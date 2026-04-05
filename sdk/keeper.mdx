@@ -1,0 +1,134 @@
+---
+title: "Keeper Bot"
+description: "Run an automated keeper bot that charges due subscriptions on schedule. Understand how keepers work, configure environment variables, and deploy to production."
+---
+
+## What is a Keeper?
+
+A keeper is an automated script that calls `charge()` on the Vowena contract for subscriptions that are due. Because `charge()` is **permissionless**, anyone can trigger it — the contract validates all conditions on-chain. The keeper simply pays the tiny transaction fee (~$0.00001 in XLM), while the subscription payment flows directly from the subscriber to the merchant.
+
+<Info>
+  You don't need to run your own keeper. The [Vowena Dashboard](/dashboard/keeper-setup) provides a managed keeper service. This page is for developers who want to self-host or customize their keeper.
+</Info>
+
+---
+
+## How It Works
+
+1. The keeper polls for subscription IDs that may be due for charging
+2. For each subscription, it builds a `charge()` transaction using the SDK
+3. It signs the transaction with its own keypair (the keeper wallet)
+4. It submits the transaction to the network
+5. If the charge succeeds, USDC transfers from subscriber to merchant. If it fails (not yet due, insufficient balance, etc.), the contract rejects it harmlessly.
+
+The keeper's wallet only needs a small XLM balance for transaction fees. It never handles or holds USDC — payments go directly between subscriber and merchant.
+
+---
+
+## Setup
+
+The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repository.
+
+<Steps>
+  <Step title="Fund a Keeper Wallet">
+    Create a new Stellar keypair and fund it with a small amount of XLM for transaction fees. On testnet, use the [Stellar Friendbot](https://laboratory.stellar.org/).
+
+    ```bash
+    # Generate a keypair (or use an existing one)
+    # Save the secret key — you'll need it in the next step
+    ```
+
+    A few XLM is sufficient for thousands of charge transactions.
+  </Step>
+
+  <Step title="Configure Environment Variables">
+    The keeper bot reads its configuration from environment variables:
+
+    | Variable | Required | Default | Description |
+    | --- | --- | --- | --- |
+    | `CONTRACT_ID` | Yes | — | Vowena contract address (e.g., `CABC...XYZ`) |
+    | `KEEPER_SECRET` | Yes | — | Stellar secret key for the keeper wallet (`S...`) |
+    | `RPC_URL` | No | `https://soroban-testnet.stellar.org` | Soroban RPC endpoint |
+    | `NETWORK_PASSPHRASE` | No | `Test SDF Network ; September 2015` | Network passphrase |
+    | `INTERVAL_MS` | No | `60000` | Polling interval in milliseconds |
+
+    <Warning>
+      Your `KEEPER_SECRET` is a private key that can sign transactions. Never commit it to source control, share it in logs, or expose it in client-side code. Use a secrets manager or environment variable injection in production.
+    </Warning>
+  </Step>
+
+  <Step title="Run the Keeper">
+    ```bash
+    CONTRACT_ID=C... KEEPER_SECRET=S... npx ts-node keeper/src/index.ts
+    ```
+
+    Or with all options:
+
+    ```bash
+    CONTRACT_ID=CABC...XYZ \
+    KEEPER_SECRET=SDEF...123 \
+    RPC_URL=https://soroban-testnet.stellar.org \
+    NETWORK_PASSPHRASE="Test SDF Network ; September 2015" \
+    INTERVAL_MS=30000 \
+    npx ts-node keeper/src/index.ts
+    ```
+
+    The keeper will start polling and log each charge attempt:
+
+    ```
+    [keeper] Starting with interval 30000ms
+    [keeper] Checking subscription #101... charged OK (tx: abc123...)
+    [keeper] Checking subscription #102... not yet due, skipping
+    [keeper] Checking subscription #103... charge failed: insufficient balance
+    ```
+  </Step>
+
+  <Step title="Verify It's Working">
+    Use the SDK to check that subscriptions are being charged:
+
+    ```typescript
+    const sub = await client.getSubscription(101, callerAddress);
+    console.log(sub.periodsCharged); // Should increment after each successful charge
+    ```
+  </Step>
+</Steps>
+
+---
+
+## How charge() Is Permissionless
+
+When a subscriber signs the `subscribe()` transaction, they authorize a SEP-41 token allowance to the Vowena contract. From that point on, the contract itself can pull funds via `transfer_from()` — it does not matter who initiates the `charge()` call. The contract enforces all rules:
+
+- The billing period must have elapsed
+- The subscription must be active
+- The subscriber must have sufficient balance and allowance
+- Trial periods must be complete
+- The max period limit must not be exceeded
+
+The caller (keeper) only pays the transaction fee. The USDC payment goes directly from subscriber to merchant — never through the keeper's wallet.
+
+---
+
+## Production Considerations
+
+<AccordionGroup>
+  <Accordion title="Use an event indexer instead of iterating IDs">
+    The basic keeper iterates subscription IDs sequentially, which works for small-scale testing. For production, use the dashboard's event indexer (or build your own) to maintain a database of active subscriptions and their next charge dates. This way you only attempt charges for subscriptions that are actually due, saving RPC calls and transaction fees.
+  </Accordion>
+
+  <Accordion title="Handle rate limits">
+    Public Soroban RPC endpoints have rate limits. For production keepers, use a dedicated RPC provider or self-host a Stellar node to avoid throttling during high-traffic periods.
+  </Accordion>
+
+  <Accordion title="Monitor and alert">
+    Set up monitoring for your keeper process. Track metrics like successful charges, failed charges, and RPC errors. Alert on prolonged failures so you can intervene before subscriptions start pausing due to missed charges.
+  </Accordion>
+
+  <Accordion title="Run multiple instances carefully">
+    If you run multiple keeper instances, they may attempt to charge the same subscription simultaneously. The contract handles this safely — only the first charge succeeds, and subsequent attempts fail harmlessly. However, you will pay unnecessary transaction fees. Use a coordination layer or partition subscription IDs across keepers.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  For most merchants, the managed keeper in the [Vowena Dashboard](/dashboard/keeper-setup) is the simplest option. Self-hosting a keeper is recommended only if you need custom logic, want full control over infrastructure, or are operating at scale.
+</Tip>

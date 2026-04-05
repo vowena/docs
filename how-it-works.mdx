@@ -1,0 +1,256 @@
+---
+title: "How It Works"
+description: "A visual step-by-step walkthrough of the Vowena protocol — from plan creation to recurring charges to cancellation. This is the full picture."
+---
+
+This page walks through the complete lifecycle of a Vowena subscription. By the end, you'll understand exactly how trustless recurring payments work on Stellar.
+
+<Info>
+  This is the "aha moment" page. If you read one page in the docs, make it this one.
+</Info>
+
+---
+
+## The Full Flow
+
+<Steps>
+  <Step title="Merchant Creates a Plan">
+    The merchant calls `create_plan()` on the Vowena contract, defining the subscription terms.
+
+    ```typescript
+    // On-chain transaction
+    create_plan({
+      merchant: "GMERCHANT...ADDR",
+      token: "USDC_CONTRACT_ADDR",
+      amount: 99900000n,          // 9.99 USDC
+      period: 2_592_000,          // 30 days
+      price_ceiling: 149900000n,  // 14.99 USDC max
+      trial_periods: 1,           // 1 free month
+      max_periods: 0,             // No limit
+      grace_period: 259_200,      // 3-day grace
+    })
+    ```
+
+    The contract stores this plan on-chain and returns a `plan_id`. This plan is now discoverable by anyone — it's a public, immutable billing template.
+
+    <Tip>
+      Plans are like product listings on the blockchain. A merchant might create multiple plans for different tiers: Basic, Pro, Enterprise — each with different amounts and periods.
+    </Tip>
+  </Step>
+
+  <Step title="Subscriber Discovers the Plan">
+    The subscriber finds the plan through:
+
+    <CardGroup cols={2}>
+      <Card title="Merchant's App" icon="globe">
+        The merchant's website or dApp displays available plans and provides a "Subscribe" button.
+      </Card>
+      <Card title="Vowena Dashboard" icon="gauge">
+        The Vowena Dashboard lets anyone browse plans, view terms, and subscribe directly.
+      </Card>
+      <Card title="On-chain Discovery" icon="magnifying-glass">
+        Plans are stored on-chain. Anyone can query `get_plan(plan_id)` or `get_merchant_plans(merchant)` to discover available plans.
+      </Card>
+      <Card title="Direct Link" icon="link">
+        Merchants can share a direct subscription link that pre-fills the plan ID.
+      </Card>
+    </CardGroup>
+
+    The subscriber can inspect all plan parameters before subscribing — amount, period, ceiling, trial, max periods, and grace period are all transparent.
+  </Step>
+
+  <Step title="Subscriber Calls subscribe()">
+    The subscriber initiates the subscription. Their wallet displays the full authorization request:
+
+    <Columns cols={2}>
+      <Card title="Contract Authorization" icon="file-signature">
+        **Action**: Call `subscribe()` on Vowena contract
+
+        **Parameters**:
+        - Subscriber address
+        - Plan ID
+
+        **Effect**: Creates an on-chain subscription record
+      </Card>
+      <Card title="Token Approval" icon="coins">
+        **Action**: Call `approve()` on USDC contract
+
+        **Parameters**:
+        - Spender: Vowena contract
+        - Amount: price_ceiling (per period budget)
+        - Expiry: Ledger-based expiration
+
+        **Effect**: Grants Vowena permission to pull USDC
+      </Card>
+    </Columns>
+
+    <Warning>
+      The subscriber should always verify the wallet prompt carefully. The token address, spending amount, and contract address should all match expectations. Legitimate Vowena subscriptions will always show the official Vowena contract as the spender.
+    </Warning>
+  </Step>
+
+  <Step title="One Signature Covers Everything">
+    Here's where Soroban's authorization framework shines. The subscriber signs **once**, and that single signature covers both:
+
+    1. The `subscribe()` contract invocation
+    2. The `token.approve()` allowance grant
+
+    This is possible because Soroban supports **authorization trees** — a single transaction can carry multiple authorization entries that the signer approves together.
+
+    ```
+    Transaction
+    └── Subscriber's Auth Entry
+        ├── vowena.subscribe(subscriber, plan_id)
+        └── usdc.approve(subscriber, vowena_contract, ceiling, expiry)
+    ```
+
+    <Note>
+      Compare this to Ethereum, where you'd typically need two separate transactions (approve + subscribe). On Soroban, it's one transaction, one signature, one fee.
+    </Note>
+
+    After submission, the blockchain now holds:
+    - A **subscription record** in the Vowena contract (status: Active)
+    - A **token allowance** in the USDC contract (Vowena can pull funds)
+  </Step>
+
+  <Step title="Each Period, a Keeper Calls charge()">
+    When the billing period elapses, a keeper submits a `charge()` transaction:
+
+    ```typescript
+    charge(caller: "GKEEPER...ADDR", subscription_id: 42)
+    ```
+
+    The keeper can be:
+    - <Icon icon="server" /> The merchant's own bot
+    - <Icon icon="gauge" /> The Vowena Dashboard's built-in keeper
+    - <Icon icon="robot" /> A third-party keeper service
+    - <Icon icon="user" /> Even the subscriber themselves
+
+    It doesn't matter who calls it — the contract enforces all rules regardless.
+
+    <Tip>
+      Keepers are economically incentivized. The transaction fee is negligible ($0.00001), and merchants want their revenue collected on time. Third-party keepers may earn service fees for maintaining reliable charging.
+    </Tip>
+  </Step>
+
+  <Step title="Contract Validates and Transfers">
+    Inside the `charge()` execution, the Vowena contract performs a series of on-chain checks:
+
+    <Steps>
+      <Step title="Status Check">
+        Is the subscription Active? If Paused, Cancelled, or Expired — reject.
+      </Step>
+      <Step title="Time Check">
+        Has at least one full `period` elapsed since `last_charged_at`? If not — reject. No double-charging.
+      </Step>
+      <Step title="Trial Check">
+        Is the subscription still in its trial period? If yes — increment the period counter but skip the transfer. The subscriber isn't charged during trials.
+      </Step>
+      <Step title="Balance and Allowance Check">
+        Does the subscriber have enough USDC balance? Is the token allowance sufficient? If either fails — record `failed_at` and enter the grace period flow.
+      </Step>
+      <Step title="Transfer">
+        All checks pass. The contract calls:
+        ```
+        usdc.transfer_from(subscriber, merchant, amount)
+        ```
+        USDC moves directly from the subscriber's wallet to the merchant's wallet. The Vowena contract never holds funds.
+      </Step>
+      <Step title="Update State">
+        The contract updates `last_charged_at`, increments `periods_charged`, and checks if `max_periods` has been reached (if set).
+      </Step>
+    </Steps>
+  </Step>
+
+  <Step title="Subscriber Can Cancel Anytime">
+    At any point, the subscriber can call `cancel()` to end the subscription.
+
+    ```typescript
+    cancel(caller: "GSUBSCRIBER...ADDR", subscription_id: 42)
+    ```
+
+    This is a direct on-chain action. The subscriber does **not** need:
+    - <Icon icon="xmark" /> The merchant's permission
+    - <Icon icon="xmark" /> Access to the merchant's app or website
+    - <Icon icon="xmark" /> The Vowena Dashboard
+    - <Icon icon="xmark" /> Any specific frontend
+
+    Any Stellar wallet, CLI tool, or block explorer that supports Soroban contract calls can execute the cancellation. The subscription status immediately becomes **Cancelled**, and no further charges can occur.
+  </Step>
+</Steps>
+
+---
+
+## What If the Merchant Disappears?
+
+One of the most important questions in any subscription protocol: what protections does the subscriber have if the merchant's app goes offline, the company shuts down, or the merchant becomes unresponsive?
+
+Vowena provides **four layers of protection**:
+
+<CardGroup cols={2}>
+  <Card title="1. Direct On-chain Cancellation" icon="ban">
+    The subscriber can always call `cancel()` directly on the Vowena contract. This requires no cooperation from the merchant. Any Stellar wallet or Soroban-compatible tool can submit this transaction.
+
+    The merchant's app being offline is irrelevant — the smart contract is always available on the Stellar network.
+  </Card>
+
+  <Card title="2. Universal Subscription Manager" icon="list-check">
+    The Vowena Dashboard includes a **Universal Subscription Manager** — a UI that lets any subscriber view and manage all their Vowena subscriptions across every merchant, regardless of which app they originally subscribed through.
+
+    Even if a merchant's frontend disappears, the subscriber can find and cancel their subscriptions through the dashboard.
+  </Card>
+
+  <Card title="3. Auto-Expiry (max_periods)" icon="hourglass-end">
+    If a plan was created with `max_periods` set (e.g., 12 for an annual subscription billed monthly), the subscription automatically expires after that many billing cycles. No action required from anyone.
+
+    Even for plans with `max_periods: 0` (unlimited), the next two protections still apply.
+  </Card>
+
+  <Card title="4. Allowance Expiration" icon="clock">
+    Token allowances on Soroban have a **ledger-based expiration**. The `approve()` call sets an expiry ledger, after which the allowance automatically becomes invalid.
+
+    If no one renews the allowance (which requires the subscriber's signature), the contract loses the ability to pull funds. The subscription effectively becomes unchargeable.
+  </Card>
+</CardGroup>
+
+<Note>
+  These protections work in layers. Even if the subscriber takes no action at all, the allowance expiration ensures that a forgotten subscription cannot be charged indefinitely. This is fundamentally different from traditional credit card subscriptions, where charges can continue until the card expires or the subscriber contacts their bank.
+</Note>
+
+---
+
+## The Trust Model
+
+<Columns cols={2}>
+  <Card title="What You Trust" icon="check">
+    - The Stellar network to process transactions
+    - The Soroban VM to execute contract logic correctly
+    - The USDC token contract (issued by Circle)
+    - The Vowena contract code (open source, auditable)
+  </Card>
+  <Card title="What You Don't Trust" icon="xmark">
+    - The merchant to be honest (contract enforces rules)
+    - The keeper to be reliable (anyone can be a keeper)
+    - Vowena the company (protocol is permissionless)
+    - Any single frontend (multiple access points exist)
+  </Card>
+</Columns>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Build your first subscription in 5 minutes.
+  </Card>
+  <Card title="Core Concepts" icon="lightbulb" href="/concepts">
+    Deep dive into plans, subscriptions, allowances, and more.
+  </Card>
+  <Card title="Protocol Architecture" icon="book" href="/protocol/overview">
+    Explore the contract internals, storage model, and error handling.
+  </Card>
+  <Card title="FAQ" icon="circle-question" href="/faq">
+    Answers to the most common questions.
+  </Card>
+</CardGroup>

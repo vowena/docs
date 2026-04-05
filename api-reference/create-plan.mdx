@@ -1,0 +1,136 @@
+---
+title: "create_plan"
+description: "Creates a new subscription billing plan with pricing, billing period, trial length, and subscriber protections."
+---
+
+```rust
+fn create_plan(
+    env: Env,
+    merchant: Address,
+    token: Address,
+    amount: i128,
+    period: u64,
+    trial_periods: u32,
+    max_periods: u32,
+    grace_period: u64,
+    price_ceiling: i128,
+) -> u64
+```
+
+Creates a new billing plan on-chain. The plan defines the terms of recurring payments — token, amount, billing period, trial length, and price protection ceiling. Returns the auto-incremented `plan_id`.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `merchant` | `Address` | The merchant's Stellar address. Must sign the transaction. |
+| `token` | `Address` | The SEP-41 token contract address (e.g., USDC). |
+| `amount` | `i128` | Amount charged per billing period, in stroops (7 decimal places). |
+| `period` | `u64` | Billing period duration in seconds (e.g., `2592000` for 30 days). |
+| `trial_periods` | `u32` | Number of free trial periods before billing begins. Use `0` for no trial. |
+| `max_periods` | `u32` | Maximum number of billing periods. Use `0` for unlimited. |
+| `grace_period` | `u64` | Grace window in seconds after a failed charge before the subscription pauses. |
+| `price_ceiling` | `i128` | Maximum amount the plan can ever charge per period, in stroops. Protects subscribers from price increases. |
+
+---
+
+## Authorization
+
+```rust
+merchant.require_auth();
+```
+
+The merchant address must sign the transaction.
+
+---
+
+## Return value
+
+`u64` — the newly created plan ID.
+
+---
+
+## Events emitted
+
+| Event | Topics | Data |
+|-------|--------|------|
+| `plan_created` | `merchant`, `plan_id` | `Plan` struct |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 3 | `InvalidAmount` | `amount` is zero or negative. |
+| 4 | `InvalidPeriod` | `period` is zero. |
+| 5 | `CeilingBelowAmount` | `price_ceiling` is less than `amount`. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS, toStroops } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    const tx = await client.buildCreatePlan({
+      merchant: "GMERCHANT...ADDR",
+      token: NETWORKS.testnet.usdcAddress,
+      amount: toStroops("9.99"),          // 99900000n stroops
+      period: 2_592_000,                  // 30 days
+      trialPeriods: 1,                    // 1 free period
+      maxPeriods: 0,                      // unlimited
+      gracePeriod: 259_200,               // 3 days
+      priceCeiling: toStroops("14.99"),   // max 14.99 USDC
+    });
+
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    console.log("Plan ID:", result.planId); // e.g., 1
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source MERCHANT_SECRET \
+      -- \
+      create_plan \
+      --merchant GMERCHANT...ADDR \
+      --token CUSDC...ADDR \
+      --amount 99900000 \
+      --period 2592000 \
+      --trial_periods 1 \
+      --max_periods 0 \
+      --grace_period 259200 \
+      --price_ceiling 149900000
+    ```
+  </Tab>
+</Tabs>
+
+<Accordion title="How stroops work">
+  Stellar tokens use 7 decimal places. The SDK's `toStroops()` helper converts human-readable amounts:
+
+  ```typescript
+  toStroops("9.99")   // → 99900000n
+  toStroops("14.99")  // → 149900000n
+  toStroops("1.00")   // → 10000000n
+  ```
+
+  When using the CLI, pass the raw stroop value directly.
+</Accordion>
+
+<Tip>
+  Set `price_ceiling` thoughtfully. It protects subscribers from unexpected price hikes — the merchant can call `update_plan_amount` to raise the price, but never above the ceiling. If you need to exceed the ceiling, create a new plan and use the [migration flow](/api-reference/request-migration).
+</Tip>

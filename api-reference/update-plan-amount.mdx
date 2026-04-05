@@ -1,0 +1,100 @@
+---
+title: "update_plan_amount"
+description: "Updates the billing amount of an existing plan within the price ceiling."
+---
+
+```rust
+fn update_plan_amount(env: Env, plan_id: u64, new_amount: i128)
+```
+
+Updates the per-period billing amount of an existing plan. The new amount must be positive and must not exceed the plan's `price_ceiling`. This allows merchants to adjust pricing without requiring subscribers to re-authorize.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `plan_id` | `u64` | The ID of the plan to update. |
+| `new_amount` | `i128` | The new billing amount per period, in stroops. |
+
+---
+
+## Authorization
+
+```rust
+merchant.require_auth();
+```
+
+The merchant address stored on the plan must sign the transaction.
+
+---
+
+## Return value
+
+None (`void`).
+
+---
+
+## Events emitted
+
+| Event | Topics | Data |
+|-------|--------|------|
+| `plan_updated` | `plan_id`, `new_amount` | Updated plan details |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 6 | `PlanNotFound` | No plan exists with the given `plan_id`. |
+| 3 | `InvalidAmount` | `new_amount` is zero or negative. |
+| 10 | `AmountExceedsCeiling` | `new_amount` exceeds the plan's `price_ceiling`. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS, toStroops } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    // Raise the price from 9.99 to 12.99 (within the 14.99 ceiling)
+    const tx = await client.buildUpdatePlanAmount(
+      planId,                   // Plan ID
+      toStroops("12.99")        // 129900000n stroops
+    );
+
+    const signedXdr = await signTransaction(tx);
+    await client.submitTransaction(signedXdr);
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source MERCHANT_SECRET \
+      -- \
+      update_plan_amount \
+      --plan_id 1 \
+      --new_amount 129900000
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Since the token allowance is set against the `price_ceiling` (not the current `amount`), updating the amount within the ceiling does not require subscribers to re-authorize. All existing subscriptions will be charged the new amount on their next billing cycle.
+</Tip>
+
+<Note>
+  If you need to set a price above the current ceiling, you must create a new plan and use the [migration flow](/api-reference/request-migration) to move subscribers. This ensures subscribers always have explicit control over their maximum exposure.
+</Note>

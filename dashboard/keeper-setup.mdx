@@ -1,0 +1,148 @@
+---
+title: "Keeper Setup"
+description: "Configure automated billing for your Vowena subscriptions. Use the built-in dashboard keeper or run a standalone keeper bot for full control."
+---
+
+A keeper is any process that calls `charge()` on due subscriptions. The Vowena protocol is permissionless — anyone can trigger a charge, and the contract validates all conditions on-chain. You just need something to make the call on schedule.
+
+There are two options: the built-in dashboard keeper (zero setup) or a standalone bot you run yourself.
+
+<Tabs>
+  <Tab title="Dashboard Keeper (Built-in)">
+    The Vowena Dashboard includes an integrated keeper service that handles billing automatically. No infrastructure to manage.
+
+    ### How It Works
+
+    The dashboard backend runs a cron job on a regular interval. Each run:
+    1. Queries the database for all subscriptions where `next_billing_time` has passed
+    2. Builds a `charge()` transaction for each due subscription
+    3. Signs and submits the transactions to the Stellar network
+    4. Records the results (success or failure) in the database
+
+    ### Configuration
+
+    Navigate to **Merchant > Keeper** in the dashboard.
+
+    1. Toggle **Auto-Billing** to ON
+    2. The keeper activates for all your plans immediately
+
+    The keeper status panel shows:
+    - **Last run** — Timestamp of the most recent keeper execution
+    - **Next scheduled run** — When the keeper will run again
+    - **Charged count** — Number of subscriptions successfully charged in the last run
+    - **Failed count** — Number of charges that failed (insufficient balance, expired allowance)
+
+    ### Manual Trigger
+
+    Don't want to wait for the next scheduled run? Click the **Charge All Due** button to trigger an immediate billing run for all your due subscriptions.
+
+    <Note>
+      The dashboard keeper requires the dashboard backend to be running (Postgres database, cron endpoint). If you're self-hosting the dashboard, make sure the cron service is configured and operational.
+    </Note>
+
+    <Tip>
+      The built-in keeper is the easiest option for most merchants. It runs as part of the dashboard infrastructure and requires no additional setup. For high-volume merchants or those who want full control over the billing schedule, consider the standalone bot.
+    </Tip>
+  </Tab>
+
+  <Tab title="Standalone Keeper Bot">
+    Run your own keeper bot for full control over billing execution, scheduling, and monitoring.
+
+    <Steps>
+      <Step title="Clone the Repository">
+        The keeper bot is included in the Vowena SDK repository.
+
+        ```bash
+        git clone https://github.com/vowena/vowena-sdk.git
+        cd vowena-sdk
+        npm install
+        ```
+      </Step>
+
+      <Step title="Configure Environment Variables">
+        The keeper bot needs the following configuration:
+
+        | Variable | Description | Example |
+        |----------|-------------|---------|
+        | `CONTRACT_ID` | The Vowena contract address on your target network | `CABC...XYZ` |
+        | `KEEPER_SECRET` | Secret key of the wallet that will sign charge transactions | `SABC...XYZ` |
+        | `RPC_URL` | Soroban RPC endpoint | `https://soroban-testnet.stellar.org` |
+        | `NETWORK_PASSPHRASE` | Stellar network passphrase | `Test SDF Network ; September 2015` |
+        | `INTERVAL_MS` | How often the keeper checks for due subscriptions (in milliseconds) | `60000` (every minute) |
+
+        <Warning>
+          The `KEEPER_SECRET` is a Stellar secret key that signs charge transactions. Treat it like a private key — never commit it to version control, never share it, and never expose it in client-side code. Use environment variables or a secrets manager.
+        </Warning>
+      </Step>
+
+      <Step title="Run the Keeper">
+        Start the bot with your environment variables:
+
+        ```bash
+        CONTRACT_ID=CABC...XYZ \
+        KEEPER_SECRET=SABC...XYZ \
+        RPC_URL=https://soroban-testnet.stellar.org \
+        NETWORK_PASSPHRASE="Test SDF Network ; September 2015" \
+        INTERVAL_MS=60000 \
+        npx ts-node keeper/src/index.ts
+        ```
+
+        The bot runs on a loop:
+        1. Query the contract (or a local index) for subscriptions that are past their `next_billing_time`
+        2. Build a `charge()` transaction for each
+        3. Sign with `KEEPER_SECRET` and submit
+        4. Log the result (success, failure, or skipped)
+        5. Wait `INTERVAL_MS` and repeat
+      </Step>
+
+      <Step title="Production Hardening">
+        For a production deployment, consider the following:
+
+        - **Use the event indexer** — Instead of querying the contract for all subscriptions each cycle, run the SDK's event indexer to maintain a local database of subscriptions and their billing state. This is far more efficient at scale.
+        - **Process manager** — Run the keeper with `pm2`, `systemd`, or inside a Docker container to ensure it restarts on failure.
+        - **Monitoring** — Set up alerts for failed charges, keeper downtime, or unexpected errors. The keeper logs structured JSON output for easy integration with monitoring tools.
+        - **Multiple keepers** — It's safe to run multiple keeper instances. If two keepers try to charge the same subscription simultaneously, the contract will reject the duplicate — only the first transaction succeeds. No double-charging is possible.
+      </Step>
+    </Steps>
+
+    <Note>
+      The keeper wallet pays Stellar transaction fees for each charge — approximately $0.00001 per transaction. The keeper does **not** receive the subscription payment. Payments flow directly from the subscriber's wallet to the merchant's wallet via the smart contract. The keeper simply triggers the transfer.
+    </Note>
+  </Tab>
+</Tabs>
+
+---
+
+## Which Option Should I Choose?
+
+<Columns cols={2}>
+  <Card title="Dashboard Keeper" icon="toggle-on">
+    Best for most merchants. Zero setup, managed infrastructure, built-in monitoring. Works out of the box at [app.vowena.xyz](https://app.vowena.xyz).
+  </Card>
+  <Card title="Standalone Bot" icon="robot">
+    Best for high-volume merchants, self-hosted setups, or anyone who wants full control over billing timing and infrastructure.
+  </Card>
+</Columns>
+
+<Tip>
+  You can use both. Enable the dashboard keeper as your primary billing mechanism and run a standalone bot as a backup. Since double-charging is impossible at the contract level, redundant keepers are perfectly safe.
+</Tip>
+
+---
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What happens if the keeper goes down?">
+    Nothing is lost. Subscriptions remain active on-chain. When the keeper comes back online, it picks up all overdue subscriptions and charges them. Subscribers in their grace period won't be paused until the grace window expires — giving you time to restore the keeper.
+  </Accordion>
+  <Accordion title="Can someone else run a keeper for my subscriptions?">
+    Yes. The `charge()` function is permissionless — anyone can call it. Third-party keeper networks, your subscribers, or even the subscribers' own automation can trigger charges. The contract validates everything regardless of who submits the transaction.
+  </Accordion>
+  <Accordion title="How much does it cost to run a keeper?">
+    Each charge transaction costs approximately $0.00001 in Stellar network fees. For 1,000 subscriptions billed monthly, that's roughly $0.01 per month in transaction fees. The keeper wallet needs a small XLM balance to cover fees — 10 XLM is enough for hundreds of thousands of transactions.
+  </Accordion>
+  <Accordion title="Does the keeper need USDC?">
+    No. The keeper only signs and submits `charge()` transactions. The USDC transfer happens from the subscriber's wallet to the merchant's wallet. The keeper wallet only needs XLM for transaction fees.
+  </Accordion>
+</AccordionGroup>

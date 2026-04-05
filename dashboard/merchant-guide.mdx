@@ -1,0 +1,176 @@
+---
+title: "Merchant Guide"
+description: "Step-by-step guide for merchants using the Vowena Dashboard. Create plans, share them with subscribers, monitor billing, issue refunds, and configure auto-charging."
+---
+
+This guide walks you through the full merchant experience on the Vowena Dashboard — from connecting your wallet to monitoring recurring revenue.
+
+<Steps>
+  <Step title="Connect Your Wallet">
+    Visit [app.vowena.xyz](https://app.vowena.xyz) and click **Connect Wallet** in the top right corner. The dashboard will prompt Freighter (or your installed Stellar wallet) to authorize the connection.
+
+    Once connected, your Stellar wallet address becomes your merchant identity. There is no separate signup — if your address has created plans, you see the merchant dashboard. If not, you see the create plan prompt.
+
+    <Tip>
+      If you don't have Freighter yet, install it from [freighter.app](https://www.freighter.app/). It's a browser extension available for Chrome, Firefox, and Brave. Make sure you're connected to the correct network (Testnet for testing, Mainnet for production).
+    </Tip>
+  </Step>
+
+  <Step title="Create Your First Plan">
+    Navigate to **Merchant > Plans > Create Plan**. The form contains the following fields:
+
+    | Field | Description | Example |
+    |-------|-------------|---------|
+    | **Plan Name** | Human-readable name (off-chain, stored in dashboard DB) | "Pro Monthly" |
+    | **Description** | What the subscriber gets (off-chain) | "Full access to all features" |
+    | **Token** | The Stellar token to bill in. USDC is the default and recommended option. | USDC |
+    | **Amount** | How much to charge per billing period, in human-readable units. | `9.99` |
+    | **Billing Period** | How often to charge. Presets: Weekly (7d), Monthly (30d), Quarterly (90d), Annual (365d), or enter a custom number of seconds. | Monthly |
+    | **Trial Periods** | Number of billing periods before the first charge. Set to 0 for no trial. | `1` (one free month) |
+    | **Max Periods** | Total number of billing periods before the subscription auto-expires. Set to 0 for unlimited. | `12` (1 year cap) |
+    | **Grace Period** | Time window (in seconds) after a failed charge before the subscription pauses. Gives the subscriber time to top up their wallet. | `259200` (3 days) |
+    | **Price Ceiling** | The maximum amount you can ever charge per period for this plan. Subscribers approve this ceiling in their wallet — you can raise your price up to this limit without requiring re-authorization. | `14.99` |
+
+    Click **Create Plan**. The dashboard builds a `create_plan` transaction, and Freighter will ask you to sign it. Once confirmed on-chain, your plan appears in the Plans list.
+
+    <Warning>
+      Choose your **price ceiling** carefully. It's the upper bound on what you can charge without requiring subscribers to re-authorize. Set it too low and you'll need migrations for any price increase. Set it too high and subscribers may hesitate to approve. A ceiling 30-50% above your current price is a reasonable starting point.
+    </Warning>
+
+    <Tip>
+      Plans are immutable on-chain once created. You can update the **amount** (within the ceiling) but not the period, trial length, or token. If you need to change those, create a new plan and use the migration flow.
+    </Tip>
+  </Step>
+
+  <Step title="Share Your Plan">
+    After creating a plan, you'll receive a **Plan ID** (a numeric identifier). You can integrate this into your application using the Vowena SDK so users can subscribe directly from your product.
+
+    <CodeGroup>
+      ```typescript React / Next.js
+      import { VowenaClient, NETWORKS } from "vowena";
+
+      const client = new VowenaClient({
+        contractId: NETWORKS.mainnet.contractId,
+        rpcUrl: NETWORKS.mainnet.rpcUrl,
+        networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      });
+
+      async function handleSubscribe(subscriberAddress: string) {
+        const tx = await client.buildSubscribe(subscriberAddress, PLAN_ID);
+        // Pass to Freighter or your wallet integration for signing
+        const signedXdr = await freighter.signTransaction(tx);
+        const result = await client.submitTransaction(signedXdr);
+        console.log("Subscribed:", result.subscriptionId);
+      }
+      ```
+
+      ```typescript Node.js Backend
+      import { VowenaClient, NETWORKS } from "vowena";
+
+      const client = new VowenaClient({
+        contractId: NETWORKS.mainnet.contractId,
+        rpcUrl: NETWORKS.mainnet.rpcUrl,
+        networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      });
+
+      // Build the transaction server-side, send XDR to frontend for signing
+      const tx = await client.buildSubscribe(subscriberAddress, PLAN_ID);
+      // Return tx to the frontend for wallet signing
+      ```
+    </CodeGroup>
+
+    You can also share a direct link to your plan on the dashboard:
+
+    ```
+    https://app.vowena.xyz/subscribe/{PLAN_ID}
+    ```
+
+    Subscribers visiting this link will see the plan details and can subscribe with one click.
+  </Step>
+
+  <Step title="Monitor Subscribers">
+    Navigate to **Merchant > Subscribers** to see everyone subscribed to your plans.
+
+    Each subscriber row shows:
+    - **Wallet address** (truncated, with copy button)
+    - **Plan name** and billing amount
+    - **Status badge** — Active (green), Paused (yellow), Cancelled (red), Expired (gray)
+    - **Next billing date** — when the next charge is due
+    - **Periods billed** — how many successful charges have been made
+    - **Total paid** — cumulative amount collected from this subscriber
+
+    Click any subscriber to expand their full billing history: every charge, failed charge, refund, and status change with timestamps.
+
+    Use the **Refund** button to issue a partial or full refund for any charge. Refunds are on-chain transactions — the USDC is transferred from your wallet back to the subscriber.
+
+    <Note>
+      Refunds require you to have sufficient USDC balance. The contract transfers tokens from your wallet to the subscriber — it does not hold funds in escrow.
+    </Note>
+  </Step>
+
+  <Step title="Billing Analytics">
+    Navigate to **Merchant > Analytics** for a high-level view of your subscription business.
+
+    The analytics dashboard includes:
+    - **Total MRR** — Monthly Recurring Revenue calculated from all active subscriptions
+    - **Active subscribers** — Count of currently active subscriptions across all plans
+    - **Churn rate** — Percentage of subscribers who cancelled in the current period
+    - **Failed charges** — Number of charges that failed due to insufficient balance or expired allowance
+    - **Revenue timeline** — A Recharts line graph showing revenue over time
+    - **Event log** — Scrollable feed of recent billing events (charges, failures, cancellations)
+
+    <Tip>
+      A high failed-charge rate usually means subscribers are running low on USDC. Consider adding a reminder notification in your app before billing day, or extending your grace period to give subscribers more time to top up.
+    </Tip>
+  </Step>
+
+  <Step title="Enable Auto-Billing">
+    By default, subscriptions need someone to call `charge()` when a billing period elapses. The dashboard includes a built-in keeper service that automates this.
+
+    Navigate to **Merchant > Keeper** to configure auto-billing:
+
+    1. Toggle **Auto-Billing** to ON
+    2. The dashboard backend will run a cron job that checks for due subscriptions and charges them automatically
+    3. View the **last run** timestamp, **next scheduled run**, and **charged count** from the most recent execution
+    4. Use the **Charge All Due** button to manually trigger an immediate billing run
+
+    <Info>
+      For more control or a self-hosted setup, see the [Keeper Setup guide](/dashboard/keeper-setup) which covers both the built-in keeper and a standalone bot you can run yourself.
+    </Info>
+  </Step>
+</Steps>
+
+---
+
+## Managing Plans
+
+### Updating the Price
+
+You can update a plan's amount at any time, as long as the new amount does not exceed the plan's price ceiling. Navigate to **Merchant > Plans**, click a plan, and use the **Update Amount** button.
+
+Since the subscriber's wallet already approved spending up to the price ceiling, no re-authorization is needed. The new amount takes effect on the next billing cycle.
+
+<Warning>
+  If you need to raise the price above the current ceiling, you must create a new plan and use the migration flow. This requires every subscriber to explicitly accept the new terms.
+</Warning>
+
+### Creating Additional Plans
+
+There is no limit to the number of plans you can create. Common patterns include:
+- **Tiered pricing** — Basic, Pro, and Enterprise plans with different amounts
+- **Annual vs monthly** — Same features, different billing periods (often with a discount for annual)
+- **Regional pricing** — Different price points for different markets
+
+### Migrating Subscribers
+
+When you create a new plan and want to move existing subscribers:
+
+1. Navigate to **Merchant > Plans** and select the old plan
+2. Click **Request Migration** and choose the target plan
+3. All subscribers on the old plan receive a migration banner in their dashboard
+4. Each subscriber reviews the changes (old price vs. new price side by side) and accepts or rejects
+5. Accepted subscribers are moved to the new plan with a fresh allowance. Rejected subscribers stay on the old plan unchanged.
+
+<Tip>
+  Communicate plan changes to your subscribers before initiating a migration. Surprise price increases lead to higher rejection rates and churn.
+</Tip>

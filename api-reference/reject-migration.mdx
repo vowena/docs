@@ -1,0 +1,95 @@
+---
+title: "reject_migration"
+description: "Rejects a pending plan migration. The subscriber stays on their current plan."
+---
+
+```rust
+fn reject_migration(env: Env, subscriber: Address, sub_id: u64)
+```
+
+Rejects a pending migration for a subscription. The `migration_target` field is cleared and the subscriber continues on their current plan with no changes.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
+| `sub_id` | `u64` | The subscription ID with a pending migration. |
+
+---
+
+## Authorization
+
+```rust
+subscriber.require_auth();
+```
+
+Only the subscriber on the subscription can reject the migration.
+
+---
+
+## Return value
+
+None (`void`).
+
+---
+
+## Events emitted
+
+| Event | Topics | Data |
+|-------|--------|------|
+| `mig_reject` | `subscriber`, `sub_id` | Rejection details |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 9 | `Unauthorized` | Caller is not the subscriber on this subscription. |
+| 12 | `NoMigrationPending` | No migration has been requested for this subscription. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    // Reject the pending migration — stay on current plan
+    const tx = await client.buildRejectMigration(
+      "GSUBSCRIBER...ADDR",   // Subscriber's address
+      subscriptionId            // Subscription ID
+    );
+
+    const signedXdr = await signTransaction(tx);
+    await client.submitTransaction(signedXdr);
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source SUBSCRIBER_SECRET \
+      -- \
+      reject_migration \
+      --subscriber GSUBSCRIBER...ADDR \
+      --sub_id 1
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Rejecting a migration has no side effects. The subscription continues as normal on the current plan, billing proceeds unchanged, and the subscriber can still cancel at any time.
+</Note>

@@ -1,68 +1,153 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Vowena",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5"
   },
   "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/vowena"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Launch App",
+      "href": "https://app.vowena.xyz"
+    }
+  },
   "navigation": {
     "tabs": [
       {
         "tab": "Guides",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
               "index",
               "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "concepts",
+              "how-it-works",
+              "faq"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Protocol",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Architecture",
+            "pages": [
+              "protocol/overview",
+              "protocol/plans",
+              "protocol/subscriptions",
+              "protocol/billing"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "protocol/migrations",
+              "protocol/refunds",
+              "protocol/security"
+            ]
+          },
+          {
+            "group": "Deploy",
+            "pages": [
+              "protocol/deployment"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "sdk/installation",
+              "sdk/client"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "sdk/amounts",
+              "sdk/events",
+              "sdk/keeper"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
             "pages": [
               "api-reference/introduction"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Core",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/initialize",
+              "api-reference/create-plan",
+              "api-reference/subscribe",
+              "api-reference/charge"
+            ]
+          },
+          {
+            "group": "Management",
+            "pages": [
+              "api-reference/cancel",
+              "api-reference/refund",
+              "api-reference/update-plan-amount",
+              "api-reference/reactivate"
+            ]
+          },
+          {
+            "group": "Migrations",
+            "pages": [
+              "api-reference/request-migration",
+              "api-reference/accept-migration",
+              "api-reference/reject-migration"
+            ]
+          },
+          {
+            "group": "Read-only",
+            "pages": [
+              "api-reference/get-plan",
+              "api-reference/get-subscription",
+              "api-reference/get-merchant-plans",
+              "api-reference/get-subscriber-subscriptions",
+              "api-reference/get-plan-subscribers",
+              "api-reference/extend-ttl"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Dashboard",
+        "groups": [
+          {
+            "group": "Dashboard",
+            "pages": [
+              "dashboard/overview",
+              "dashboard/merchant-guide",
+              "dashboard/subscriber-guide",
+              "dashboard/keeper-setup"
             ]
           }
         ]
@@ -71,52 +156,40 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Blog",
+          "href": "https://vowena.xyz/blogs",
+          "icon": "newspaper"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "GitHub",
+          "href": "https://github.com/vowena",
+          "icon": "github"
+        },
+        {
+          "anchor": "npm",
+          "href": "https://www.npmjs.com/package/vowena",
+          "icon": "npm"
         }
       ]
     }
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/vowena",
+      "github": "https://github.com/vowena"
     }
+  },
+  "seo": {
+    "indexHiddenPages": false
   }
 }

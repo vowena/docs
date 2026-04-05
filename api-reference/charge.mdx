@@ -1,0 +1,138 @@
+---
+title: "charge"
+description: "Charges a due subscription. Permissionless — anyone can call this function to trigger billing."
+---
+
+```rust
+fn charge(env: Env, sub_id: u64) -> bool
+```
+
+Attempts to charge a subscription that is due for billing. This is the only write function in Vowena that requires **no authorization** — anyone can call it. The contract validates all conditions on-chain and either transfers funds or handles the failure gracefully.
+
+Returns `true` if the charge succeeded, `false` if it did not.
+
+<Warning>
+  `charge()` is **permissionless by design**. There is no `require_auth()` call. This enables keeper bots, third-party services, or anyone to trigger billing without the merchant's private key. The contract enforces all safety checks — timing, balance, allowance, and subscription status — so permissionless calling is safe.
+</Warning>
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `sub_id` | `u64` | The subscription ID to charge. |
+
+---
+
+## Authorization
+
+**None.** This function has no `require_auth()`. Anyone can call it.
+
+---
+
+## Return value
+
+`bool` — `true` if the charge was processed successfully, `false` if it was not charged (e.g., not yet due, insufficient funds).
+
+---
+
+## Pre-charge validation
+
+Before attempting the `transfer_from`, the contract checks the subscriber's balance and allowance. This is a deliberate design decision:
+
+<Warning>
+  The contract **pre-checks** the subscriber's token balance and allowance before calling `transfer_from()`. If either is insufficient, the charge fails gracefully (emitting `charge_fail`) instead of reverting the transaction. This means the caller still pays the transaction fee, but the subscription enters the grace period flow instead of causing an on-chain error.
+</Warning>
+
+The contract checks, in order:
+
+1. Does the subscription exist and is it `Active`?
+2. Has the `next_billing_time` passed?
+3. Is this a trial period? (If so, advance the period counter without transferring funds.)
+4. Has `max_periods` been reached? (If so, expire the subscription.)
+5. Does the subscriber have sufficient balance?
+6. Does the subscriber have sufficient allowance?
+7. Execute `transfer_from()` to move funds from subscriber to merchant.
+
+---
+
+## Events emitted
+
+| Event | Topics | Data | Condition |
+|-------|--------|------|-----------|
+| `charge_ok` | `subscriber`, `sub_id`, `amount` | Period number | Charge succeeded |
+| `charge_fail` | `subscriber`, `sub_id` | Failure reason | Balance or allowance insufficient |
+| `sub_paused` | `subscriber`, `sub_id` | `failed_at` timestamp | Grace period expired on a previously failed charge |
+| `sub_expired` | `subscriber`, `sub_id` | `periods_billed` | Max periods reached |
+| `sub_cancel` | `subscriber`, `sub_id` | `cancelled_at` timestamp | Subscription cancelled due to expiry |
+
+---
+
+## Error cases
+
+`charge()` is designed to fail gracefully rather than revert. It returns `false` for most failure conditions rather than throwing an error. However, the following will cause a revert:
+
+| Code | Name | Description |
+|------|------|-------------|
+| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    // Anyone can build and submit this — no specific signer required
+    const tx = await client.buildCharge(
+      "GCALLER...ADDR",   // Any address (pays the tx fee)
+      subscriptionId       // Subscription ID to charge
+    );
+
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    console.log("Charged:", result.charged); // true or false
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source ANY_SECRET_KEY \
+      -- \
+      charge \
+      --sub_id 1
+    ```
+  </Tab>
+</Tabs>
+
+<AccordionGroup>
+  <Accordion title="Who should call charge()?">
+    Since `charge()` is permissionless, there are several options:
+
+    - **Keeper bots** — automated services that monitor `next_billing_time` and call `charge()` on schedule.
+    - **The merchant** — can call `charge()` directly from their backend.
+    - **The Vowena Dashboard** — includes a built-in keeper service.
+    - **Third-party networks** — any service can integrate charge calling.
+
+    The caller pays the Stellar transaction fee (~0.00001 XLM), but needs no special authorization.
+  </Accordion>
+  <Accordion title="What happens when a charge fails?">
+    If the subscriber has insufficient balance or allowance:
+
+    1. The `charge_fail` event is emitted.
+    2. `failed_at` is set to the current timestamp.
+    3. On the **next** `charge()` call, if `now > failed_at + grace_period`, the subscription is paused.
+    4. A paused subscription can be reactivated by the subscriber via [`reactivate()`](/api-reference/reactivate).
+  </Accordion>
+</AccordionGroup>

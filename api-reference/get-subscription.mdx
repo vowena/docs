@@ -1,0 +1,91 @@
+---
+title: "get_subscription"
+description: "Returns the Subscription struct for a given subscription ID. Read-only — no signature required."
+---
+
+```rust
+fn get_subscription(env: Env, sub_id: u64) -> Subscription
+```
+
+Returns the full `Subscription` struct for the given subscription ID. This is a read-only function that queries contract state directly — no transaction signature is required.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `sub_id` | `u64` | The ID of the subscription to retrieve. |
+
+---
+
+## Authorization
+
+None. This is a read-only query.
+
+---
+
+## Return value
+
+`Subscription` struct with the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `u64` | Unique subscription identifier |
+| `plan_id` | `u64` | The plan this subscription belongs to |
+| `subscriber` | `Address` | Subscriber's wallet address |
+| `status` | `SubscriptionStatus` | Current lifecycle state (`Active`, `Paused`, `Cancelled`, `Expired`) |
+| `created_at` | `u64` | Ledger timestamp at creation |
+| `periods_billed` | `u32` | Number of periods successfully charged |
+| `next_billing_time` | `u64` | Timestamp when next charge is due |
+| `failed_at` | `u64` | Timestamp of last failed charge (0 = none) |
+| `migration_target` | `u64` | Target plan ID for pending migration (0 = none) |
+| `cancelled_at` | `u64` | Timestamp of cancellation (0 = not cancelled) |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    const sub = await client.getSubscription(1);
+
+    console.log("Plan ID:", sub.planId);
+    console.log("Subscriber:", sub.subscriber);
+    console.log("Status:", sub.status);
+    console.log("Periods billed:", sub.periodsBilled);
+    console.log("Next billing:", new Date(sub.nextBillingTime * 1000));
+
+    if (sub.migrationTarget > 0) {
+      console.log("Migration pending to plan:", sub.migrationTarget);
+    }
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      -- \
+      get_subscription \
+      --sub_id 1
+    ```
+  </Tab>
+</Tabs>

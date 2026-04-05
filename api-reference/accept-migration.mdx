@@ -1,0 +1,96 @@
+---
+title: "accept_migration"
+description: "Accepts a pending plan migration. Cancels the old subscription and creates a new one on the target plan."
+---
+
+```rust
+fn accept_migration(env: Env, subscriber: Address, sub_id: u64) -> u64
+```
+
+Accepts a pending migration for a subscription. This cancels the old subscription, creates a new subscription on the target plan, and sets a fresh token allowance for the new plan's terms. Returns the new subscription ID.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
+| `sub_id` | `u64` | The old subscription ID with a pending migration. |
+
+---
+
+## Authorization
+
+```rust
+subscriber.require_auth();
+```
+
+Only the subscriber on the subscription can accept the migration. The subscriber's signature covers the `accept_migration()` call, the old subscription cancellation, and the new `token.approve()` for the target plan.
+
+---
+
+## Return value
+
+`u64` — the new subscription ID on the target plan.
+
+---
+
+## Events emitted
+
+| Event | Topics | Data |
+|-------|--------|------|
+| `mig_accept` | `subscriber`, `old_sub_id`, `new_sub_id` | Migration details |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 9 | `Unauthorized` | Caller is not the subscriber on this subscription. |
+| 12 | `NoMigrationPending` | No migration has been requested for this subscription. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    // Accept the pending migration
+    const tx = await client.buildAcceptMigration(
+      "GSUBSCRIBER...ADDR",   // Subscriber's address
+      oldSubscriptionId        // Old subscription ID
+    );
+
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    console.log("New subscription ID:", result.subscriptionId);
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source SUBSCRIBER_SECRET \
+      -- \
+      accept_migration \
+      --subscriber GSUBSCRIBER...ADDR \
+      --sub_id 1
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+  The new subscription inherits the subscriber's billing history context but starts fresh on the new plan's terms. The old subscription is permanently cancelled. The new allowance is calculated based on the new plan's `price_ceiling` and `max_periods`.
+</Info>

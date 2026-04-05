@@ -1,0 +1,272 @@
+---
+title: "Deployment Guide"
+description: "Step-by-step guide to building, deploying, and initializing the Vowena smart contract on Stellar's Soroban platform — for both testnet and mainnet."
+---
+
+## Prerequisites
+
+<Info>
+  Before deploying Vowena, ensure you have the following installed:
+
+  - **Rust** (latest stable) — [rustup.rs](https://rustup.rs)
+  - **wasm32 target** — `rustup target add wasm32-unknown-unknown`
+  - **Stellar CLI** — `cargo install stellar-cli` or via [Stellar docs](https://developers.stellar.org/docs/tools/cli)
+  - A funded Stellar account (testnet faucet or mainnet XLM for fees)
+</Info>
+
+---
+
+## Build and Deploy
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/vowena/vowena.git
+    cd vowena
+    ```
+  </Step>
+
+  <Step title="Build the WASM binary">
+    Compile the Soroban smart contract to WebAssembly:
+
+    ```bash
+    stellar contract build
+    ```
+
+    This produces the optimized WASM binary at `target/wasm32v1-none/release/vowena.wasm`.
+
+    <Tip>
+      The compiled WASM is approximately **18.5 KB** — well within Soroban's size limits. The contract exports **17 functions**.
+    </Tip>
+  </Step>
+
+  <Step title="Deploy to the network">
+    <Tabs>
+      <Tab title="Testnet">
+        ```bash
+        stellar contract deploy \
+          --wasm target/wasm32v1-none/release/vowena.wasm \
+          --network testnet \
+          --source $YOUR_SECRET_KEY
+        ```
+
+        This returns the **contract ID** — save it. You will need it for every subsequent interaction.
+
+        ```
+        # Example output:
+        # CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
+        ```
+      </Tab>
+      <Tab title="Mainnet">
+        ```bash
+        stellar contract deploy \
+          --wasm target/wasm32v1-none/release/vowena.wasm \
+          --network mainnet \
+          --source $YOUR_SECRET_KEY
+        ```
+
+        <Warning>
+          Mainnet deployment costs real XLM. Ensure your account is funded and double-check the WASM binary before deploying. Contract upgrades are possible but require the admin key.
+        </Warning>
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Initialize the contract">
+    After deployment, initialize the contract with an admin address:
+
+    <Tabs>
+      <Tab title="Testnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network testnet \
+          --source $YOUR_SECRET_KEY \
+          -- initialize \
+          --admin $ADMIN_ADDRESS
+        ```
+      </Tab>
+      <Tab title="Mainnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network mainnet \
+          --source $YOUR_SECRET_KEY \
+          -- initialize \
+          --admin $ADMIN_ADDRESS
+        ```
+      </Tab>
+    </Tabs>
+
+    <Note>
+      The admin address is used only for TTL management (`extend_ttl`). It cannot access funds, modify plans, or interfere with subscriptions. See [Security](/protocol/security) for details.
+    </Note>
+  </Step>
+
+  <Step title="Verify the deployment">
+    Confirm the contract is live by calling a read-only function:
+
+    <Tabs>
+      <Tab title="Testnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network testnet \
+          -- get_plan \
+          --plan_id 1
+        ```
+      </Tab>
+      <Tab title="Mainnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network mainnet \
+          -- get_plan \
+          --plan_id 1
+        ```
+      </Tab>
+    </Tabs>
+
+    This should return an error like `Plan not found` — which confirms the contract is deployed and responding. No plans exist yet because none have been created.
+  </Step>
+
+  <Step title="Create your first plan">
+    Test the full flow by creating a plan:
+
+    <Tabs>
+      <Tab title="Testnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network testnet \
+          --source $YOUR_SECRET_KEY \
+          -- create_plan \
+          --merchant $MERCHANT_ADDRESS \
+          --token $USDC_TOKEN_ADDRESS \
+          --amount 100000000 \
+          --period 2592000 \
+          --trial_periods 0 \
+          --max_periods 12 \
+          --grace_period 259200 \
+          --price_ceiling 150000000
+        ```
+      </Tab>
+      <Tab title="Mainnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network mainnet \
+          --source $YOUR_SECRET_KEY \
+          -- create_plan \
+          --merchant $MERCHANT_ADDRESS \
+          --token $USDC_TOKEN_ADDRESS \
+          --amount 100000000 \
+          --period 2592000 \
+          --trial_periods 0 \
+          --max_periods 12 \
+          --grace_period 259200 \
+          --price_ceiling 150000000
+        ```
+      </Tab>
+    </Tabs>
+
+    <Tip>
+      On testnet, you can get test USDC from the [Stellar testnet faucet](https://laboratory.stellar.org). Use the test token address for the `--token` parameter.
+    </Tip>
+  </Step>
+</Steps>
+
+---
+
+## Testing
+
+The Vowena contract includes a comprehensive test suite:
+
+```bash
+cargo test
+```
+
+<AccordionGroup>
+  <Accordion title="Test coverage">
+    The test suite includes **29 tests** covering:
+
+    - Plan creation and validation
+    - Subscription lifecycle (create, cancel, expire)
+    - Billing flow (charge, trial periods, grace periods)
+    - Failed charge handling and pre-check logic
+    - Migration request, accept, and reject flows
+    - Refund processing
+    - TTL extension
+    - Edge cases (double charge, early charge, unauthorized access)
+  </Accordion>
+  <Accordion title="Running specific tests">
+    ```bash
+    # Run a specific test
+    cargo test test_charge_flow
+
+    # Run with output
+    cargo test -- --nocapture
+
+    # Run only billing tests
+    cargo test billing
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Contract Specifications
+
+| Property | Value |
+|---|---|
+| WASM size | ~18.5 KB |
+| Exported functions | 17 |
+| Storage types | Instance + Persistent |
+| Token standard | SEP-41 (SAC) |
+| Soroban SDK | Latest stable |
+
+---
+
+## Environment Variables Reference
+
+For convenience, set these in your shell when working with the contract:
+
+```bash
+# Contract ID (set after deployment)
+export CONTRACT_ID="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+
+# Your Stellar secret key
+export YOUR_SECRET_KEY="S..."
+
+# Admin address
+export ADMIN_ADDRESS="G..."
+
+# Merchant address
+export MERCHANT_ADDRESS="G..."
+
+# USDC token contract (testnet)
+export USDC_TOKEN_ADDRESS="CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
+```
+
+<Warning>
+  Never commit secret keys to version control. Use environment variables or a secrets manager. The values above are examples only.
+</Warning>
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="TypeScript SDK" icon="npm" href="/sdk/installation">
+    Install the SDK and start building integrations.
+  </Card>
+  <Card title="Keeper Setup" icon="robot" href="/dashboard/keeper-setup">
+    Set up a keeper bot to automate billing.
+  </Card>
+  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+    Complete reference for every contract function.
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/protocol/overview">
+    Review the contract architecture and data models.
+  </Card>
+</CardGroup>

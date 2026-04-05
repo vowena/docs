@@ -1,0 +1,168 @@
+---
+title: "Installation & Setup"
+description: "Install the Vowena TypeScript SDK, configure your client for testnet or mainnet, and explore all available exports."
+---
+
+## Install the SDK
+
+<CodeGroup>
+  ```bash npm
+  npm install vowena
+  ```
+
+  ```bash yarn
+  yarn add vowena
+  ```
+
+  ```bash pnpm
+  pnpm add vowena
+  ```
+
+  ```bash bun
+  bun add vowena
+  ```
+</CodeGroup>
+
+<Info>
+  The SDK requires **Node.js 18+** and has a peer dependency on `@stellar/stellar-sdk ^15.0.1`. If your project doesn't already include it, install it alongside:
+
+  ```bash
+  npm install vowena @stellar/stellar-sdk
+  ```
+</Info>
+
+---
+
+## Create a Client
+
+The `VowenaClient` is the main entry point for all contract interactions. It builds transactions locally — you sign and submit them with your own wallet or keypair.
+
+```typescript
+import { VowenaClient, NETWORKS } from "vowena";
+
+const client = new VowenaClient({
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+});
+```
+
+---
+
+## Network Configuration
+
+The SDK ships with pre-configured network constants via the `NETWORKS` object.
+
+<Tabs>
+  <Tab title="Testnet">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+    ```
+
+    | Property | Value |
+    | --- | --- |
+    | `rpcUrl` | `https://soroban-testnet.stellar.org` |
+    | `networkPassphrase` | `Test SDF Network ; September 2015` |
+    | `contractId` | Pre-deployed testnet contract |
+    | `usdcAddress` | Testnet USDC token contract |
+  </Tab>
+  <Tab title="Mainnet">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+    });
+    ```
+
+    | Property | Value |
+    | --- | --- |
+    | `rpcUrl` | `https://soroban.stellar.org` |
+    | `networkPassphrase` | `Public Global Stellar Network ; September 2015` |
+    | `contractId` | Production mainnet contract |
+    | `usdcAddress` | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI` |
+  </Tab>
+  <Tab title="Custom RPC">
+    ```typescript
+    import { VowenaClient } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: "CABC...XYZ",
+      rpcUrl: "https://your-rpc.example.com",
+      networkPassphrase: "Test SDF Network ; September 2015",
+    });
+    ```
+
+    Use a custom configuration when you want to connect to a private RPC provider or a locally deployed contract.
+  </Tab>
+</Tabs>
+
+---
+
+## Exports
+
+### Classes & Functions
+
+```typescript
+import {
+  VowenaClient,        // Main client for all contract interactions
+  toStroops,           // Convert human-readable amount to stroops (bigint)
+  fromStroops,         // Convert stroops (bigint) to human-readable string
+  getEvents,           // Fetch contract events from Soroban RPC
+  VowenaEventPoller,   // Continuous event polling class
+  NETWORKS,            // Pre-configured network constants
+  USDC_DECIMALS,       // 7
+  SECONDS_PER_DAY,     // 86400
+  SECONDS_PER_MONTH,   // 2592000
+  SECONDS_PER_YEAR,    // 31536000
+} from "vowena";
+```
+
+### Types
+
+```typescript
+import type {
+  Plan,                  // On-chain plan data
+  Subscription,          // On-chain subscription data
+  SubscriptionStatus,    // "active" | "paused" | "cancelled" | "expired"
+  CreatePlanParams,      // Parameters for buildCreatePlan()
+  VowenaClientOptions,   // Constructor options for VowenaClient
+  TransactionResult,     // Result from submitTransaction()
+  VowenaEvent,           // Parsed contract event
+  EventPollerOptions,    // Constructor options for VowenaEventPoller
+} from "vowena";
+```
+
+---
+
+## Requirements
+
+| Dependency | Version |
+| --- | --- |
+| Node.js | 18+ |
+| `@stellar/stellar-sdk` | `^15.0.1` |
+
+<Tip>
+  The SDK is a lightweight wrapper that builds Soroban transactions. It does **not** hold private keys or sign transactions — that is handled by your wallet integration (e.g., Freighter, Albedo, or a raw `Keypair`).
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Client Reference" icon="code" href="/sdk/client">
+    Full API reference for every VowenaClient method.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Build a complete subscription lifecycle in 5 minutes.
+  </Card>
+</CardGroup>

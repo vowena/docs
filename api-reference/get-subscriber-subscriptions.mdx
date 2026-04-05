@@ -1,0 +1,79 @@
+---
+title: "get_subscriber_subscriptions"
+description: "Returns all subscription IDs for a subscriber. Read-only — no signature required."
+---
+
+```rust
+fn get_subscriber_subscriptions(env: Env, subscriber: Address) -> Vec<u64>
+```
+
+Returns a vector of all subscription IDs associated with the given subscriber address. This includes subscriptions in any status — `Active`, `Paused`, `Cancelled`, and `Expired`. This is a read-only function — no transaction signature is required.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `subscriber` | `Address` | The subscriber's Stellar address. |
+
+---
+
+## Authorization
+
+None. This is a read-only query.
+
+---
+
+## Return value
+
+`Vec<u64>` — a list of subscription IDs for the subscriber. Returns an empty vector if the subscriber has no subscriptions.
+
+---
+
+## Error cases
+
+None. Returns an empty vector if the subscriber has no subscriptions.
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    const subIds = await client.getSubscriberSubscriptions("GSUBSCRIBER...ADDR");
+    console.log("Subscription IDs:", subIds); // e.g., [1, 3, 7]
+
+    // Fetch full details and filter active ones
+    for (const subId of subIds) {
+      const sub = await client.getSubscription(subId);
+      if (sub.status === "Active") {
+        console.log(`Sub ${subId}: plan ${sub.planId}, next billing ${new Date(sub.nextBillingTime * 1000)}`);
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      -- \
+      get_subscriber_subscriptions \
+      --subscriber GSUBSCRIBER...ADDR
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  This returns all subscriptions regardless of status. To display only active subscriptions in your UI, filter the results by checking each subscription's `status` field via [`get_subscription`](/api-reference/get-subscription).
+</Tip>

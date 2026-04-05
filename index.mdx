@@ -1,97 +1,116 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Vowena"
+description: "The first trustless recurring payment protocol on Stellar. On-chain subscriptions powered by Soroban smart contracts and USDC."
 ---
 
-## Setting up
+<Frame>
+  <div style={{ textAlign: "center", padding: "2rem 0" }}>
+    <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>Vowena</h1>
+    <p style={{ fontSize: "1.25rem", opacity: 0.8 }}>The first trustless recurring payment protocol on Stellar</p>
+  </div>
+</Frame>
 
-Get your documentation site up and running in minutes.
+Create subscription plans, authorize recurring billing, and charge subscribers — all on-chain, all trustless, all in USDC. No intermediaries. No custodial risk. One signature from the subscriber covers every future payment.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
+<Card title="Get started in 5 minutes" icon="rocket" href="/quickstart" horizontal>
+  Install the SDK, create a plan, subscribe, and charge — all in a single quickstart guide.
 </Card>
 
-## Make it yours
+---
 
-Design a docs site that looks great and empowers your users.
+## Who is Vowena for?
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={3}>
+  <Card title="For Merchants" icon="store">
+    Create subscription plans on-chain. Set your price, billing period, trial length, and grace period. Receive USDC directly — no payment processor, no chargebacks, no middlemen.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="For Subscribers" icon="user-shield">
+    Approve a subscription with one wallet signature. Know exactly what you're authorizing — token, amount ceiling, and duration — all visible on-chain. Cancel anytime, directly from any Stellar wallet.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="For Developers" icon="code">
+    Integrate recurring payments into any Stellar dApp with the TypeScript SDK. Build keeper bots, subscription dashboards, or analytics tools on top of a fully permissionless protocol.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+</CardGroup>
+
+---
+
+## Protocol Features
+
+<CardGroup cols={3}>
+  <Card title="On-chain Billing" icon="link">
+    Every subscription, charge, and cancellation is a Soroban transaction. Full transparency and auditability with no off-chain state.
+  </Card>
+  <Card title="Price Protection" icon="shield-halved">
+    Subscribers set a price ceiling at signup. Merchants can never charge above it without explicit re-authorization.
+  </Card>
+  <Card title="Permissionless Charging" icon="bolt">
+    Anyone can call `charge()`. Merchants, keepers, or third-party bots — the protocol validates everything on-chain.
+  </Card>
+  <Card title="Grace Periods" icon="clock">
+    If a charge fails (insufficient balance), the subscriber gets a configurable grace window to top up before the subscription pauses.
+  </Card>
+  <Card title="Free Trials" icon="gift">
+    Built-in trial period support. Subscribers activate immediately but aren't charged until the trial ends.
+  </Card>
+  <Card title="Plan Migrations" icon="arrow-right-arrow-left">
+    Merchants can migrate subscribers from old plans to new ones. Subscribers must explicitly accept — no silent changes.
+  </Card>
+</CardGroup>
+
+---
+
+## Why Stellar?
+
+<Columns cols={3}>
+  <Card title="$0.00001 per tx" icon="coins">
+    Stellar transactions cost a fraction of a cent. Running a subscription protocol is economically viable even at massive scale.
+  </Card>
+  <Card title="5-second finality" icon="gauge-high">
+    Transactions confirm in ~5 seconds. Charges settle instantly — no waiting for block confirmations.
+  </Card>
+  <Card title="Native USDC" icon="dollar-sign">
+    Circle issues USDC natively on Stellar. No bridging, no wrapping — real stablecoin payments from day one.
   </Card>
 </Columns>
 
-## Create beautiful pages
+<Tip>
+  Stellar's Soroban smart contract platform provides the SEP-41 token interface, which includes the `approve` / `transfer_from` pattern that makes pull-based billing possible without custodial wallets.
+</Tip>
 
-Everything you need to create world-class documentation.
+---
+
+## Explore the Docs
+
+<CardGroup cols={2}>
+  <Card title="Protocol" icon="book" href="/protocol/overview">
+    Deep dive into the smart contract architecture, data models, and billing mechanics.
+  </Card>
+  <Card title="TypeScript SDK" icon="npm" href="/sdk/installation">
+    Install the SDK, build transactions, listen to events, and run a keeper bot.
+  </Card>
+  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+    Complete reference for every contract function — parameters, return types, and error codes.
+  </Card>
+  <Card title="Dashboard" icon="gauge" href="/dashboard/overview">
+    Manage plans, view subscribers, trigger charges, and monitor billing from the Vowena dashboard.
+  </Card>
+</CardGroup>
+
+---
+
+## Quick Links
 
 <Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+  <Card title="Core Concepts" icon="lightbulb" href="/concepts">
+    Understand plans, subscriptions, token allowances, keepers, and the billing lifecycle.
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="How It Works" icon="diagram-project" href="/how-it-works">
+    Visual step-by-step walkthrough of the full subscription flow from plan creation to cancellation.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
+  <Card title="FAQ" icon="circle-question" href="/faq">
+    Answers to the most common questions about Vowena, security, pricing, and compatibility.
   </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="GitHub" icon="github" href="https://github.com/vowena">
+    View the source code, report issues, and contribute to the protocol.
   </Card>
 </Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>

@@ -1,0 +1,181 @@
+---
+title: "Migrations"
+description: "How Vowena handles plan changes with explicit subscriber consent — the migration system that prevents silent price increases and protects consumers."
+---
+
+## Why Migrations Exist
+
+In traditional payment systems, a merchant can silently change your subscription price. Your credit card gets charged a new amount, and you may not notice until you check your statement. Some services bury price-change notices in emails. Others change terms retroactively.
+
+Vowena makes this structurally impossible.
+
+<Check>
+  **A merchant cannot raise prices above the ceiling without explicit subscriber consent.** The migration system enforces this at the smart contract level — not through a policy, not through a terms of service, but through code that cannot be bypassed.
+</Check>
+
+Plans are immutable (except for the amount within the ceiling). If a merchant needs to change the billing period, raise the price above the ceiling, switch tokens, or alter any other structural parameter, they must:
+
+1. Create a **new plan** with the new terms
+2. **Request** that subscribers migrate
+3. Wait for each subscriber to **accept or reject**
+
+---
+
+## Migration Flow
+
+<Steps>
+  <Step title="Merchant creates a new plan">
+    The merchant calls `create_plan` with the new pricing, period, or other terms. This is a completely independent plan with its own ID.
+
+    ```typescript
+    const newPlanId = await client.createPlan({
+      merchant: merchantKeypair.publicKey(),
+      token: USDC_CONTRACT_ID,
+      amount: 15_0000000n,        // New price: 15 USDC
+      period: 2592000n,
+      trial_periods: 0,
+      max_periods: 12,
+      grace_period: 259200n,
+      price_ceiling: 20_0000000n, // New ceiling
+    });
+    ```
+  </Step>
+
+  <Step title="Merchant requests migration">
+    The merchant calls `request_migration(old_plan_id, new_plan_id)`. The contract:
+
+    - Verifies `merchant.require_auth()`
+    - Confirms both plans belong to the same merchant
+    - Confirms the new plan is active
+    - Iterates through all **active** subscriptions on the old plan
+    - Sets `migration_target = new_plan_id` on each subscription
+    - Emits `MigrationRequested` with the count of affected subscriptions
+
+    ```typescript
+    await client.requestMigration({
+      merchant: merchantKeypair.publicKey(),
+      old_plan_id: 1n,
+      new_plan_id: 2n,
+    });
+    ```
+
+    <Note>
+      This step does **not** change the subscription status or stop billing. Subscriptions on the old plan continue to be charged at the old price until the subscriber acts.
+    </Note>
+  </Step>
+
+  <Step title="Subscribers see the migration">
+    Each affected subscriber will see `migration_target != 0` on their subscription. The [Vowena Dashboard](/dashboard/subscriber-guide) shows a banner prompting action. Keeper bots and SDK event listeners can trigger notifications.
+
+    The subscriber can view the new plan's terms — including the new price, ceiling, and period — before deciding.
+  </Step>
+
+  <Step title="Subscriber accepts or rejects">
+    The subscriber has two choices:
+
+    <Tabs>
+      <Tab title="Accept migration">
+        The subscriber calls `accept_migration(sub_id)`. The contract:
+
+        1. Cancels the old subscription (sets status to `Cancelled`, records `cancelled_at`)
+        2. Creates a **new subscription** on the new plan
+        3. Calls `token.approve()` with the new plan's ceiling and periods (subscriber signs for this)
+        4. Emits `MigrationAccepted` with old and new subscription IDs
+
+        The subscriber's wallet shows the new approval amount, making the price change fully transparent.
+
+        ```typescript
+        await client.acceptMigration({
+          subscriber: subscriberKeypair.publicKey(),
+          sub_id: 42n,
+        });
+        ```
+      </Tab>
+      <Tab title="Reject migration">
+        The subscriber calls `reject_migration(sub_id)`. The contract:
+
+        1. Clears `migration_target` back to `0`
+        2. The subscription continues on the old plan at the old price, unchanged
+
+        ```typescript
+        await client.rejectMigration({
+          subscriber: subscriberKeypair.publicKey(),
+          sub_id: 42n,
+        });
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+---
+
+## Consumer Protection Guarantees
+
+<CardGroup cols={2}>
+  <Card title="No silent changes" icon="eye">
+    <Check>
+      Every price change requires a new plan, a migration request, and explicit subscriber acceptance. The subscriber sees the new price in their wallet before signing.
+    </Check>
+  </Card>
+  <Card title="Right to refuse" icon="hand">
+    <Check>
+      Rejecting a migration has zero consequences. The subscription continues at the original price on the original plan. The merchant cannot force the change.
+    </Check>
+  </Card>
+  <Card title="No disruption during migration" icon="plug">
+    <Check>
+      The old subscription keeps billing normally while the migration is pending. There is no gap in service, no "pending" state that blocks charges.
+    </Check>
+  </Card>
+  <Card title="Transparent on-chain" icon="link">
+    <Check>
+      Both the old and new plan are visible on-chain. Anyone can compare the terms. The `MigrationRequested` event links the two plans publicly.
+    </Check>
+  </Card>
+</CardGroup>
+
+---
+
+## Comparison with Traditional Systems
+
+| Aspect | Traditional (Credit Card) | Vowena |
+|---|---|---|
+| Price increase notice | Email (often buried) | On-chain migration request, wallet prompt |
+| Subscriber action needed | Often opt-out (charged by default) | Opt-in (must explicitly accept) |
+| Time pressure | "Changes take effect in 30 days" | No deadline — old plan continues indefinitely |
+| Auditability | Statement after the fact | All terms visible on-chain before accepting |
+| Enforcement | Consumer protection law (varies by country) | Smart contract code (global, deterministic) |
+
+<Warning>
+  Merchants should communicate migrations through their own channels (email, in-app notifications) in addition to the on-chain mechanism. While the protocol ensures subscribers can always check on-chain, good UX means proactively informing users about upcoming changes.
+</Warning>
+
+---
+
+## What Happens if No One Accepts?
+
+If every subscriber rejects the migration, they all stay on the old plan. The merchant can:
+
+- Continue operating the old plan at the old price
+- Deactivate the old plan (stops new sign-ups but existing subscriptions continue)
+- Let subscriptions naturally expire via `max_periods`
+
+The merchant **cannot** force-cancel subscriptions or stop billing to coerce migration.
+
+<Check>
+  The protocol is structurally designed so that the power asymmetry between merchant and subscriber is inverted compared to traditional systems. The subscriber always has the final say.
+</Check>
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Refunds" icon="rotate-left" href="/protocol/refunds">
+    How merchants issue partial or full refunds on-chain.
+  </Card>
+  <Card title="Security" icon="shield" href="/protocol/security">
+    The full consumer protection model and security architecture.
+  </Card>
+</CardGroup>

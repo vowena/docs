@@ -1,0 +1,117 @@
+---
+title: "subscribe"
+description: "Subscribes to a billing plan by setting a token allowance and creating a new on-chain subscription."
+---
+
+```rust
+fn subscribe(env: Env, subscriber: Address, plan_id: u64) -> u64
+```
+
+Subscribes a user to an existing plan. This function creates the subscription record and sets the SEP-41 token allowance in a single transaction — the subscriber signs once and both operations are authorized.
+
+Returns the auto-incremented `sub_id`.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
+| `plan_id` | `u64` | The ID of the plan to subscribe to. |
+
+---
+
+## Authorization
+
+```rust
+subscriber.require_auth();
+```
+
+The subscriber's single signature covers both the `subscribe()` contract call **and** the nested `token.approve()` call. Soroban's auth tree bundles both operations into one authorization.
+
+<Tip>
+  The subscriber signs once. Their wallet will display exactly what is being authorized: the Vowena contract call and the token allowance (amount = `price_ceiling * periods`, spender = Vowena contract). No hidden permissions — full transparency.
+</Tip>
+
+---
+
+## Allowance calculation
+
+The contract calculates the token allowance as:
+
+```
+allowance = price_ceiling * periods_for_approval
+```
+
+- If `max_periods > 0`: `periods_for_approval = max_periods`
+- If `max_periods = 0` (unlimited): `periods_for_approval = 120`
+- Allowance expiry is capped at **6,000,000 ledgers** (~347 days)
+
+The allowance is set against the plan's `price_ceiling`, not the current `amount`. This means the merchant can adjust pricing within the ceiling without requiring re-authorization.
+
+---
+
+## Return value
+
+`u64` — the newly created subscription ID.
+
+---
+
+## Events emitted
+
+| Event | Topics | Data |
+|-------|--------|------|
+| `sub_created` | `subscriber`, `sub_id`, `plan_id` | `Subscription` struct |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 6 | `PlanNotFound` | No plan exists with the given `plan_id`. |
+| 7 | `PlanInactive` | The plan is not accepting new subscribers. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    const tx = await client.buildSubscribe(
+      "GSUBSCRIBER...ADDR",  // Subscriber's address
+      1                       // Plan ID
+    );
+
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    console.log("Subscription ID:", result.subscriptionId);
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source SUBSCRIBER_SECRET \
+      -- \
+      subscribe \
+      --subscriber GSUBSCRIBER...ADDR \
+      --plan_id 1
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  If the plan has trial periods, the subscription starts immediately but billing begins after the trial ends. The `next_billing_time` is set to `now + (period * (trial_periods + 1))` so the first real charge happens after the trial.
+</Note>

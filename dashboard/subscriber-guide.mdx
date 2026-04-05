@@ -1,0 +1,135 @@
+---
+title: "Subscriber Guide"
+description: "Manage all your Vowena subscriptions from one dashboard. View billing history, handle plan migrations, and cancel any subscription with a single click."
+---
+
+The Vowena Dashboard gives subscribers a single place to manage every on-chain subscription across all merchants. No more hunting through transaction history — everything is in one view.
+
+<Steps>
+  <Step title="Connect Your Wallet">
+    Visit [app.vowena.xyz](https://app.vowena.xyz) and click **Connect Wallet**. Approve the connection in Freighter (or your Stellar wallet).
+
+    Your wallet address is your identity. The dashboard queries the Vowena contract for every subscription tied to your address and displays them automatically. There is no signup form and no profile to fill out.
+
+    <Tip>
+      Make sure your wallet is connected to the correct network — Testnet for testing, Mainnet for real subscriptions. The dashboard detects the network from your wallet.
+    </Tip>
+  </Step>
+
+  <Step title="View Your Subscriptions">
+    The **Universal Subscription Manager** is your home screen. It shows every Vowena subscription you hold — across all merchants, all plans, all statuses.
+
+    Each subscription card displays:
+    - **Merchant** — The merchant's wallet address (and name, if they set one in the dashboard)
+    - **Amount** — How much you're charged per period (e.g., 9.99 USDC)
+    - **Billing period** — Weekly, monthly, quarterly, annual, or custom
+    - **Status** — Active, Paused, Cancelled, or Expired
+    - **Next billing date** — When the next charge will be attempted
+    - **Total paid** — Cumulative amount charged across all periods
+
+    <Check>
+      The Universal Subscription Manager works independently of any merchant's infrastructure. Even if a merchant's website goes offline, your subscriptions are still visible and manageable here because the data comes from the blockchain.
+    </Check>
+  </Step>
+
+  <Step title="Review Billing History">
+    Click any subscription card to expand its full billing history. Every event is recorded:
+
+    - **Successful charges** — Amount, period number, and timestamp
+    - **Failed charges** — Amount, failure reason (insufficient balance or expired allowance), and timestamp
+    - **Refunds** — Amount refunded by the merchant and timestamp
+    - **Status changes** — When the subscription went from Active to Paused, or was reactivated
+
+    The history is sourced from on-chain events indexed by the dashboard. Every entry corresponds to a real Soroban transaction that you can verify on a block explorer.
+
+    <Check>
+      You can never be charged more than the price ceiling you approved at subscription time. This is enforced by the smart contract — not by the dashboard, not by the merchant, and not by any off-chain system.
+    </Check>
+  </Step>
+
+  <Step title="Handle Migrations">
+    When a merchant updates their plan and requests a migration, you'll see a **migration banner** on the affected subscription.
+
+    The banner shows a side-by-side comparison:
+
+    | | Current Plan | New Plan |
+    |---|---|---|
+    | Amount | 9.99 USDC | 12.99 USDC |
+    | Period | Monthly | Monthly |
+    | Price Ceiling | 14.99 USDC | 19.99 USDC |
+
+    You have two options:
+
+    - **Accept** — The dashboard builds a transaction that subscribes you to the new plan with a new token allowance. Freighter will show you exactly what you're approving. Your old subscription is cancelled and the new one begins.
+    - **Reject** — You stay on your current plan with no changes. The merchant cannot force a migration.
+
+    <Check>
+      Migrations are always opt-in. A merchant can request a migration, but only you can authorize the new allowance. If you reject, your current subscription continues unchanged at the original price.
+    </Check>
+  </Step>
+
+  <Step title="Cancel a Subscription">
+    To cancel, click the **Cancel** button on any active subscription card. The dashboard builds a `cancel` transaction and prompts you to sign it in Freighter.
+
+    Once signed and confirmed on-chain, the cancellation is immediate and irreversible. The subscription status changes to Cancelled and no further charges can be made.
+
+    <Warning>
+      Cancellation is permanent. There is no "pause" option from the subscriber side. If you want to resubscribe later, you'll need to create a new subscription to the merchant's plan.
+    </Warning>
+
+    <Check>
+      You do not need the merchant's permission to cancel. The smart contract allows the subscriber to cancel at any time, unconditionally. This is a protocol-level guarantee.
+    </Check>
+  </Step>
+</Steps>
+
+---
+
+## What If the Merchant Disappears?
+
+One of the core benefits of on-chain subscriptions is that you are never locked in. If a merchant's website goes down, their dashboard stops working, or they simply vanish:
+
+<AccordionGroup>
+  <Accordion title="Use the Universal Subscription Manager">
+    The Vowena Dashboard at [app.vowena.xyz](https://app.vowena.xyz) indexes all subscriptions from the blockchain. It works independently of any merchant. Connect your wallet and cancel any subscription directly.
+  </Accordion>
+  <Accordion title="Use a Block Explorer">
+    Find the Vowena contract on any Stellar block explorer (e.g., [stellar.expert](https://stellar.expert) or [stellarchain.io](https://stellarchain.io)). Locate your subscription and invoke the `cancel` function with your wallet address and subscription ID.
+  </Accordion>
+  <Accordion title="Use the Soroban CLI">
+    Cancel directly from the command line:
+
+    ```bash
+    soroban contract invoke \
+      --id CVOWENA_CONTRACT_ID \
+      --source YOUR_SECRET_KEY \
+      --network testnet \
+      -- cancel \
+      --caller YOUR_PUBLIC_KEY \
+      --sub_id YOUR_SUBSCRIPTION_ID
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Check>
+  No single point of failure can trap you in a subscription. The contract is permissionless — any Stellar tool that can invoke Soroban contracts can cancel your subscription. The Vowena Dashboard is a convenience, not a requirement.
+</Check>
+
+---
+
+## Subscriber Protections Summary
+
+<Columns cols={2}>
+  <Card title="Price Ceiling" icon="shield-halved">
+    You approve a maximum charge amount at subscription time. The merchant can never exceed it without your explicit re-authorization via a migration.
+  </Card>
+  <Card title="Cancel Anytime" icon="xmark">
+    One-click cancellation, immediate and on-chain. No merchant approval needed. No cancellation fees. No waiting period.
+  </Card>
+  <Card title="Full Transparency" icon="eye">
+    Every charge, failure, and status change is an on-chain event. Your billing history is publicly auditable on the Stellar ledger.
+  </Card>
+  <Card title="No Lock-in" icon="lock-open">
+    Cancel from the Vowena Dashboard, any block explorer, or the Soroban CLI. You are never dependent on a merchant's infrastructure.
+  </Card>
+</Columns>

@@ -1,0 +1,102 @@
+---
+title: "request_migration"
+description: "Requests migration of all subscribers from one plan to another. Subscribers must individually accept or reject."
+---
+
+```rust
+fn request_migration(env: Env, merchant: Address, old_plan_id: u64, new_plan_id: u64)
+```
+
+Initiates a migration from an old plan to a new plan. This sets the `migration_target` field on all active subscriptions under the old plan. Each subscriber must individually call [`accept_migration`](/api-reference/accept-migration) or [`reject_migration`](/api-reference/reject-migration) — the migration is never automatic.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `merchant` | `Address` | The merchant's Stellar address. Must own both plans. |
+| `old_plan_id` | `u64` | The plan ID to migrate subscribers from. |
+| `new_plan_id` | `u64` | The plan ID to migrate subscribers to. |
+
+---
+
+## Authorization
+
+```rust
+merchant.require_auth();
+```
+
+The merchant must own both the old and new plans.
+
+---
+
+## Return value
+
+None (`void`).
+
+---
+
+## Events emitted
+
+| Event | Topics | Data |
+|-------|--------|------|
+| `mig_req` | `old_plan_id`, `new_plan_id` | Migration details |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 11 | `MerchantMismatch` | The old and new plans belong to different merchants. |
+| 7 | `PlanInactive` | The new plan is not active. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    // Migrate all subscribers from plan 1 to plan 2
+    const tx = await client.buildRequestMigration(
+      "GMERCHANT...ADDR",   // Merchant's address
+      1,                     // Old plan ID
+      2                      // New plan ID
+    );
+
+    const signedXdr = await signTransaction(tx);
+    await client.submitTransaction(signedXdr);
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source MERCHANT_SECRET \
+      -- \
+      request_migration \
+      --merchant GMERCHANT...ADDR \
+      --old_plan_id 1 \
+      --new_plan_id 2
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Requesting a migration does not move anyone. It sets a pending flag on each subscription. Subscribers can continue to be billed on the old plan until they explicitly accept or reject. This ensures subscribers always have full control.
+</Note>
+
+<Tip>
+  Migrations are the correct way to handle price changes that exceed the `price_ceiling`. Create a new plan with the new pricing, then request a migration. Subscribers who accept will get a new allowance set against the new ceiling.
+</Tip>

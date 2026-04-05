@@ -1,0 +1,99 @@
+---
+title: "cancel"
+description: "Cancels a subscription immediately and irreversibly. Can be called by the subscriber or the merchant."
+---
+
+```rust
+fn cancel(env: Env, caller: Address, sub_id: u64)
+```
+
+Cancels a subscription. Cancellation is **immediate and irreversible** — the subscription status is set to `Cancelled` and no further charges can be processed. Either the subscriber or the merchant who owns the plan can cancel.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `caller` | `Address` | The address initiating the cancellation. Must be the subscriber or the merchant. |
+| `sub_id` | `u64` | The subscription ID to cancel. |
+
+---
+
+## Authorization
+
+```rust
+caller.require_auth();
+```
+
+The `caller` must be either:
+- The **subscriber** on the subscription, or
+- The **merchant** on the plan the subscription belongs to.
+
+Any other caller will fail with `Unauthorized`.
+
+---
+
+## Return value
+
+None (`void`).
+
+---
+
+## Events emitted
+
+| Event | Topics | Data |
+|-------|--------|------|
+| `sub_cancel` | `subscriber`, `sub_id` | `cancelled_at` timestamp |
+
+---
+
+## Error cases
+
+| Code | Name | Description |
+|------|------|-------------|
+| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
+| 9 | `Unauthorized` | Caller is neither the subscriber nor the merchant. |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    // Subscriber cancels their own subscription
+    const tx = await client.buildCancel(
+      "GSUBSCRIBER...ADDR",   // Subscriber or merchant address
+      subscriptionId           // Subscription ID
+    );
+
+    const signedXdr = await signTransaction(tx);
+    await client.submitTransaction(signedXdr);
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source SUBSCRIBER_SECRET \
+      -- \
+      cancel \
+      --caller GSUBSCRIBER...ADDR \
+      --sub_id 1
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Cancellation does not issue a refund. If the merchant wants to refund remaining time, they should call [`refund()`](/api-reference/refund) separately. The token allowance remains on-chain but becomes irrelevant since the contract will never call `transfer_from` on a cancelled subscription.
+</Note>

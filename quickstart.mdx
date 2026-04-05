@@ -1,80 +1,251 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Go from zero to a working subscription in 5 minutes. Install the SDK, create a plan, subscribe, charge, and cancel."
 ---
 
-## Get started in three steps
+Get a complete subscription lifecycle running on Stellar testnet in under 5 minutes.
 
-Get your documentation site running locally and make your first customization.
+<Info>
+  This guide uses the Vowena TypeScript SDK. You'll need Node.js 18+ and a Stellar testnet account with USDC. You can get testnet USDC from the [Stellar Laboratory](https://laboratory.stellar.org/).
+</Info>
 
-### Step 1: Set up your local environment
+<Steps>
+  <Step title="Install the SDK">
+    Add the Vowena SDK to your project.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    <CodeGroup>
+      ```bash npm
+      npm install vowena
+      ```
 
-### Step 2: Deploy your changes
+      ```bash yarn
+      yarn add vowena
+      ```
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+      ```bash pnpm
+      pnpm add vowena
+      ```
+    </CodeGroup>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    <Tip>
+      The SDK is a lightweight wrapper around the Vowena Soroban contract. It builds transactions locally — you sign and submit them with your own wallet or keypair.
+    </Tip>
+  </Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+  <Step title="Create a Client">
+    Initialize the `VowenaClient` with your network configuration.
 
-### Step 3: Go live
+    <Tabs>
+      <Tab title="Testnet">
+        ```typescript
+        import { VowenaClient, NETWORKS } from "vowena";
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+        const client = new VowenaClient({
+          contractId: NETWORKS.testnet.contractId,
+          rpcUrl: NETWORKS.testnet.rpcUrl,
+          networkPassphrase: NETWORKS.testnet.networkPassphrase,
+        });
+        ```
+      </Tab>
+      <Tab title="Mainnet">
+        ```typescript
+        import { VowenaClient, NETWORKS } from "vowena";
 
-## Next steps
+        const client = new VowenaClient({
+          contractId: NETWORKS.mainnet.contractId,
+          rpcUrl: NETWORKS.mainnet.rpcUrl,
+          networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+        });
+        ```
+      </Tab>
+      <Tab title="Custom RPC">
+        ```typescript
+        import { VowenaClient } from "vowena";
 
-Now that you have your docs running, explore these key features:
+        const client = new VowenaClient({
+          contractId: "CABC...XYZ",
+          rpcUrl: "https://your-rpc.example.com",
+          networkPassphrase: "Test SDF Network ; September 2015",
+        });
+        ```
+      </Tab>
+    </Tabs>
+
+    <Note>
+      `NETWORKS.testnet` provides pre-configured values for `contractId`, `rpcUrl`, `networkPassphrase`, and `usdcAddress` so you don't need to look them up.
+    </Note>
+  </Step>
+
+  <Step title="Create a Plan (Merchant)">
+    Define a subscription plan. This is an on-chain transaction that stores the plan parameters permanently.
+
+    ```typescript
+    import { toStroops, NETWORKS } from "vowena";
+
+    // Build the create_plan transaction
+    const tx = await client.buildCreatePlan({
+      merchant: "GMERCHANT...ADDR",        // Merchant's Stellar address
+      token: NETWORKS.testnet.usdcAddress,  // USDC token contract
+      amount: toStroops("9.99"),            // 9.99 USDC per period → 99900000n
+      period: 2_592_000,                    // 30 days in seconds
+      priceCeiling: toStroops("14.99"),     // Max price before re-auth needed
+      trialPeriods: 1,                      // 1 free billing period
+      maxPeriods: 0,                        // 0 = unlimited
+      gracePeriod: 259_200,                 // 3 days grace on failed charges
+    });
+
+    // Sign with your wallet and submit
+    const signedXdr = await signTransaction(tx); // Your wallet integration
+    const result = await client.submitTransaction(signedXdr);
+    console.log("Plan created! ID:", result.planId);
+    ```
+
+    <Warning>
+      Plans are immutable once created. If you need to change pricing, create a new plan and use the migration flow to move existing subscribers.
+    </Warning>
+
+    <Accordion title="What does toStroops do?">
+      `toStroops("9.99")` converts a human-readable amount to the 7-decimal-place integer format used by Stellar tokens. It returns a `BigInt`:
+
+      ```typescript
+      toStroops("9.99")   // → 99900000n
+      toStroops("1.00")   // → 10000000n
+      toStroops("0.50")   // → 5000000n
+      ```
+
+      USDC on Stellar uses 7 decimal places (stroops), matching the native XLM precision.
+    </Accordion>
+  </Step>
+
+  <Step title="Subscribe (Subscriber)">
+    A subscriber authorizes the plan. This single transaction calls `subscribe()` on the Vowena contract **and** sets the SEP-41 token allowance — one signature covers both.
+
+    ```typescript
+    // Build the subscribe transaction
+    const tx = await client.buildSubscribe(
+      "GSUBSCRIBER...ADDR",  // Subscriber's Stellar address
+      planId                  // Plan ID from step 3
+    );
+
+    // Subscriber signs and submits
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    console.log("Subscribed! Subscription ID:", result.subscriptionId);
+    ```
+
+    <Tip>
+      The subscriber's wallet will display exactly what is being approved: the token (USDC), the spending ceiling (price_ceiling from the plan), and the contract authorized to pull funds. Full transparency — no hidden permissions.
+    </Tip>
+  </Step>
+
+  <Step title="Charge (Keeper / Anyone)">
+    Once a billing period has elapsed, **anyone** can trigger the charge. The contract validates all conditions on-chain.
+
+    ```typescript
+    // Build the charge transaction
+    const tx = await client.buildCharge(
+      "GCALLER...ADDR",  // Address of whoever is calling (can be anyone)
+      subscriptionId      // Subscription ID from step 4
+    );
+
+    // Sign and submit
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    console.log("Charged! Period:", result.periodNumber);
+    ```
+
+    The contract checks:
+    - <Check /> Is the subscription active?
+    - <Check /> Has enough time passed since the last charge?
+    - <Check /> Is the trial period over?
+    - <Check /> Does the subscriber have sufficient balance and allowance?
+    - <Check /> Has the max period limit been reached?
+
+    If all checks pass, USDC is transferred from the subscriber directly to the merchant via `transfer_from()`.
+
+    <Info>
+      You don't need to run your own keeper. The [Vowena Dashboard](/dashboard/keeper-setup) includes a built-in keeper service, or you can use third-party keeper networks.
+    </Info>
+  </Step>
+
+  <Step title="Cancel">
+    Either the subscriber **or** the merchant can cancel a subscription at any time.
+
+    ```typescript
+    // Build the cancel transaction
+    const tx = await client.buildCancel(
+      "GSUBSCRIBER...ADDR",  // Subscriber or merchant address
+      subscriptionId          // Subscription ID
+    );
+
+    // Sign and submit
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    console.log("Cancelled! Subscription:", subscriptionId);
+    ```
+
+    <Note>
+      Cancellation is **immediate and on-chain**. No approval from the merchant is needed. The subscriber can also cancel directly through any Stellar wallet or block explorer that supports Soroban contract invocations — the Vowena frontend is not required.
+    </Note>
+  </Step>
+</Steps>
+
+---
+
+## Full Example
+
+Here's the complete flow in a single script:
+
+```typescript
+import { VowenaClient, NETWORKS, toStroops } from "vowena";
+
+const client = new VowenaClient({
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+});
+
+// 1. Merchant creates a plan
+const createTx = await client.buildCreatePlan({
+  merchant: "GMERCHANT...ADDR",
+  token: NETWORKS.testnet.usdcAddress,
+  amount: toStroops("9.99"),
+  period: 2_592_000,
+  priceCeiling: toStroops("14.99"),
+  trialPeriods: 1,
+  maxPeriods: 12,
+  gracePeriod: 259_200,
+});
+const planResult = await client.submitTransaction(await sign(createTx));
+
+// 2. Subscriber subscribes
+const subTx = await client.buildSubscribe("GSUB...ADDR", planResult.planId);
+const subResult = await client.submitTransaction(await sign(subTx));
+
+// 3. After billing period elapses, anyone charges
+const chargeTx = await client.buildCharge("GKEEPER...ADDR", subResult.subscriptionId);
+await client.submitTransaction(await sign(chargeTx));
+
+// 4. Subscriber cancels when they want
+const cancelTx = await client.buildCancel("GSUB...ADDR", subResult.subscriptionId);
+await client.submitTransaction(await sign(cancelTx));
+```
+
+---
+
+## Next Steps
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Core Concepts" icon="lightbulb" href="/concepts">
+    Understand plans, subscriptions, allowances, and the billing lifecycle in depth.
+  </Card>
+  <Card title="How It Works" icon="diagram-project" href="/how-it-works">
+    Visual walkthrough of the full protocol flow — from plan creation to cancellation.
+  </Card>
+  <Card title="SDK Reference" icon="npm" href="/sdk/client">
+    Complete SDK documentation with all methods, types, and configuration options.
+  </Card>
+  <Card title="Run a Keeper" icon="robot" href="/sdk/keeper">
+    Set up an automated keeper bot to charge subscriptions on schedule.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

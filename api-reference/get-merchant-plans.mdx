@@ -1,0 +1,73 @@
+---
+title: "get_merchant_plans"
+description: "Returns all plan IDs belonging to a merchant. Read-only — no signature required."
+---
+
+```rust
+fn get_merchant_plans(env: Env, merchant: Address) -> Vec<u64>
+```
+
+Returns a vector of all plan IDs created by the given merchant address. This is a read-only function — no transaction signature is required.
+
+---
+
+## Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `merchant` | `Address` | The merchant's Stellar address. |
+
+---
+
+## Authorization
+
+None. This is a read-only query.
+
+---
+
+## Return value
+
+`Vec<u64>` — a list of plan IDs belonging to the merchant. Returns an empty vector if the merchant has no plans.
+
+---
+
+## Error cases
+
+None. Returns an empty vector if the merchant has no plans.
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    const planIds = await client.getMerchantPlans("GMERCHANT...ADDR");
+    console.log("Plan IDs:", planIds); // e.g., [1, 2, 5]
+
+    // Fetch full details for each plan
+    for (const planId of planIds) {
+      const plan = await client.getPlan(planId);
+      console.log(`Plan ${planId}: ${plan.amount} stroops, active: ${plan.active}`);
+    }
+    ```
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      -- \
+      get_merchant_plans \
+      --merchant GMERCHANT...ADDR
+    ```
+  </Tab>
+</Tabs>

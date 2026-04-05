@@ -1,0 +1,152 @@
+---
+title: "Refunds"
+description: "How merchants issue on-chain refunds in Vowena — partial refunds, verifiable receipts, and the refund flow from the merchant's own funds."
+---
+
+## How Refunds Work
+
+Vowena supports on-chain refunds initiated by the merchant. When a merchant issues a refund, they are transferring their **own funds** back to the subscriber. The contract never holds funds — refunds are a direct merchant-to-subscriber transfer recorded on-chain.
+
+<Info>
+  Refunds in Vowena are **voluntary**. The protocol does not force refunds on cancellation. Merchants decide when and how much to refund based on their own policies. The protocol provides the mechanism and the verifiable receipt.
+</Info>
+
+---
+
+## Refund Flow
+
+<Steps>
+  <Step title="Merchant calls refund">
+    The merchant calls `refund(sub_id, amount)` with the subscription ID and the amount to refund.
+  </Step>
+  <Step title="Authorization">
+    The contract calls `merchant.require_auth()` — confirming the caller is the plan's merchant. Only the merchant who owns the plan can issue refunds for subscriptions on that plan.
+  </Step>
+  <Step title="Token transfer">
+    The contract calls `token.transfer(merchant, subscriber, amount)`. This is a direct transfer from the merchant's wallet to the subscriber's wallet. The contract acts as the executor but never holds the tokens.
+  </Step>
+  <Step title="Event emitted">
+    A `RefundIssued` event is emitted with `sub_id`, `plan_id`, and `amount`. This creates a permanent, verifiable on-chain receipt of the refund.
+  </Step>
+</Steps>
+
+<Warning>
+  The merchant must have sufficient token balance to cover the refund. If the merchant's wallet does not have enough tokens, the transaction will revert. The contract does not escrow funds for potential refunds.
+</Warning>
+
+---
+
+## Partial Refunds
+
+Refunds support **any amount** — there is no requirement to refund the full billing amount. Common scenarios:
+
+| Scenario | Refund Amount | Example |
+|---|---|---|
+| Full period refund | `plan.amount` | Subscriber cancels mid-cycle, merchant refunds the last charge |
+| Partial refund | Any `i128 > 0` | Pro-rated refund for unused days in a billing period |
+| Goodwill credit | Any `i128 > 0` | Merchant issues a credit for service disruption |
+| Multi-period refund | `plan.amount * N` | Merchant refunds multiple past periods |
+
+<Tip>
+  There is no on-chain enforcement of refund limits. A merchant could refund more than was ever charged. The `amount` parameter accepts any positive value. Business logic around refund policies should be handled at the application layer.
+</Tip>
+
+---
+
+## Code Examples
+
+<CodeGroup>
+```typescript TypeScript SDK
+import { VowenaClient } from "vowena";
+
+const client = new VowenaClient({ contractId, networkPassphrase, rpcUrl });
+
+// Full refund of one period (10 USDC with 7 decimals)
+const tx = await client.refund({
+  merchant: merchantKeypair.publicKey(),
+  sub_id: 42n,
+  amount: 10_0000000n,
+});
+
+// Partial refund (3.50 USDC)
+const partialTx = await client.refund({
+  merchant: merchantKeypair.publicKey(),
+  sub_id: 42n,
+  amount: 3_5000000n,
+});
+```
+
+```bash Stellar CLI
+# Full refund
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network testnet \
+  -- refund \
+  --merchant $MERCHANT_ADDRESS \
+  --sub_id 42 \
+  --amount 100000000
+
+# Partial refund (3.50 USDC)
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network testnet \
+  -- refund \
+  --merchant $MERCHANT_ADDRESS \
+  --sub_id 42 \
+  --amount 35000000
+```
+</CodeGroup>
+
+---
+
+## Verifiable Receipts
+
+Every refund emits a `RefundIssued` event that serves as a permanent, publicly verifiable receipt:
+
+```json
+{
+  "type": "RefundIssued",
+  "topics": ["sub_id: 42", "plan_id: 1"],
+  "data": {
+    "amount": 100000000
+  }
+}
+```
+
+<Columns cols={2}>
+  <Card title="For subscribers" icon="receipt">
+    The refund is visible in their wallet's transaction history and can be independently verified by querying the Stellar ledger. No "refund pending" ambiguity.
+  </Card>
+  <Card title="For merchants" icon="file-invoice">
+    The on-chain event serves as an immutable accounting record. Integrate with the [SDK event listener](/sdk/events) to sync refunds to your accounting system.
+  </Card>
+</Columns>
+
+---
+
+## Key Properties
+
+<AccordionGroup>
+  <Accordion title="Refunds do not affect subscription status">
+    Issuing a refund does not cancel, pause, or otherwise change the subscription. The subscription continues in whatever state it was in. If the merchant wants to cancel after refunding, they should instruct the subscriber to call `cancel()`.
+  </Accordion>
+  <Accordion title="Refunds are not reversible">
+    Once the token transfer executes, it is final. There is no "undo refund" function. This is a direct on-chain transfer with immediate settlement.
+  </Accordion>
+  <Accordion title="Multiple refunds per subscription">
+    A merchant can issue multiple refunds for the same subscription. Each one is a separate transaction with its own event. There is no lifetime refund cap enforced by the contract.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Security" icon="shield" href="/protocol/security">
+    Understand the full security model and consumer protection guarantees.
+  </Card>
+  <Card title="Billing" icon="credit-card" href="/protocol/billing">
+    See how charges work and why the pre-check mechanism matters.
+  </Card>
+</CardGroup>

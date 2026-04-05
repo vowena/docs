@@ -1,0 +1,163 @@
+---
+title: "Event Polling"
+description: "Listen to on-chain Vowena events using getEvents() for one-off queries or VowenaEventPoller for continuous real-time monitoring."
+---
+
+The Vowena contract emits events for every significant state change — plan creation, charges, cancellations, migrations, and more. The SDK provides two ways to consume these events.
+
+---
+
+## getEvents
+
+Fetches events from the Soroban RPC in a single request. Useful for one-off queries or building your own polling loop.
+
+```typescript
+import { getEvents } from "vowena";
+
+const { events, latestLedger } = await getEvents(
+  "https://soroban-testnet.stellar.org",
+  "CABC...CONTRACT",
+  12345678,  // startLedger
+  100        // limit (optional)
+);
+
+for (const event of events) {
+  console.log(event.type, event.ledger, event.data);
+}
+```
+
+**Signature:**
+
+```typescript
+function getEvents(
+  rpcUrl: string,
+  contractId: string,
+  startLedger: number,
+  limit?: number
+): Promise<{ events: VowenaEvent[]; latestLedger: number }>;
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `rpcUrl` | `string` | Yes | Soroban RPC endpoint URL |
+| `contractId` | `string` | Yes | Vowena contract address |
+| `startLedger` | `number` | Yes | Ledger sequence to start fetching from |
+| `limit` | `number` | No | Maximum number of events to return |
+
+**Returns:** `Promise<{ events: VowenaEvent[], latestLedger: number }>`
+
+---
+
+## VowenaEvent
+
+Every event returned by `getEvents` or the poller follows this shape:
+
+```typescript
+interface VowenaEvent {
+  type: string;        // Event type identifier (e.g., "charge_ok", "sub_created")
+  ledger: number;      // Ledger sequence where the event was emitted
+  timestamp: number;   // Unix timestamp of the ledger
+  contractId: string;  // Contract that emitted the event
+  topics: unknown[];   // Raw event topics
+  data: unknown;       // Parsed event data
+}
+```
+
+---
+
+## VowenaEventPoller
+
+For continuous monitoring, use `VowenaEventPoller`. It polls the RPC at a configurable interval and invokes your callback for each new event.
+
+```typescript
+import { VowenaEventPoller } from "vowena";
+
+const poller = new VowenaEventPoller({
+  contractId: "C...",
+  rpcUrl: "https://soroban-testnet.stellar.org",
+  onEvent: (event) => console.log(event.type, event.data),
+  intervalMs: 5000,
+});
+
+await poller.start();
+
+// Later, when you want to stop:
+poller.stop();
+```
+
+**Constructor options:**
+
+```typescript
+interface EventPollerOptions {
+  contractId: string;
+  rpcUrl: string;
+  onEvent: (event: VowenaEvent) => void;
+  intervalMs?: number;    // Polling interval in ms (default: 5000)
+  startLedger?: number;   // Ledger to start from (default: latest)
+}
+```
+
+| Option | Type | Required | Description |
+| --- | --- | --- | --- |
+| `contractId` | `string` | Yes | Vowena contract address |
+| `rpcUrl` | `string` | Yes | Soroban RPC endpoint URL |
+| `onEvent` | `(event: VowenaEvent) => void` | Yes | Callback invoked for each event |
+| `intervalMs` | `number` | No | Polling interval in milliseconds (default: 5000) |
+| `startLedger` | `number` | No | Ledger to begin polling from (default: latest ledger at start) |
+
+**Methods:**
+
+| Method | Description |
+| --- | --- |
+| `await poller.start()` | Begin polling. Resolves once the first poll completes. |
+| `poller.stop()` | Stop polling. Safe to call multiple times. |
+
+---
+
+## Event Types
+
+The Vowena contract emits the following event types:
+
+| Event Type | Emitted When |
+| --- | --- |
+| `plan_created` | A new subscription plan is created |
+| `plan_updated` | A plan's amount is updated |
+| `sub_created` | A subscriber subscribes to a plan |
+| `charge_ok` | A charge succeeds and USDC is transferred |
+| `charge_fail` | A charge attempt fails (e.g., insufficient balance) |
+| `sub_cancel` | A subscription is cancelled |
+| `sub_paused` | A subscription is paused due to failed charges exceeding the grace period |
+| `sub_expired` | A subscription reaches its maximum period limit |
+| `sub_react` | A paused subscription is reactivated |
+| `refund` | A merchant issues a refund |
+| `mig_req` | A merchant requests plan migration |
+| `mig_accept` | A subscriber accepts a migration |
+| `mig_reject` | A subscriber rejects a migration |
+
+---
+
+## Example: Logging All Charges
+
+```typescript
+import { VowenaEventPoller, NETWORKS } from "vowena";
+
+const poller = new VowenaEventPoller({
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  onEvent: (event) => {
+    if (event.type === "charge_ok") {
+      console.log(`Charge succeeded at ledger ${event.ledger}`, event.data);
+    }
+    if (event.type === "charge_fail") {
+      console.warn(`Charge failed at ledger ${event.ledger}`, event.data);
+    }
+  },
+  intervalMs: 10_000,
+});
+
+await poller.start();
+```
+
+<Note>
+  Soroban RPC retains events for a limited window (typically the last ~24 hours of ledgers). For production use, persist events to your own database and use the `startLedger` option to resume from where you left off. The Vowena Dashboard includes a built-in event indexer that handles this automatically.
+</Note>

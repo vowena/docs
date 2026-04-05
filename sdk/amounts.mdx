@@ -1,0 +1,145 @@
+---
+title: "Amount Conversion"
+description: "Convert between human-readable USDC amounts and on-chain stroops. Understand USDC decimal precision and the helper constants provided by the SDK."
+---
+
+## Stroops and USDC Precision
+
+USDC on Stellar uses **7 decimal places**. The smallest unit is called a **stroop**:
+
+```
+1 USDC = 10,000,000 stroops
+```
+
+All on-chain amounts are stored and transmitted as stroops represented by `bigint` values. The SDK provides two helper functions to convert between human-readable strings and stroops.
+
+<Tip>
+  Why stroops? Floating-point arithmetic introduces rounding errors that are unacceptable for financial transactions. By using integer math with `bigint`, every calculation is exact — no precision loss, no rounding surprises.
+</Tip>
+
+---
+
+## toStroops
+
+Converts a human-readable amount string to a `bigint` in stroops.
+
+```typescript
+import { toStroops } from "vowena";
+
+const amount = toStroops("9.99");
+// → 99900000n
+```
+
+**Signature:**
+
+```typescript
+function toStroops(amount: string): bigint;
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `amount` | `string` | Human-readable decimal amount (e.g., `"9.99"`, `"100"`, `"0.0000001"`) |
+
+**Returns:** `bigint` — The amount in stroops.
+
+---
+
+## fromStroops
+
+Converts a `bigint` in stroops back to a human-readable string.
+
+```typescript
+import { fromStroops } from "vowena";
+
+const display = fromStroops(99900000n);
+// → "9.99"
+```
+
+**Signature:**
+
+```typescript
+function fromStroops(stroops: bigint): string;
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `stroops` | `bigint` | Amount in stroops |
+
+**Returns:** `string` — Human-readable decimal string.
+
+---
+
+## Conversion Table
+
+| Human-Readable | Stroops (`bigint`) | Usage |
+| --- | --- | --- |
+| `"0.01"` | `100000n` | Minimum practical charge |
+| `"0.50"` | `5000000n` | Micro-subscription |
+| `"1.00"` | `10000000n` | 1 USDC |
+| `"4.99"` | `49900000n` | Starter plan |
+| `"9.99"` | `99900000n` | Standard monthly plan |
+| `"14.99"` | `149900000n` | Premium plan |
+| `"29.99"` | `299900000n` | Professional plan |
+| `"99.99"` | `999900000n` | Enterprise plan |
+| `"0.0000001"` | `1n` | One stroop (smallest unit) |
+
+---
+
+## Constants
+
+The SDK exports several constants for common values:
+
+```typescript
+import {
+  USDC_DECIMALS,
+  SECONDS_PER_DAY,
+  SECONDS_PER_MONTH,
+  SECONDS_PER_YEAR,
+} from "vowena";
+```
+
+| Constant | Value | Description |
+| --- | --- | --- |
+| `USDC_DECIMALS` | `7` | Number of decimal places for USDC on Stellar |
+| `SECONDS_PER_DAY` | `86400` | Seconds in one day |
+| `SECONDS_PER_MONTH` | `2592000` | Seconds in 30 days |
+| `SECONDS_PER_YEAR` | `31536000` | Seconds in 365 days |
+
+<Note>
+  These time constants are the same values used by the Vowena smart contract. Use them when setting `period` and `gracePeriod` in `buildCreatePlan()` to stay consistent with on-chain conventions.
+</Note>
+
+---
+
+## Examples
+
+### Creating a Plan with Correct Amounts
+
+```typescript
+import { VowenaClient, NETWORKS, toStroops, SECONDS_PER_MONTH } from "vowena";
+
+const client = new VowenaClient({
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+});
+
+const xdr = await client.buildCreatePlan({
+  merchant: "GMERCHANT...ADDR",
+  token: NETWORKS.testnet.usdcAddress,
+  amount: toStroops("9.99"),          // 99900000n
+  period: SECONDS_PER_MONTH,          // 2592000
+  priceCeiling: toStroops("14.99"),   // 149900000n
+  gracePeriod: SECONDS_PER_DAY * 3,   // 259200 (3 days)
+});
+```
+
+### Displaying a Subscription Price
+
+```typescript
+import { fromStroops } from "vowena";
+
+const plan = await client.getPlan(42, callerAddress);
+const priceDisplay = `$${fromStroops(plan.amount)} USDC / month`;
+// → "$9.99 USDC / month"
+```

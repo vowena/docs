@@ -1,0 +1,162 @@
+---
+title: "FAQ"
+description: "Frequently asked questions about the Vowena protocol"
+---
+
+## General
+
+<AccordionGroup>
+  <Accordion title="What blockchain is Vowena on?">
+    Vowena runs on **Stellar** via **Soroban**, Stellar's smart contract platform. Stellar offers ~$0.00001 transaction fees, 5-second finality, and native USDC support — making on-chain subscriptions economically viable for the first time.
+  </Accordion>
+
+  <Accordion title="What tokens are supported?">
+    Vowena supports any **SEP-41 compliant token** on Stellar. This includes USDC (the primary target), EURC, and any Stellar Asset Contract (SAC) token. Each plan specifies its billing token at creation time.
+  </Accordion>
+
+  <Accordion title="How much does a transaction cost?">
+    Stellar transactions cost approximately **$0.00001 USD**. This makes it practical to charge subscriptions as frequently as daily or even hourly without fees eating into the payment amount.
+  </Accordion>
+
+  <Accordion title="Is Vowena a single contract or multiple contracts?">
+    Vowena is a **single Soroban smart contract** deployed once on Stellar. All merchants share the same contract instance — plans and subscriptions are differentiated by on-chain data, not by separate deployments. This means one deployment serves the entire ecosystem.
+  </Accordion>
+
+  <Accordion title="Is the contract upgradeable?">
+    The contract has an **admin address** set during initialization that could be used for upgrades via Soroban's standard upgrade mechanism. The admin cannot access subscriber funds — the contract holds permission to pull funds, not the funds themselves.
+  </Accordion>
+
+  <Accordion title="What wallets are supported?">
+    The Vowena dashboard supports **Freighter** as the primary wallet. The SDK works with any Stellar wallet that supports Soroban transaction signing, including Freighter, xBull, Albedo, and WalletConnect-compatible wallets.
+  </Accordion>
+</AccordionGroup>
+
+## For Subscribers
+
+<AccordionGroup>
+  <Accordion title="Can the merchant raise prices without my consent?">
+    **No.** Merchants can only adjust prices within the **price ceiling** you agreed to when subscribing. Any change beyond the ceiling requires creating a new plan and explicitly requesting your migration — you see the new price in your wallet and must approve it. This is stronger consumer protection than any traditional payment system.
+  </Accordion>
+
+  <Accordion title="What happens if I don't have enough balance?">
+    Your subscription enters a **grace period** (defined by the merchant, typically 30 days). During this window, billing retries on each `charge()` call. If you fund your wallet during the grace period, the next charge succeeds and billing resumes normally. If the grace period expires, your subscription transitions to **Paused**. If it remains paused for another billing period, it becomes **Cancelled**.
+  </Accordion>
+
+  <Accordion title="Can I cancel anytime?">
+    **Yes.** You can cancel any subscription instantly by calling `cancel()` on the contract. This can be done through:
+    - The Vowena dashboard (one-click cancel)
+    - The Universal Subscription Manager
+    - Any Soroban block explorer
+    - The Stellar CLI directly
+
+    Cancellation is immediate and irreversible. The remaining token allowance is not consumed.
+  </Accordion>
+
+  <Accordion title="What's the difference between Paused and Cancelled?">
+    | Status | Meaning | Can recover? |
+    |--------|---------|-------------|
+    | **Paused** | Billing failed and grace period expired. | Yes — call `reactivate()` to re-approve allowance and resume. |
+    | **Cancelled** | Terminated by you, the merchant, or auto-cancelled after extended pause. | No — cancellation is irreversible. You'd need to create a new subscription. |
+  </Accordion>
+
+  <Accordion title="What happens if the merchant's app shuts down?">
+    Your money is **never held by the contract**. The contract holds a *permission* to pull funds, not the funds themselves. Four layers protect you:
+
+    <Steps>
+      <Step title="Direct on-chain cancellation">
+        The `cancel()` function is public. Call it from any block explorer or Soroban transaction builder. No frontend needed.
+      </Step>
+      <Step title="Universal Subscription Manager">
+        A standalone page in the Vowena dashboard where any wallet holder can see and cancel all their Vowena subscriptions, regardless of which merchant created them.
+      </Step>
+      <Step title="Auto-expiry">
+        If a plan has `max_periods`, the subscription expires automatically when that count is reached.
+      </Step>
+      <Step title="Allowance expiration">
+        The token allowance itself has an expiration ledger on Soroban. Even if you do nothing, the allowance eventually expires and the contract can no longer pull funds.
+      </Step>
+    </Steps>
+  </Accordion>
+
+  <Accordion title="How do free trials work?">
+    Plans can include a `trial_periods` count. During trial periods, the `charge()` function advances the period counter but **does not transfer any tokens**. When the trial ends, normal billing begins. If you cancel during the trial, you are never charged.
+  </Accordion>
+
+  <Accordion title="How do migrations work?">
+    When a merchant wants to change pricing:
+    1. They create a **new plan** with the new price
+    2. They call `request_migration()` — your subscription gets flagged as "migration pending"
+    3. You see the migration in the dashboard with old vs new price compared
+    4. You **accept** (signs new allowance at new price) or **reject** (stay on current plan at current price)
+
+    You are never silently moved to a higher price. Period.
+  </Accordion>
+</AccordionGroup>
+
+## For Merchants
+
+<AccordionGroup>
+  <Accordion title="What is the price ceiling?">
+    The price ceiling is the **maximum amount** you can adjust a plan's billing to without requiring subscriber re-authorization. For example, if you create a plan at $9.99/month with a $14.99 ceiling, you can raise the price up to $14.99 using `update_plan_amount()` — subscribers continue billing at the new amount without needing to re-approve. Beyond the ceiling, you must create a new plan and migrate subscribers.
+
+    <Tip>Set the ceiling thoughtfully. Too low limits your flexibility. Too high may deter subscribers who see the maximum possible charge in their wallet approval.</Tip>
+  </Accordion>
+
+  <Accordion title="Can merchants refund subscribers?">
+    **Yes.** Call `refund(sub_id, amount)` to transfer tokens from your wallet back to the subscriber. The merchant authorizes the transfer (it's your own funds). Partial refunds are supported — specify any amount. The refund is recorded on-chain as a `RefundIssued` event, creating a verifiable receipt.
+  </Accordion>
+
+  <Accordion title="What is a keeper?">
+    A keeper is any script, bot, or person that calls the `charge()` function for due subscriptions. The function is **permissionless** — anyone can call it, but only the merchant receives the payment. Options:
+    - **Dashboard keeper**: Built-in auto-billing in the Vowena dashboard
+    - **Standalone bot**: Run the keeper from `sdk/keeper/`
+    - **Your own**: Build custom billing logic using the SDK
+    - **Third-party**: Anyone can run a keeper service
+
+    The keeper pays the transaction fee (~$0.00001) but the subscription payment goes entirely to the merchant.
+  </Accordion>
+
+  <Accordion title="Can I run my own keeper?">
+    **Yes.** The standalone keeper bot lives at `sdk/keeper/src/index.ts`. Configure it with your contract ID and a funded Stellar keypair, then run it on a schedule. See the [Keeper Setup guide](/dashboard/keeper-setup) for details.
+  </Accordion>
+
+  <Accordion title="How does the Universal Subscription Manager affect me?">
+    It doesn't change anything about your billing. The Universal Subscription Manager simply gives subscribers a way to view and manage their subscriptions independently of your app. Since `cancel()` is a public contract function anyway, this just provides a better UX for it. Transparent cancellation builds subscriber trust.
+  </Accordion>
+</AccordionGroup>
+
+## Technical
+
+<AccordionGroup>
+  <Accordion title="Why does charge() pre-check balance and allowance?">
+    This is a critical design decision. In Soroban, if `transfer_from()` panics (insufficient balance or allowance), the **entire transaction reverts** — including any state changes the contract made before the call. This means the contract couldn't record `failed_at` or emit a `ChargeFailed` event.
+
+    By checking `token.balance()` and `token.allowance()` *before* calling `transfer_from()`, the contract can:
+    - Record the failure timestamp (`failed_at`)
+    - Emit a `ChargeFailed` event
+    - Return `false` gracefully
+    - Trigger the grace period state machine
+
+    Without the pre-check, a failed charge would be invisible to the system.
+  </Accordion>
+
+  <Accordion title="How does the single-signature auth tree work?">
+    When a subscriber calls `subscribe()`, the contract internally calls `token.approve()`. In Soroban's authorization model, sub-contract calls that require the same caller's auth are bundled into an **auth tree**. The subscriber's wallet sees both authorizations (the contract call and the token approval) and signs them as a single transaction. One signature, two authorizations.
+  </Accordion>
+
+  <Accordion title="What are the contract's storage limits?">
+    The contract uses:
+    - **Instance storage** (shared, limited): admin address, plan/subscription ID counters
+    - **Persistent storage** (per-entry, restorable): each plan, each subscription, and index vectors (merchant→plans, subscriber→subs, plan→subs)
+
+    Each plan and subscription is its own persistent storage entry, which works well with Soroban's parallelism model. TTLs are extended to ~120 days on write, with a ~30 day renewal threshold.
+  </Accordion>
+
+  <Accordion title="What if a persistent entry gets archived?">
+    Soroban's restore mechanism allows archived entries to be brought back. Subscription and plan data is **never permanently lost** — it can always be restored by paying the restoration fee. The `extend_ttl()` function exists to proactively prevent archival.
+  </Accordion>
+
+  <Accordion title="How large is the contract?">
+    The compiled WASM is **18.5 KB** with 17 exported functions and 29 passing tests. It's a single, self-contained contract with no external dependencies beyond the SEP-41 token interface.
+  </Accordion>
+</AccordionGroup>

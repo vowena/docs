@@ -1,0 +1,171 @@
+---
+title: "Architecture Overview"
+description: "Deep dive into Vowena's single-contract architecture, storage strategy, data models, TTL management, and event system on Soroban."
+---
+
+## Single Contract, Shared by All
+
+Vowena is a **single smart contract** deployed once on Stellar's Soroban platform. Every merchant, every plan, and every subscription lives inside the same contract instance. There are no separate deployments per merchant — plans and subscriptions are differentiated by their on-chain data, not by contract addresses.
+
+<Info>
+  This design means one contract address to integrate, one set of events to index, and one deployment to maintain. Merchants share infrastructure while retaining full isolation of their data.
+</Info>
+
+---
+
+## Storage Strategy
+
+Soroban offers multiple storage types with different cost and lifetime characteristics. Vowena uses two:
+
+<Columns cols={2}>
+  <Card title="Instance Storage" icon="database">
+    **Shared across the contract.** Stores global state that every invocation may need: the admin address and auto-incrementing counters (`NextPlanId`, `NextSubId`). Instance storage lives as long as the contract instance itself.
+  </Card>
+  <Card title="Persistent Storage" icon="hard-drive">
+    **One entry per entity.** Each plan, subscription, and index is its own persistent ledger entry. This is critical for Soroban's parallel execution model — transactions touching different plans or subscriptions never contend on the same storage key.
+  </Card>
+</Columns>
+
+<Tip>
+  Because each plan and subscription is a separate persistent entry, Soroban can execute charges for different subscriptions in parallel across validators. This is a deliberate design choice for scalability.
+</Tip>
+
+---
+
+## Data Models
+
+### DataKey Enum
+
+Every storage entry is keyed by a variant of the `DataKey` enum:
+
+```rust
+#[contracttype]
+pub enum DataKey {
+    Admin,                          // Instance — admin address
+    NextPlanId,                     // Instance — u64 counter
+    NextSubId,                      // Instance — u64 counter
+    Plan(u64),                      // Persistent — one per plan
+    Sub(u64),                       // Persistent — one per subscription
+    MerchantPlans(Address),         // Persistent — Vec<u64> of plan IDs
+    SubscriberSubs(Address),        // Persistent — Vec<u64> of sub IDs
+    PlanSubs(u64),                  // Persistent — Vec<u64> of sub IDs per plan
+}
+```
+
+### Plan Struct
+
+A plan defines the billing terms that a merchant offers. Once created, plans are immutable except for the `amount` field (within the ceiling).
+
+```rust
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Plan {
+    pub id: u64,              // Unique auto-incremented identifier
+    pub merchant: Address,    // Merchant who created the plan
+    pub token: Address,       // SAC token address (e.g., USDC)
+    pub amount: i128,         // Amount charged per period
+    pub period: u64,          // Billing period in seconds
+    pub trial_periods: u32,   // Number of free trial periods (0 = no trial)
+    pub max_periods: u32,     // Maximum billing periods (0 = unlimited)
+    pub grace_period: u64,    // Grace window in seconds after failed charge
+    pub price_ceiling: i128,  // Maximum amount the merchant can ever set
+    pub created_at: u64,      // Ledger timestamp at creation
+    pub active: bool,         // Whether the plan accepts new subscribers
+}
+```
+
+### Subscription Struct
+
+A subscription links a subscriber to a plan and tracks billing state.
+
+```rust
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Subscription {
+    pub id: u64,                     // Unique auto-incremented identifier
+    pub plan_id: u64,                // The plan this subscription belongs to
+    pub subscriber: Address,         // Subscriber's wallet address
+    pub status: SubscriptionStatus,  // Current lifecycle state
+    pub created_at: u64,             // Ledger timestamp at creation
+    pub periods_billed: u32,         // Number of periods successfully charged
+    pub next_billing_time: u64,      // Timestamp when next charge is due
+    pub failed_at: u64,              // Timestamp of last failed charge (0 = none)
+    pub migration_target: u64,       // Target plan ID for pending migration (0 = none)
+    pub cancelled_at: u64,           // Timestamp of cancellation (0 = not cancelled)
+}
+```
+
+### SubscriptionStatus Enum
+
+```rust
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub enum SubscriptionStatus {
+    Active,     // Subscription is live and billable
+    Paused,     // Grace period expired — charge failed, awaiting resolution
+    Cancelled,  // Permanently cancelled by subscriber or system
+    Expired,    // Max periods reached — natural end of subscription
+}
+```
+
+---
+
+## TTL Management
+
+Soroban ledger entries have a **time-to-live (TTL)** and can be archived if not extended. Vowena manages TTLs to keep data available:
+
+| Storage Type | Threshold | Extend To | Approximate Duration |
+|---|---|---|---|
+| **Persistent** (plans, subs, indexes) | ~30 days | ~120 days | Entries are extended when accessed; archived entries can be restored |
+| **Instance** (admin, counters) | ~30 days | ~90 days | Extended on every contract invocation |
+
+<Note>
+  If a persistent entry is archived (e.g., a very old subscription no one has touched), it can be **restored** by anyone calling `extend_ttl`. The data is never deleted — just temporarily inaccessible until restored.
+</Note>
+
+The contract exposes an `extend_ttl` function that can be called by anyone to proactively extend the TTL of any plan or subscription.
+
+---
+
+## Events
+
+Vowena emits **13 event types** covering every state change in the protocol. All events are indexable by Soroban event listeners and the Vowena SDK.
+
+| Event | Topics | Data |
+|---|---|---|
+| `PlanCreated` | `plan_id` | Full `Plan` struct |
+| `PlanUpdated` | `plan_id` | New `amount` |
+| `PlanDeactivated` | `plan_id` | — |
+| `SubscriptionCreated` | `sub_id`, `plan_id` | Full `Subscription` struct |
+| `ChargeBilled` | `sub_id`, `plan_id` | `amount`, `periods_billed` |
+| `ChargeFailed` | `sub_id`, `plan_id` | `failed_at` timestamp |
+| `SubscriptionPaused` | `sub_id`, `plan_id` | `failed_at` timestamp |
+| `SubscriptionCancelled` | `sub_id`, `plan_id` | `cancelled_at` timestamp |
+| `SubscriptionExpired` | `sub_id`, `plan_id` | `periods_billed` |
+| `SubscriptionReactivated` | `sub_id`, `plan_id` | — |
+| `MigrationRequested` | `old_plan_id`, `new_plan_id` | Count of affected subs |
+| `MigrationAccepted` | `old_sub_id`, `new_sub_id` | `new_plan_id` |
+| `RefundIssued` | `sub_id`, `plan_id` | `amount` |
+
+<Tip>
+  Use the [SDK event listener](/sdk/events) to subscribe to these events in real time and build dashboards, notifications, or analytics pipelines.
+</Tip>
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Plans" icon="file-lines" href="/protocol/plans">
+    Learn how merchants create and configure subscription plans.
+  </Card>
+  <Card title="Subscriptions" icon="users" href="/protocol/subscriptions">
+    Understand the subscription lifecycle and state machine.
+  </Card>
+  <Card title="Billing" icon="credit-card" href="/protocol/billing">
+    Deep dive into the permissionless charge flow.
+  </Card>
+  <Card title="Security" icon="shield" href="/protocol/security">
+    Explore the consumer protection guarantees.
+  </Card>
+</CardGroup>

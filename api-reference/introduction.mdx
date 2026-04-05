@@ -1,33 +1,124 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API Reference"
+description: "Complete reference for every function in the Vowena Soroban smart contract — parameters, authorization, return types, events, and error codes."
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+The Vowena contract exposes 17 functions covering the full subscription lifecycle. This reference documents every function with its parameters, authorization requirements, events, and error codes.
 
-## Welcome
+<Info>
+  **Write functions** return assembled XDR via the SDK. You sign the transaction with your wallet and submit it to the network. **Read functions** query contract state directly and return data without requiring a transaction signature.
+</Info>
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+---
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Functions by category
 
-## Authentication
+### Setup
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+| Function | Description | Auth |
+|----------|-------------|------|
+| [`initialize`](/api-reference/initialize) | One-time contract setup. Sets admin and initializes counters. | None (first call only) |
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+### Plans
+
+| Function | Description | Auth |
+|----------|-------------|------|
+| [`create_plan`](/api-reference/create-plan) | Creates a new billing plan with pricing, period, trials, and limits. | Merchant |
+| [`update_plan_amount`](/api-reference/update-plan-amount) | Updates the billing amount within the price ceiling. | Merchant |
+
+### Subscriptions
+
+| Function | Description | Auth |
+|----------|-------------|------|
+| [`subscribe`](/api-reference/subscribe) | Subscribes to a plan. Sets token allowance and creates the subscription. | Subscriber |
+| [`cancel`](/api-reference/cancel) | Cancels a subscription immediately. Irreversible. | Subscriber or Merchant |
+| [`reactivate`](/api-reference/reactivate) | Reactivates a paused subscription. Re-approves allowance and attempts charge. | Subscriber |
+
+### Billing
+
+| Function | Description | Auth |
+|----------|-------------|------|
+| [`charge`](/api-reference/charge) | Charges a due subscription. **Permissionless** — anyone can call. | None |
+| [`refund`](/api-reference/refund) | Refunds a subscriber from the merchant's wallet. | Merchant |
+
+### Migrations
+
+| Function | Description | Auth |
+|----------|-------------|------|
+| [`request_migration`](/api-reference/request-migration) | Requests migration of all subscribers from one plan to another. | Merchant |
+| [`accept_migration`](/api-reference/accept-migration) | Accepts a pending migration. Cancels old sub and creates new one. | Subscriber |
+| [`reject_migration`](/api-reference/reject-migration) | Rejects a pending migration. Stays on current plan. | Subscriber |
+
+### Read-only
+
+| Function | Description | Auth |
+|----------|-------------|------|
+| [`get_plan`](/api-reference/get-plan) | Returns the Plan struct for a given plan ID. | None |
+| [`get_subscription`](/api-reference/get-subscription) | Returns the Subscription struct for a given subscription ID. | None |
+| [`get_merchant_plans`](/api-reference/get-merchant-plans) | Returns all plan IDs belonging to a merchant. | None |
+| [`get_subscriber_subscriptions`](/api-reference/get-subscriber-subscriptions) | Returns all subscription IDs for a subscriber. | None |
+| [`get_plan_subscribers`](/api-reference/get-plan-subscribers) | Returns all active subscription IDs on a plan. | None |
+| [`extend_ttl`](/api-reference/extend-ttl) | Extends TTL of plan and subscription entries to prevent archival. | None |
+
+---
+
+## Authorization model
+
+Vowena uses Soroban's `require_auth()` pattern. When a function requires authorization, the caller must sign the transaction with the appropriate keypair:
+
+- **Merchant functions** — the merchant address stored on the plan must sign.
+- **Subscriber functions** — the subscriber address stored on the subscription must sign.
+- **Permissionless functions** — `charge()` is the only write function that requires no authorization. Anyone can call it, and the contract validates all conditions on-chain.
+
+<Tip>
+  Read-only functions (`get_plan`, `get_subscription`, etc.) never require a signature. They query contract state directly via Soroban's simulation endpoint.
+</Tip>
+
+---
+
+## Error codes
+
+Every error returned by the contract maps to a numeric code:
+
+| Code | Name | Description |
+|------|------|-------------|
+| 1 | `AlreadyInitialized` | Contract has already been initialized |
+| 3 | `InvalidAmount` | Amount is zero or negative |
+| 4 | `InvalidPeriod` | Period is zero |
+| 5 | `CeilingBelowAmount` | Price ceiling is less than the plan amount |
+| 6 | `PlanNotFound` | No plan exists with the given ID |
+| 7 | `PlanInactive` | Plan is not accepting new subscribers |
+| 8 | `SubNotFound` | No subscription exists with the given ID |
+| 9 | `Unauthorized` | Caller is not authorized for this action |
+| 10 | `AmountExceedsCeiling` | New amount exceeds the plan's price ceiling |
+| 11 | `MerchantMismatch` | Old and new plans belong to different merchants |
+| 12 | `NoMigrationPending` | No migration has been requested for this subscription |
+| 13 | `NotPaused` | Subscription is not in a paused state |
+
+---
+
+## SDK vs CLI
+
+Every function can be called through the TypeScript SDK or the Soroban CLI. The SDK wraps each function with a typed builder method that returns assembled XDR for signing. The CLI is useful for one-off operations and scripting.
+
+<Tabs>
+  <Tab title="SDK pattern">
+    ```typescript
+    const tx = await client.buildFunctionName({ ...params });
+    const signed = await signTransaction(tx);
+    const result = await client.submitTransaction(signed);
+    ```
+  </Tab>
+  <Tab title="CLI pattern">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source SIGNER_SECRET \
+      -- \
+      function_name \
+      --param1 value1 \
+      --param2 value2
+    ```
+  </Tab>
+</Tabs>

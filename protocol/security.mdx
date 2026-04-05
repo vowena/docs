@@ -1,0 +1,170 @@
+---
+title: "Security & Consumer Protection"
+description: "Vowena's security architecture — how subscribers are protected from merchant failure, price manipulation, and custodial risk through on-chain guarantees."
+---
+
+## Core Security Property
+
+<Warning>
+  **The Vowena contract holds PERMISSION to pull funds, not the funds themselves.** The contract never custodies, escrows, or temporarily holds any tokens. Subscriber funds remain in the subscriber's wallet at all times. The contract only has a token allowance — a revocable permission — to transfer a specific amount to the merchant.
+</Warning>
+
+This is the foundational security property of the protocol. If the contract were compromised, paused, or abandoned, subscriber funds are unaffected — they are in the subscriber's wallet, not in the contract.
+
+---
+
+## What If the Merchant Disappears?
+
+The most common concern with subscription payments: what happens if the merchant goes offline, shuts down, or acts maliciously? Vowena provides **four independent layers of protection**, any one of which is sufficient to stop unauthorized charges.
+
+<Steps>
+  <Step title="Layer 1: Direct on-chain cancellation">
+    The subscriber can call `cancel(sub_id)` directly on the smart contract from **any Stellar-compatible interface** — a wallet, a block explorer, or the CLI. No merchant cooperation needed.
+
+    <Check>
+      `cancel()` is a public contract function. It requires only the subscriber's signature. It works even if the merchant's website, API, and servers are completely offline.
+    </Check>
+
+    ```bash
+    # Cancel from any terminal with Stellar CLI
+    stellar contract invoke \
+      --id $CONTRACT_ID \
+      --network mainnet \
+      -- cancel \
+      --subscriber $YOUR_ADDRESS \
+      --sub_id 42
+    ```
+  </Step>
+
+  <Step title="Layer 2: Universal Subscription Manager">
+    The [Vowena Dashboard](/dashboard/subscriber-guide) is a universal subscription manager that works with **any wallet**. Connect your wallet, see every active subscription across all merchants, and cancel any of them with one click.
+
+    <Check>
+      The dashboard reads directly from the blockchain. It does not depend on any merchant's infrastructure. Even if Vowena's own dashboard goes down, the contract functions remain accessible through any Soroban-compatible interface.
+    </Check>
+  </Step>
+
+  <Step title="Layer 3: Auto-expiry via max_periods">
+    If a plan has `max_periods` set (e.g., 12 for an annual plan), the subscription automatically expires after that many billing periods. No action needed from anyone.
+
+    <Check>
+      Even if the subscriber loses access to their wallet or forgets about the subscription, billing stops automatically at the configured limit. For unlimited plans (`max_periods = 0`), Layer 4 provides the backstop.
+    </Check>
+  </Step>
+
+  <Step title="Layer 4: Allowance expiration">
+    The token allowance granted during `subscribe()` has a **ledger expiry** — approximately 347 days at maximum. After this, the contract's permission to pull funds expires automatically at the Soroban protocol level.
+
+    <Check>
+      This is the ultimate backstop. Even if the subscriber takes no action at all, the allowance expires and no further charges are possible. The subscriber would need to explicitly re-approve to continue.
+    </Check>
+  </Step>
+</Steps>
+
+---
+
+## Price Protection
+
+<Columns cols={2}>
+  <Card title="Price ceiling" icon="shield-halved">
+    Every plan has an immutable `price_ceiling`. The merchant can adjust `amount` within this range but never above it. Subscribers know the absolute worst-case charge per period at sign-up time.
+
+    <Check>
+      The ceiling is set at plan creation and can never be changed. No admin key, no governance vote, no emergency function can raise it.
+    </Check>
+  </Card>
+  <Card title="Migration consent" icon="arrow-right-arrow-left">
+    To change pricing beyond the ceiling, the merchant must create a new plan and request migration. Each subscriber must **explicitly accept** the new terms by signing a new transaction.
+
+    <Check>
+      Rejecting a migration keeps the subscriber on the old plan at the old price. The merchant cannot force the transition, cancel the old plan's billing, or otherwise coerce acceptance.
+    </Check>
+  </Card>
+</Columns>
+
+---
+
+## Permissionless Charge Model
+
+<AccordionGroup>
+  <Accordion title="Why is charge() permissionless?">
+    If `charge()` required the merchant's signature, the merchant becomes a single point of failure. If their key is lost, compromised, or their server goes down, billing stops. By removing the auth requirement, anyone can ensure billing continues on schedule.
+  </Accordion>
+  <Accordion title="Can someone grief by calling charge() at the wrong time?">
+    No. The contract enforces `next_billing_time` — a charge call before the billing time simply returns `false` with no state change. You cannot charge early, charge twice, or charge a different amount.
+  </Accordion>
+  <Accordion title="Can someone manipulate the charge amount?">
+    No. The amount is read from the plan's on-chain data. The `charge()` function takes only `sub_id` — there is no amount parameter. The contract determines the amount from the plan, and the subscriber approved the ceiling at subscription time.
+  </Accordion>
+  <Accordion title="Can someone redirect funds?">
+    No. The `transfer_from` call sends tokens directly to `plan.merchant`. The recipient is hardcoded in the plan struct, which can only be set at plan creation by the merchant themselves.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Authorization Model
+
+Vowena uses Soroban's native authorization framework:
+
+| Action | Who Signs | What They Authorize |
+|---|---|---|
+| `create_plan` | Merchant | Creating a plan under their address |
+| `subscribe` | Subscriber | The subscription AND the token allowance (single signature via auth tree) |
+| `cancel` | Subscriber | Cancelling their own subscription |
+| `reactivate` | Subscriber | Reactivating their paused subscription |
+| `refund` | Merchant | Transferring their own funds to the subscriber |
+| `charge` | **Nobody** | Permissionless — contract validates everything |
+| `request_migration` | Merchant | Flagging subscriptions for migration |
+| `accept_migration` | Subscriber | New subscription AND new token allowance |
+| `reject_migration` | Subscriber | Clearing the migration flag |
+
+<Warning>
+  **There are no admin keys that can drain funds.** The admin address (set during `initialize`) can only call `extend_ttl` to keep ledger entries alive. The admin cannot charge subscribers, cancel subscriptions, modify plans, or access any tokens. The admin role exists solely for TTL management.
+</Warning>
+
+---
+
+## What the Contract Cannot Do
+
+Understanding what the contract **cannot** do is as important as understanding what it can:
+
+<CardGroup cols={2}>
+  <Card title="Cannot hold funds" icon="vault">
+    The contract has no balance. Tokens move directly from subscriber to merchant via `transfer_from`. There is nothing to hack, drain, or freeze.
+  </Card>
+  <Card title="Cannot charge above ceiling" icon="arrow-up">
+    The `amount` is validated against `price_ceiling` on every update. The ceiling is immutable. The transfer amount is read from the plan, not passed as a parameter.
+  </Card>
+  <Card title="Cannot charge early" icon="clock">
+    Every `charge()` call checks `next_billing_time`. Calls before the due time return `false` with no state change.
+  </Card>
+  <Card title="Cannot prevent cancellation" icon="ban">
+    `cancel()` checks only the subscriber's auth and the subscription's existence. No other condition can block it — not the merchant, not the admin, not the contract state.
+  </Card>
+</CardGroup>
+
+---
+
+## Comparison with Traditional Systems
+
+| Risk | Credit Card | Vowena |
+|---|---|---|
+| Unauthorized charge amount | Possible (dispute after the fact) | Impossible (ceiling enforced by contract) |
+| Charge after cancellation | Common complaint | Impossible (status check in `charge()`) |
+| Merchant disappears, charges continue | Requires bank intervention | 4 independent self-service cancellation paths |
+| Silent price increase | Email notice easily missed | Requires on-chain migration + explicit wallet signature |
+| Funds at risk | Full credit line exposed | Only approved allowance, auto-expiring |
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Billing" icon="credit-card" href="/protocol/billing">
+    See the charge flow and understand the pre-check mechanism in detail.
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/protocol/deployment">
+    Deploy and verify the contract yourself.
+  </Card>
+</CardGroup>
