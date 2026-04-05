@@ -1,6 +1,6 @@
 ---
 title: "How It Works"
-description: "A visual step-by-step walkthrough of the Vowena protocol — from plan creation to recurring charges to cancellation. This is the full picture."
+description: "A visual step-by-step walkthrough of the Vowena protocol - from plan creation to recurring charges to cancellation. This is the full picture."
 ---
 
 This page walks through the complete lifecycle of a Vowena subscription. By the end, you'll understand exactly how trustless recurring payments work on Stellar.
@@ -31,10 +31,10 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     })
     ```
 
-    The contract stores this plan on-chain and returns a `plan_id`. This plan is now discoverable by anyone — it's a public, immutable billing template.
+    The contract stores this plan on-chain and returns a `plan_id`. This plan is now discoverable by anyone - it's a public, immutable billing template.
 
     <Tip>
-      Plans are like product listings on the blockchain. A merchant might create multiple plans for different tiers: Basic, Pro, Enterprise — each with different amounts and periods.
+      Plans are like product listings on the blockchain. A merchant might create multiple plans for different tiers: Basic, Pro, Enterprise - each with different amounts and periods.
     </Tip>
   </Step>
 
@@ -56,7 +56,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
       </Card>
     </CardGroup>
 
-    The subscriber can inspect all plan parameters before subscribing — amount, period, ceiling, trial, max periods, and grace period are all transparent.
+    The subscriber can inspect all plan parameters before subscribing - amount, period, ceiling, trial, max periods, and grace period are all transparent.
   </Step>
 
   <Step title="Subscriber Calls subscribe()">
@@ -95,7 +95,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     1. The `subscribe()` contract invocation
     2. The `token.approve()` allowance grant
 
-    This is possible because Soroban supports **authorization trees** — a single transaction can carry multiple authorization entries that the signer approves together.
+    This is possible because Soroban supports **authorization trees** - a single transaction can carry multiple authorization entries that the signer approves together.
 
     ```
     Transaction
@@ -126,7 +126,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     - <Icon icon="robot" /> A third-party keeper service
     - <Icon icon="user" /> Even the subscriber themselves
 
-    It doesn't matter who calls it — the contract enforces all rules regardless.
+    It doesn't matter who calls it - the contract enforces all rules regardless.
 
     <Tip>
       Keepers are economically incentivized. The transaction fee is negligible ($0.00001), and merchants want their revenue collected on time. Third-party keepers may earn service fees for maintaining reliable charging.
@@ -138,16 +138,16 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
 
     <Steps>
       <Step title="Status Check">
-        Is the subscription Active? If Paused, Cancelled, or Expired — reject.
+        Is the subscription Active? If Paused, Cancelled, or Expired - reject.
       </Step>
       <Step title="Time Check">
-        Has at least one full `period` elapsed since `last_charged_at`? If not — reject. No double-charging.
+        Has at least one full `period` elapsed since `last_charged_at`? If not - reject. No double-charging.
       </Step>
       <Step title="Trial Check">
-        Is the subscription still in its trial period? If yes — increment the period counter but skip the transfer. The subscriber isn't charged during trials.
+        Is the subscription still in its trial period? If yes - increment the period counter but skip the transfer. The subscriber isn't charged during trials.
       </Step>
       <Step title="Balance and Allowance Check">
-        Does the subscriber have enough USDC balance? Is the token allowance sufficient? If either fails — record `failed_at` and enter the grace period flow.
+        Does the subscriber have enough USDC balance? Is the token allowance sufficient? If either fails - record `failed_at` and enter the grace period flow.
       </Step>
       <Step title="Transfer">
         All checks pass. The contract calls:
@@ -191,11 +191,11 @@ Vowena provides **four layers of protection**:
   <Card title="1. Direct On-chain Cancellation" icon="ban">
     The subscriber can always call `cancel()` directly on the Vowena contract. This requires no cooperation from the merchant. Any Stellar wallet or Soroban-compatible tool can submit this transaction.
 
-    The merchant's app being offline is irrelevant — the smart contract is always available on the Stellar network.
+    The merchant's app being offline is irrelevant - the smart contract is always available on the Stellar network.
   </Card>
 
   <Card title="2. Universal Subscription Manager" icon="list-check">
-    The Vowena Dashboard includes a **Universal Subscription Manager** — a UI that lets any subscriber view and manage all their Vowena subscriptions across every merchant, regardless of which app they originally subscribed through.
+    The Vowena Dashboard includes a **Universal Subscription Manager** - a UI that lets any subscriber view and manage all their Vowena subscriptions across every merchant, regardless of which app they originally subscribed through.
 
     Even if a merchant's frontend disappears, the subscriber can find and cancel their subscriptions through the dashboard.
   </Card>

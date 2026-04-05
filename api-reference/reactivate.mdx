@@ -1,6 +1,6 @@
 ---
 title: "reactivate"
-description: "Reactivates a paused subscription by re-approving the token allowance and attempting an immediate charge."
+description: "Reactivates a paused subscription by re-approving the token allowance and attempting an immediate charge. Returns the subscription to active billing on success."
 ---
 
 ```rust
@@ -32,7 +32,7 @@ Only the subscriber can reactivate their own subscription. The subscriber's sign
 
 ## Return value
 
-`Result<bool>` — `true` if the immediate charge succeeded, `false` if it did not (e.g., still insufficient balance). The subscription is reactivated regardless — the charge attempt is best-effort.
+`Result<bool>` - `true` if the immediate charge succeeded, `false` if it did not (e.g., still insufficient balance). The subscription is reactivated regardless - the charge attempt is best-effort.
 
 ---
 

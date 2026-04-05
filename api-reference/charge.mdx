@@ -1,18 +1,18 @@
 ---
 title: "charge"
-description: "Charges a due subscription. Permissionless — anyone can call this function to trigger billing."
+description: "Charges a due subscription by transferring tokens from subscriber to merchant. Permissionless - anyone can call this function to trigger billing."
 ---
 
 ```rust
 fn charge(env: Env, sub_id: u64) -> bool
 ```
 
-Attempts to charge a subscription that is due for billing. This is the only write function in Vowena that requires **no authorization** — anyone can call it. The contract validates all conditions on-chain and either transfers funds or handles the failure gracefully.
+Attempts to charge a subscription that is due for billing. This is the only write function in Vowena that requires **no authorization** - anyone can call it. The contract validates all conditions on-chain and either transfers funds or handles the failure gracefully.
 
 Returns `true` if the charge succeeded, `false` if it did not.
 
 <Warning>
-  `charge()` is **permissionless by design**. There is no `require_auth()` call. This enables keeper bots, third-party services, or anyone to trigger billing without the merchant's private key. The contract enforces all safety checks — timing, balance, allowance, and subscription status — so permissionless calling is safe.
+  `charge()` is **permissionless by design**. There is no `require_auth()` call. This enables keeper bots, third-party services, or anyone to trigger billing without the merchant's private key. The contract enforces all safety checks - timing, balance, allowance, and subscription status - so permissionless calling is safe.
 </Warning>
 
 ---
@@ -33,7 +33,7 @@ Returns `true` if the charge succeeded, `false` if it did not.
 
 ## Return value
 
-`bool` — `true` if the charge was processed successfully, `false` if it was not charged (e.g., not yet due, insufficient funds).
+`bool` - `true` if the charge was processed successfully, `false` if it was not charged (e.g., not yet due, insufficient funds).
 
 ---
 
@@ -92,7 +92,7 @@ The contract checks, in order:
       networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
-    // Anyone can build and submit this — no specific signer required
+    // Anyone can build and submit this - no specific signer required
     const tx = await client.buildCharge(
       "GCALLER...ADDR",   // Any address (pays the tx fee)
       subscriptionId       // Subscription ID to charge
@@ -120,10 +120,10 @@ The contract checks, in order:
   <Accordion title="Who should call charge()?">
     Since `charge()` is permissionless, there are several options:
 
-    - **Keeper bots** — automated services that monitor `next_billing_time` and call `charge()` on schedule.
-    - **The merchant** — can call `charge()` directly from their backend.
-    - **The Vowena Dashboard** — includes a built-in keeper service.
-    - **Third-party networks** — any service can integrate charge calling.
+    - **Keeper bots** - automated services that monitor `next_billing_time` and call `charge()` on schedule.
+    - **The merchant** - can call `charge()` directly from their backend.
+    - **The Vowena Dashboard** - includes a built-in keeper service.
+    - **Third-party networks** - any service can integrate charge calling.
 
     The caller pays the Stellar transaction fee (~0.00001 XLM), but needs no special authorization.
   </Accordion>

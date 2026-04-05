@@ -1,6 +1,6 @@
 ---
 title: "API Reference"
-description: "Complete reference for every function in the Vowena Soroban smart contract — parameters, authorization, return types, events, and error codes."
+description: "Complete reference for every function in the Vowena Soroban smart contract - parameters, authorization, return types, events, and error codes."
 ---
 
 The Vowena contract exposes 17 functions covering the full subscription lifecycle. This reference documents every function with its parameters, authorization requirements, events, and error codes.
@@ -38,7 +38,7 @@ The Vowena contract exposes 17 functions covering the full subscription lifecycl
 
 | Function | Description | Auth |
 |----------|-------------|------|
-| [`charge`](/api-reference/charge) | Charges a due subscription. **Permissionless** — anyone can call. | None |
+| [`charge`](/api-reference/charge) | Charges a due subscription. **Permissionless** - anyone can call. | None |
 | [`refund`](/api-reference/refund) | Refunds a subscriber from the merchant's wallet. | Merchant |
 
 ### Migrations
@@ -66,9 +66,9 @@ The Vowena contract exposes 17 functions covering the full subscription lifecycl
 
 Vowena uses Soroban's `require_auth()` pattern. When a function requires authorization, the caller must sign the transaction with the appropriate keypair:
 
-- **Merchant functions** — the merchant address stored on the plan must sign.
-- **Subscriber functions** — the subscriber address stored on the subscription must sign.
-- **Permissionless functions** — `charge()` is the only write function that requires no authorization. Anyone can call it, and the contract validates all conditions on-chain.
+- **Merchant functions** - the merchant address stored on the plan must sign.
+- **Subscriber functions** - the subscriber address stored on the subscription must sign.
+- **Permissionless functions** - `charge()` is the only write function that requires no authorization. Anyone can call it, and the contract validates all conditions on-chain.
 
 <Tip>
   Read-only functions (`get_plan`, `get_subscription`, etc.) never require a signature. They query contract state directly via Soroban's simulation endpoint.

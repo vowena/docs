@@ -1,6 +1,6 @@
 ---
 title: "Installation & Setup"
-description: "Install the Vowena TypeScript SDK, configure your client for testnet or mainnet, and explore all available exports."
+description: "Install the Vowena TypeScript SDK from npm, configure your VowenaClient for Stellar testnet or mainnet, and explore all available exports and type definitions."
 ---
 
 ## Install the SDK
@@ -35,7 +35,7 @@ description: "Install the Vowena TypeScript SDK, configure your client for testn
 
 ## Create a Client
 
-The `VowenaClient` is the main entry point for all contract interactions. It builds transactions locally — you sign and submit them with your own wallet or keypair.
+The `VowenaClient` is the main entry point for all contract interactions. It builds transactions locally - you sign and submit them with your own wallet or keypair.
 
 ```typescript
 import { VowenaClient, NETWORKS } from "vowena";
@@ -151,7 +151,7 @@ import type {
 | `@stellar/stellar-sdk` | `^15.0.1` |
 
 <Tip>
-  The SDK is a lightweight wrapper that builds Soroban transactions. It does **not** hold private keys or sign transactions — that is handled by your wallet integration (e.g., Freighter, Albedo, or a raw `Keypair`).
+  The SDK is a lightweight wrapper that builds Soroban transactions. It does **not** hold private keys or sign transactions - that is handled by your wallet integration (e.g., Freighter, Albedo, or a raw `Keypair`).
 </Tip>
 
 ---

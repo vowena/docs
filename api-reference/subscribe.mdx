@@ -1,13 +1,13 @@
 ---
 title: "subscribe"
-description: "Subscribes to a billing plan by setting a token allowance and creating a new on-chain subscription."
+description: "Subscribes to a billing plan by setting a token allowance and creating an on-chain subscription. One signature covers both the contract call and approval."
 ---
 
 ```rust
 fn subscribe(env: Env, subscriber: Address, plan_id: u64) -> u64
 ```
 
-Subscribes a user to an existing plan. This function creates the subscription record and sets the SEP-41 token allowance in a single transaction — the subscriber signs once and both operations are authorized.
+Subscribes a user to an existing plan. This function creates the subscription record and sets the SEP-41 token allowance in a single transaction - the subscriber signs once and both operations are authorized.
 
 Returns the auto-incremented `sub_id`.
 
@@ -31,7 +31,7 @@ subscriber.require_auth();
 The subscriber's single signature covers both the `subscribe()` contract call **and** the nested `token.approve()` call. Soroban's auth tree bundles both operations into one authorization.
 
 <Tip>
-  The subscriber signs once. Their wallet will display exactly what is being authorized: the Vowena contract call and the token allowance (amount = `price_ceiling * periods`, spender = Vowena contract). No hidden permissions — full transparency.
+  The subscriber signs once. Their wallet will display exactly what is being authorized: the Vowena contract call and the token allowance (amount = `price_ceiling * periods`, spender = Vowena contract). No hidden permissions - full transparency.
 </Tip>
 
 ---
@@ -54,7 +54,7 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
 
 ## Return value
 
-`u64` — the newly created subscription ID.
+`u64` - the newly created subscription ID.
 
 ---
 

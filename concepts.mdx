@@ -1,6 +1,6 @@
 ---
 title: "Core Concepts"
-description: "Understand the fundamental building blocks of the Vowena protocol — plans, subscriptions, token allowances, billing cycles, price ceilings, grace periods, and keepers."
+description: "Understand the building blocks of the Vowena protocol: plans, subscriptions, token allowances, billing cycles, price ceilings, grace periods, and keepers."
 ---
 
 Vowena is built on a small set of composable primitives. Understanding these concepts will help you build on the protocol, integrate it into your application, and reason about edge cases.
@@ -37,7 +37,7 @@ A **plan** is an immutable billing template created by a merchant on-chain. It d
   <Accordion title="Immutability" icon="lock">
     Plans are **immutable once created**. This is a deliberate design choice:
 
-    - Subscribers know exactly what they signed up for — the terms can never change silently.
+    - Subscribers know exactly what they signed up for - the terms can never change silently.
     - Price changes require creating a new plan and using the **migration** flow.
     - Subscribers must explicitly accept any migration, preserving full consent.
 
@@ -98,10 +98,10 @@ A **subscription** is an on-chain record that links a subscriber to a plan. It t
                                     └──────────┘
     ```
 
-    - **Active** — The subscription is live. Charges can be triggered each period.
-    - **Paused** — A charge failed, the grace period expired, and the subscription is on hold. It can be reactivated.
-    - **Cancelled** — Permanently ended. Either the subscriber/merchant cancelled, or a paused subscription was not reactivated in time.
-    - **Expired** — The `max_periods` limit was reached. The subscription completed naturally.
+    - **Active** - The subscription is live. Charges can be triggered each period.
+    - **Paused** - A charge failed, the grace period expired, and the subscription is on hold. It can be reactivated.
+    - **Cancelled** - Permanently ended. Either the subscriber/merchant cancelled, or a paused subscription was not reactivated in time.
+    - **Expired** - The `max_periods` limit was reached. The subscription completed naturally.
   </Accordion>
 
   <Accordion title="Subscription Data" icon="database">
@@ -121,7 +121,7 @@ A **subscription** is an on-chain record that links a subscriber to a plan. It t
   <Accordion title="Who Can Cancel?" icon="ban">
     Both the **subscriber** and the **merchant** can cancel a subscription at any time by calling `cancel()`. The subscriber does not need the merchant's permission, and the merchant does not need the subscriber's permission.
 
-    Cancellation is an on-chain transaction — no frontend, API, or dashboard is required. Any tool that can invoke a Soroban contract can cancel a subscription.
+    Cancellation is an on-chain transaction - no frontend, API, or dashboard is required. Any tool that can invoke a Soroban contract can cancel a subscription.
   </Accordion>
 </AccordionGroup>
 
@@ -133,7 +133,7 @@ A **subscription** is an on-chain record that links a subscriber to a plan. It t
   This is the core mechanism that makes Vowena possible. Understanding token allowances is essential to understanding the protocol.
 </Note>
 
-Vowena uses the **SEP-41 token standard** on Stellar, which includes an `approve` / `transfer_from` pattern — the same concept as ERC-20 allowances on Ethereum.
+Vowena uses the **SEP-41 token standard** on Stellar, which includes an `approve` / `transfer_from` pattern - the same concept as ERC-20 allowances on Ethereum.
 
 <AccordionGroup>
   <Accordion title="How It Works" icon="key">
@@ -143,7 +143,7 @@ Vowena uses the **SEP-41 token standard** on Stellar, which includes an `approve
        - **Amount**: The plan's `price_ceiling` multiplied by remaining periods (or a large value for unlimited plans)
        - **Expiry**: A ledger-based expiration
     3. Each billing period, when `charge()` is called, the contract calls `transfer_from()` to move USDC from the subscriber to the merchant.
-    4. No new signature is needed for each charge — the initial allowance covers all future payments.
+    4. No new signature is needed for each charge - the initial allowance covers all future payments.
   </Accordion>
 
   <Accordion title="What the Subscriber Sees" icon="eye">
@@ -161,14 +161,14 @@ Vowena uses the **SEP-41 token standard** on Stellar, which includes an `approve
     1. Authorization to invoke `subscribe()` on the Vowena contract
     2. Authorization to invoke `approve()` on the USDC token contract
 
-    The subscriber signs once, and both authorizations are included in the same transaction. This is what makes the UX seamless — no multi-step approval flow.
+    The subscriber signs once, and both authorizations are included in the same transaction. This is what makes the UX seamless - no multi-step approval flow.
   </Accordion>
 
   <Accordion title="Security Properties" icon="shield">
     - The allowance is granted **only to the Vowena contract**, not to the merchant.
     - The contract enforces billing rules (period timing, amount limits, status checks) before calling `transfer_from()`.
     - The subscriber can revoke the allowance at any time by calling `cancel()` or by directly calling `token.approve()` with a zero amount.
-    - Allowances have a ledger-based expiration on Soroban — they don't last forever.
+    - Allowances have a ledger-based expiration on Soroban - they don't last forever.
   </Accordion>
 </AccordionGroup>
 
@@ -182,18 +182,18 @@ The billing cycle is the heartbeat of every subscription. Here's what happens ea
   <Accordion title="The charge() Flow" icon="bolt">
     When `charge()` is called, the contract performs these checks in order:
 
-    1. **Status check** — Is the subscription Active?
-    2. **Time check** — Has at least one full `period` elapsed since `last_charged_at`?
-    3. **Trial check** — Has the trial period ended? (If not, the period counter increments but no transfer occurs.)
-    4. **Allowance check** — Does the subscriber have sufficient token allowance for the Vowena contract?
-    5. **Balance check** — Does the subscriber have enough USDC balance?
-    6. **Max periods check** — Has `max_periods` been reached? (If so, mark as Expired.)
+    1. **Status check** - Is the subscription Active?
+    2. **Time check** - Has at least one full `period` elapsed since `last_charged_at`?
+    3. **Trial check** - Has the trial period ended? (If not, the period counter increments but no transfer occurs.)
+    4. **Allowance check** - Does the subscriber have sufficient token allowance for the Vowena contract?
+    5. **Balance check** - Does the subscriber have enough USDC balance?
+    6. **Max periods check** - Has `max_periods` been reached? (If so, mark as Expired.)
 
     If all checks pass, the contract calls `transfer_from()` to move `amount` USDC from the subscriber to the merchant.
   </Accordion>
 
   <Accordion title="Permissionless Charging" icon="unlock">
-    The `charge()` function is **permissionless** — literally anyone can call it. The `caller` address parameter is simply used for attribution; it does not need to be the merchant or the subscriber.
+    The `charge()` function is **permissionless** - literally anyone can call it. The `caller` address parameter is simply used for attribution; it does not need to be the merchant or the subscriber.
 
     This design enables:
     - **Merchant self-service**: Merchants run their own keeper bots
@@ -223,7 +223,7 @@ The **price ceiling** is a subscriber protection mechanism built directly into t
 
 <AccordionGroup>
   <Accordion title="What It Does" icon="shield-halved">
-    When a merchant creates a plan, they set a `price_ceiling` — the maximum amount the plan's billing amount can ever be adjusted to.
+    When a merchant creates a plan, they set a `price_ceiling` - the maximum amount the plan's billing amount can ever be adjusted to.
 
     - A merchant can call `update_plan_amount()` to change the billing amount, but **only up to the price_ceiling**.
     - If the merchant needs to charge more than the ceiling, they must create a new plan and use the migration flow.
@@ -309,7 +309,7 @@ Grace periods provide a safety net for failed charges, preventing immediate subs
         Run the SDK's keeper module on your own infrastructure. Full control, no dependencies.
       </Card>
       <Card title="Dashboard Keeper" icon="gauge">
-        The Vowena Dashboard includes a hosted keeper service. Toggle it on per plan — no code required.
+        The Vowena Dashboard includes a hosted keeper service. Toggle it on per plan - no code required.
       </Card>
       <Card title="Third-Party Keepers" icon="handshake">
         Independent keeper services that monitor and charge subscriptions across the network. Permissionless and competitive.

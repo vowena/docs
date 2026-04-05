@@ -1,6 +1,6 @@
 ---
 title: "extend_ttl"
-description: "Extends the time-to-live of plan and subscription entries to prevent archival on the Soroban ledger."
+description: "Extends the time-to-live of plan and subscription storage entries on the Soroban ledger, preventing them from being archived and ensuring data availability."
 ---
 
 ```rust
@@ -10,7 +10,7 @@ fn extend_ttl(env: Env, plan_id: u64, sub_id: u64)
 Extends the TTL (time-to-live) of plan and subscription persistent storage entries. This prevents these entries from being archived by the Soroban ledger when their TTL expires.
 
 <Note>
-  Soroban persistent storage entries have a finite TTL. When the TTL expires, the entry is **archived** — it still exists but cannot be accessed until restored. Calling `extend_ttl` refreshes the TTL window, keeping the data accessible. This is critical for long-running subscriptions that span months or years.
+  Soroban persistent storage entries have a finite TTL. When the TTL expires, the entry is **archived** - it still exists but cannot be accessed until restored. Calling `extend_ttl` refreshes the TTL window, keeping the data accessible. This is critical for long-running subscriptions that span months or years.
 </Note>
 
 ---
@@ -26,7 +26,7 @@ Extends the TTL (time-to-live) of plan and subscription persistent storage entri
 
 ## Authorization
 
-None. Anyone can extend the TTL of any entry. This is safe because extending TTL only keeps data accessible longer — it does not modify the data.
+None. Anyone can extend the TTL of any entry. This is safe because extending TTL only keeps data accessible longer - it does not modify the data.
 
 ---
 
@@ -94,7 +94,7 @@ None. If the plan or subscription does not exist, the function is a no-op.
   <Accordion title="Who should call extend_ttl?">
     Typically, keeper bots or the merchant's backend should periodically call `extend_ttl` for active plans and subscriptions. The Vowena Dashboard keeper service handles this automatically.
 
-    Since the function is permissionless, anyone can extend TTL for any entry — there is no access control needed because extending TTL only keeps data alive longer.
+    Since the function is permissionless, anyone can extend TTL for any entry - there is no access control needed because extending TTL only keeps data alive longer.
   </Accordion>
   <Accordion title="What are the TTL thresholds?">
     Vowena uses these default TTL policies:

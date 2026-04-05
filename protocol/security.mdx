@@ -1,15 +1,15 @@
 ---
 title: "Security & Consumer Protection"
-description: "Vowena's security architecture — how subscribers are protected from merchant failure, price manipulation, and custodial risk through on-chain guarantees."
+description: "Vowena's security architecture - how subscribers are protected from merchant failure, price manipulation, and custodial risk through on-chain guarantees."
 ---
 
 ## Core Security Property
 
 <Warning>
-  **The Vowena contract holds PERMISSION to pull funds, not the funds themselves.** The contract never custodies, escrows, or temporarily holds any tokens. Subscriber funds remain in the subscriber's wallet at all times. The contract only has a token allowance — a revocable permission — to transfer a specific amount to the merchant.
+  **The Vowena contract holds PERMISSION to pull funds, not the funds themselves.** The contract never custodies, escrows, or temporarily holds any tokens. Subscriber funds remain in the subscriber's wallet at all times. The contract only has a token allowance - a revocable permission - to transfer a specific amount to the merchant.
 </Warning>
 
-This is the foundational security property of the protocol. If the contract were compromised, paused, or abandoned, subscriber funds are unaffected — they are in the subscriber's wallet, not in the contract.
+This is the foundational security property of the protocol. If the contract were compromised, paused, or abandoned, subscriber funds are unaffected - they are in the subscriber's wallet, not in the contract.
 
 ---
 
@@ -19,7 +19,7 @@ The most common concern with subscription payments: what happens if the merchant
 
 <Steps>
   <Step title="Layer 1: Direct on-chain cancellation">
-    The subscriber can call `cancel(sub_id)` directly on the smart contract from **any Stellar-compatible interface** — a wallet, a block explorer, or the CLI. No merchant cooperation needed.
+    The subscriber can call `cancel(sub_id)` directly on the smart contract from **any Stellar-compatible interface** - a wallet, a block explorer, or the CLI. No merchant cooperation needed.
 
     <Check>
       `cancel()` is a public contract function. It requires only the subscriber's signature. It works even if the merchant's website, API, and servers are completely offline.
@@ -53,7 +53,7 @@ The most common concern with subscription payments: what happens if the merchant
   </Step>
 
   <Step title="Layer 4: Allowance expiration">
-    The token allowance granted during `subscribe()` has a **ledger expiry** — approximately 347 days at maximum. After this, the contract's permission to pull funds expires automatically at the Soroban protocol level.
+    The token allowance granted during `subscribe()` has a **ledger expiry** - approximately 347 days at maximum. After this, the contract's permission to pull funds expires automatically at the Soroban protocol level.
 
     <Check>
       This is the ultimate backstop. Even if the subscriber takes no action at all, the allowance expires and no further charges are possible. The subscriber would need to explicitly re-approve to continue.
@@ -91,10 +91,10 @@ The most common concern with subscription payments: what happens if the merchant
     If `charge()` required the merchant's signature, the merchant becomes a single point of failure. If their key is lost, compromised, or their server goes down, billing stops. By removing the auth requirement, anyone can ensure billing continues on schedule.
   </Accordion>
   <Accordion title="Can someone grief by calling charge() at the wrong time?">
-    No. The contract enforces `next_billing_time` — a charge call before the billing time simply returns `false` with no state change. You cannot charge early, charge twice, or charge a different amount.
+    No. The contract enforces `next_billing_time` - a charge call before the billing time simply returns `false` with no state change. You cannot charge early, charge twice, or charge a different amount.
   </Accordion>
   <Accordion title="Can someone manipulate the charge amount?">
-    No. The amount is read from the plan's on-chain data. The `charge()` function takes only `sub_id` — there is no amount parameter. The contract determines the amount from the plan, and the subscriber approved the ceiling at subscription time.
+    No. The amount is read from the plan's on-chain data. The `charge()` function takes only `sub_id` - there is no amount parameter. The contract determines the amount from the plan, and the subscriber approved the ceiling at subscription time.
   </Accordion>
   <Accordion title="Can someone redirect funds?">
     No. The `transfer_from` call sends tokens directly to `plan.merchant`. The recipient is hardcoded in the plan struct, which can only be set at plan creation by the merchant themselves.
@@ -114,7 +114,7 @@ Vowena uses Soroban's native authorization framework:
 | `cancel` | Subscriber | Cancelling their own subscription |
 | `reactivate` | Subscriber | Reactivating their paused subscription |
 | `refund` | Merchant | Transferring their own funds to the subscriber |
-| `charge` | **Nobody** | Permissionless — contract validates everything |
+| `charge` | **Nobody** | Permissionless - contract validates everything |
 | `request_migration` | Merchant | Flagging subscriptions for migration |
 | `accept_migration` | Subscriber | New subscription AND new token allowance |
 | `reject_migration` | Subscriber | Clearing the migration flag |
@@ -140,7 +140,7 @@ Understanding what the contract **cannot** do is as important as understanding w
     Every `charge()` call checks `next_billing_time`. Calls before the due time return `false` with no state change.
   </Card>
   <Card title="Cannot prevent cancellation" icon="ban">
-    `cancel()` checks only the subscriber's auth and the subscription's existence. No other condition can block it — not the merchant, not the admin, not the contract state.
+    `cancel()` checks only the subscriber's auth and the subscription's existence. No other condition can block it - not the merchant, not the admin, not the contract state.
   </Card>
 </CardGroup>
 

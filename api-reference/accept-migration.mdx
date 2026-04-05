@@ -1,6 +1,6 @@
 ---
 title: "accept_migration"
-description: "Accepts a pending plan migration. Cancels the old subscription and creates a new one on the target plan."
+description: "Accepts a pending plan migration for a subscriber. Cancels the old subscription, creates a new one on the target plan, and sets a fresh token allowance."
 ---
 
 ```rust
@@ -32,7 +32,7 @@ Only the subscriber on the subscription can accept the migration. The subscriber
 
 ## Return value
 
-`u64` — the new subscription ID on the target plan.
+`u64` - the new subscription ID on the target plan.
 
 ---
 

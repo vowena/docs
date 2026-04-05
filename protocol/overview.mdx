@@ -1,11 +1,11 @@
 ---
 title: "Architecture Overview"
-description: "Deep dive into Vowena's single-contract architecture, storage strategy, data models, TTL management, and event system on Soroban."
+description: "Deep dive into the Vowena single-contract architecture on Soroban, covering storage strategy, data models, TTL management, and the event system."
 ---
 
 ## Single Contract, Shared by All
 
-Vowena is a **single smart contract** deployed once on Stellar's Soroban platform. Every merchant, every plan, and every subscription lives inside the same contract instance. There are no separate deployments per merchant — plans and subscriptions are differentiated by their on-chain data, not by contract addresses.
+Vowena is a **single smart contract** deployed once on Stellar's Soroban platform. Every merchant, every plan, and every subscription lives inside the same contract instance. There are no separate deployments per merchant - plans and subscriptions are differentiated by their on-chain data, not by contract addresses.
 
 <Info>
   This design means one contract address to integrate, one set of events to index, and one deployment to maintain. Merchants share infrastructure while retaining full isolation of their data.
@@ -22,7 +22,7 @@ Soroban offers multiple storage types with different cost and lifetime character
     **Shared across the contract.** Stores global state that every invocation may need: the admin address and auto-incrementing counters (`NextPlanId`, `NextSubId`). Instance storage lives as long as the contract instance itself.
   </Card>
   <Card title="Persistent Storage" icon="hard-drive">
-    **One entry per entity.** Each plan, subscription, and index is its own persistent ledger entry. This is critical for Soroban's parallel execution model — transactions touching different plans or subscriptions never contend on the same storage key.
+    **One entry per entity.** Each plan, subscription, and index is its own persistent ledger entry. This is critical for Soroban's parallel execution model - transactions touching different plans or subscriptions never contend on the same storage key.
   </Card>
 </Columns>
 
@@ -41,14 +41,14 @@ Every storage entry is keyed by a variant of the `DataKey` enum:
 ```rust
 #[contracttype]
 pub enum DataKey {
-    Admin,                          // Instance — admin address
-    NextPlanId,                     // Instance — u64 counter
-    NextSubId,                      // Instance — u64 counter
-    Plan(u64),                      // Persistent — one per plan
-    Sub(u64),                       // Persistent — one per subscription
-    MerchantPlans(Address),         // Persistent — Vec<u64> of plan IDs
-    SubscriberSubs(Address),        // Persistent — Vec<u64> of sub IDs
-    PlanSubs(u64),                  // Persistent — Vec<u64> of sub IDs per plan
+    Admin,                          // Instance - admin address
+    NextPlanId,                     // Instance - u64 counter
+    NextSubId,                      // Instance - u64 counter
+    Plan(u64),                      // Persistent - one per plan
+    Sub(u64),                       // Persistent - one per subscription
+    MerchantPlans(Address),         // Persistent - Vec<u64> of plan IDs
+    SubscriberSubs(Address),        // Persistent - Vec<u64> of sub IDs
+    PlanSubs(u64),                  // Persistent - Vec<u64> of sub IDs per plan
 }
 ```
 
@@ -102,9 +102,9 @@ pub struct Subscription {
 #[derive(Clone, Debug, PartialEq)]
 pub enum SubscriptionStatus {
     Active,     // Subscription is live and billable
-    Paused,     // Grace period expired — charge failed, awaiting resolution
+    Paused,     // Grace period expired - charge failed, awaiting resolution
     Cancelled,  // Permanently cancelled by subscriber or system
-    Expired,    // Max periods reached — natural end of subscription
+    Expired,    // Max periods reached - natural end of subscription
 }
 ```
 
@@ -120,7 +120,7 @@ Soroban ledger entries have a **time-to-live (TTL)** and can be archived if not 
 | **Instance** (admin, counters) | ~30 days | ~90 days | Extended on every contract invocation |
 
 <Note>
-  If a persistent entry is archived (e.g., a very old subscription no one has touched), it can be **restored** by anyone calling `extend_ttl`. The data is never deleted — just temporarily inaccessible until restored.
+  If a persistent entry is archived (e.g., a very old subscription no one has touched), it can be **restored** by anyone calling `extend_ttl`. The data is never deleted - just temporarily inaccessible until restored.
 </Note>
 
 The contract exposes an `extend_ttl` function that can be called by anyone to proactively extend the TTL of any plan or subscription.
@@ -135,14 +135,14 @@ Vowena emits **13 event types** covering every state change in the protocol. All
 |---|---|---|
 | `PlanCreated` | `plan_id` | Full `Plan` struct |
 | `PlanUpdated` | `plan_id` | New `amount` |
-| `PlanDeactivated` | `plan_id` | — |
+| `PlanDeactivated` | `plan_id` | - |
 | `SubscriptionCreated` | `sub_id`, `plan_id` | Full `Subscription` struct |
 | `ChargeBilled` | `sub_id`, `plan_id` | `amount`, `periods_billed` |
 | `ChargeFailed` | `sub_id`, `plan_id` | `failed_at` timestamp |
 | `SubscriptionPaused` | `sub_id`, `plan_id` | `failed_at` timestamp |
 | `SubscriptionCancelled` | `sub_id`, `plan_id` | `cancelled_at` timestamp |
 | `SubscriptionExpired` | `sub_id`, `plan_id` | `periods_billed` |
-| `SubscriptionReactivated` | `sub_id`, `plan_id` | — |
+| `SubscriptionReactivated` | `sub_id`, `plan_id` | - |
 | `MigrationRequested` | `old_plan_id`, `new_plan_id` | Count of affected subs |
 | `MigrationAccepted` | `old_sub_id`, `new_sub_id` | `new_plan_id` |
 | `RefundIssued` | `sub_id`, `plan_id` | `amount` |

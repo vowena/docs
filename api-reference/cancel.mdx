@@ -1,13 +1,13 @@
 ---
 title: "cancel"
-description: "Cancels a subscription immediately and irreversibly. Can be called by the subscriber or the merchant."
+description: "Cancels a subscription immediately and irreversibly. Can be called by either the subscriber or the plan merchant. Removes the subscription from active billing."
 ---
 
 ```rust
 fn cancel(env: Env, caller: Address, sub_id: u64)
 ```
 
-Cancels a subscription. Cancellation is **immediate and irreversible** — the subscription status is set to `Cancelled` and no further charges can be processed. Either the subscriber or the merchant who owns the plan can cancel.
+Cancels a subscription. Cancellation is **immediate and irreversible** - the subscription status is set to `Cancelled` and no further charges can be processed. Either the subscriber or the merchant who owns the plan can cancel.
 
 ---
 

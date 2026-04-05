@@ -1,13 +1,13 @@
 ---
 title: "get_subscriber_subscriptions"
-description: "Returns all subscription IDs for a subscriber. Read-only — no signature required."
+description: "Returns all subscription IDs for a given subscriber address across every merchant on Vowena. Read-only query requiring no wallet signature."
 ---
 
 ```rust
 fn get_subscriber_subscriptions(env: Env, subscriber: Address) -> Vec<u64>
 ```
 
-Returns a vector of all subscription IDs associated with the given subscriber address. This includes subscriptions in any status — `Active`, `Paused`, `Cancelled`, and `Expired`. This is a read-only function — no transaction signature is required.
+Returns a vector of all subscription IDs associated with the given subscriber address. This includes subscriptions in any status - `Active`, `Paused`, `Cancelled`, and `Expired`. This is a read-only function - no transaction signature is required.
 
 ---
 
@@ -27,7 +27,7 @@ None. This is a read-only query.
 
 ## Return value
 
-`Vec<u64>` — a list of subscription IDs for the subscriber. Returns an empty vector if the subscriber has no subscriptions.
+`Vec<u64>` - a list of subscription IDs for the subscriber. Returns an empty vector if the subscriber has no subscriptions.
 
 ---
 

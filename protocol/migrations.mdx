@@ -1,6 +1,6 @@
 ---
 title: "Migrations"
-description: "How Vowena handles plan changes with explicit subscriber consent — the migration system that prevents silent price increases and protects consumers."
+description: "How Vowena handles plan changes with explicit subscriber consent - the migration system that prevents silent price increases and protects consumers."
 ---
 
 ## Why Migrations Exist
@@ -10,7 +10,7 @@ In traditional payment systems, a merchant can silently change your subscription
 Vowena makes this structurally impossible.
 
 <Check>
-  **A merchant cannot raise prices above the ceiling without explicit subscriber consent.** The migration system enforces this at the smart contract level — not through a policy, not through a terms of service, but through code that cannot be bypassed.
+  **A merchant cannot raise prices above the ceiling without explicit subscriber consent.** The migration system enforces this at the smart contract level - not through a policy, not through a terms of service, but through code that cannot be bypassed.
 </Check>
 
 Plans are immutable (except for the amount within the ceiling). If a merchant needs to change the billing period, raise the price above the ceiling, switch tokens, or alter any other structural parameter, they must:
@@ -67,7 +67,7 @@ Plans are immutable (except for the amount within the ceiling). If a merchant ne
   <Step title="Subscribers see the migration">
     Each affected subscriber will see `migration_target != 0` on their subscription. The [Vowena Dashboard](/dashboard/subscriber-guide) shows a banner prompting action. Keeper bots and SDK event listeners can trigger notifications.
 
-    The subscriber can view the new plan's terms — including the new price, ceiling, and period — before deciding.
+    The subscriber can view the new plan's terms - including the new price, ceiling, and period - before deciding.
   </Step>
 
   <Step title="Subscriber accepts or rejects">
@@ -143,7 +143,7 @@ Plans are immutable (except for the amount within the ceiling). If a merchant ne
 |---|---|---|
 | Price increase notice | Email (often buried) | On-chain migration request, wallet prompt |
 | Subscriber action needed | Often opt-out (charged by default) | Opt-in (must explicitly accept) |
-| Time pressure | "Changes take effect in 30 days" | No deadline — old plan continues indefinitely |
+| Time pressure | "Changes take effect in 30 days" | No deadline - old plan continues indefinitely |
 | Auditability | Statement after the fact | All terms visible on-chain before accepting |
 | Enforcement | Consumer protection law (varies by country) | Smart contract code (global, deterministic) |
 

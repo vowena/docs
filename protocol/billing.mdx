@@ -1,6 +1,6 @@
 ---
 title: "Billing"
-description: "The complete charge flow in Vowena — permissionless billing, pre-check mechanics, grace period handling, trial periods, and why the balance check exists before transfer."
+description: "The complete charge flow in Vowena: permissionless billing, pre-check mechanics, grace period handling, trial periods, and balance verification."
 ---
 
 ## The Most Important Function
@@ -8,7 +8,7 @@ description: "The complete charge flow in Vowena — permissionless billing, pre
 `charge()` is the heart of the Vowena protocol. It is called every billing period for every active subscription, and its design drives most of the contract's architecture decisions.
 
 <Info>
-  **`charge()` is permissionless.** It takes no authorization. There is no `require_auth()` call. Anyone — the merchant, a keeper bot, a random third party — can call `charge(sub_id)` and trigger billing. The protocol validates everything on-chain: only the merchant receives funds, only the correct amount is transferred, and only at the right time.
+  **`charge()` is permissionless.** It takes no authorization. There is no `require_auth()` call. Anyone - the merchant, a keeper bot, a random third party - can call `charge(sub_id)` and trigger billing. The protocol validates everything on-chain: only the merchant receives funds, only the correct amount is transferred, and only at the right time.
 </Info>
 
 This design means there is **no single point of failure** for billing. If the merchant's server goes down, a keeper network can continue charging. If all keepers go down, the merchant can charge manually. The protocol does not care who submits the transaction.
@@ -17,7 +17,7 @@ This design means there is **no single point of failure** for billing. If the me
 
 ## Complete Charge Flow
 
-Every call to `charge(sub_id)` executes the following steps in order. If any step fails, the function either reverts the transaction or returns `false` — depending on the failure type.
+Every call to `charge(sub_id)` executes the following steps in order. If any step fails, the function either reverts the transaction or returns `false` - depending on the failure type.
 
 <Steps>
   <Step title="Load subscription and plan">
@@ -27,7 +27,7 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
   <Step title="Handle Paused-to-Cancelled transition">
     If the subscription is **Paused** and an entire billing period has elapsed since it was paused, the contract transitions it to **Cancelled**, emits `SubscriptionCancelled`, and returns `false`.
 
-    This is how paused subscriptions eventually terminate — they get one extra period to recover before being permanently cancelled.
+    This is how paused subscriptions eventually terminate - they get one extra period to recover before being permanently cancelled.
   </Step>
 
   <Step title="Check status is Active">
@@ -66,11 +66,11 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
     <Warning>
       **Why pre-check instead of just calling `transfer_from`?**
 
-      If `transfer_from` is called and it fails (insufficient balance or allowance), the token contract **panics**. A panic in Soroban reverts the **entire transaction** — including all state changes the Vowena contract made up to that point.
+      If `transfer_from` is called and it fails (insufficient balance or allowance), the token contract **panics**. A panic in Soroban reverts the **entire transaction** - including all state changes the Vowena contract made up to that point.
 
       This means the contract **cannot record the failure**. It cannot set `failed_at`. It cannot emit `ChargeFailed`. It cannot start the grace period. The transaction simply disappears as if it never happened.
 
-      By pre-checking, the contract detects insufficient funds **before** calling `transfer_from`. It can then record the failure, start the grace clock, emit events, and return `false` — all within a successful transaction that persists to the ledger.
+      By pre-checking, the contract detects insufficient funds **before** calling `transfer_from`. It can then record the failure, start the grace clock, emit events, and return `false` - all within a successful transaction that persists to the ledger.
     </Warning>
   </Step>
 
@@ -81,7 +81,7 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
     - Emits `ChargeFailed` event with the timestamp
     - Returns `false`
 
-    The transaction **succeeds** (is recorded on-chain) even though the charge failed. This is intentional — it creates an auditable record of the failure and starts the grace period countdown.
+    The transaction **succeeds** (is recorded on-chain) even though the charge failed. This is intentional - it creates an auditable record of the failure and starts the grace period countdown.
   </Step>
 
   <Step title="Successful charge">
@@ -90,7 +90,7 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
     1. Calls `token.transfer_from(contract_address, subscriber, merchant, amount)`
     2. Increments `periods_billed`
     3. Advances `next_billing_time` by one billing period
-    4. Clears `failed_at` (resets to `0` — any previous grace clock is cancelled)
+    4. Clears `failed_at` (resets to `0` - any previous grace clock is cancelled)
     5. Emits `ChargeBilled` with the amount and updated period count
     6. Returns `true`
   </Step>
@@ -136,7 +136,7 @@ The grace period creates a recovery window when a charge fails. Here is the comp
 </AccordionGroup>
 
 <Tip>
-  Set `grace_period` generously. A grace period of `259200` (3 days) gives subscribers time to receive failure notifications, transfer funds, and recover — without losing their subscription.
+  Set `grace_period` generously. A grace period of `259200` (3 days) gives subscribers time to receive failure notifications, transfer funds, and recover - without losing their subscription.
 </Tip>
 
 ---
@@ -186,7 +186,7 @@ Because `charge()` requires no authorization, it enables a **keeper bot** ecosys
     Pre-checking balance before transfer ensures that every failed charge is recorded on-chain with a timestamp, enabling grace periods and notifications.
   </Card>
   <Card title="Atomic state transitions" icon="atom">
-    Every charge call either completes fully or records the failure. There is no partial state — no "payment sent but not recorded" scenario.
+    Every charge call either completes fully or records the failure. There is no partial state - no "payment sent but not recorded" scenario.
   </Card>
   <Card title="No custody risk" icon="lock-open">
     Funds move directly from subscriber to merchant via `transfer_from`. The contract never holds or custodies any tokens.

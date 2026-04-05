@@ -1,11 +1,11 @@
 ---
 title: "Refunds"
-description: "How merchants issue on-chain refunds in Vowena — partial refunds, verifiable receipts, and the refund flow from the merchant's own funds."
+description: "How merchants issue on-chain refunds in Vowena - partial refunds, verifiable receipts, and the refund flow from the merchant's own funds."
 ---
 
 ## How Refunds Work
 
-Vowena supports on-chain refunds initiated by the merchant. When a merchant issues a refund, they are transferring their **own funds** back to the subscriber. The contract never holds funds — refunds are a direct merchant-to-subscriber transfer recorded on-chain.
+Vowena supports on-chain refunds initiated by the merchant. When a merchant issues a refund, they are transferring their **own funds** back to the subscriber. The contract never holds funds - refunds are a direct merchant-to-subscriber transfer recorded on-chain.
 
 <Info>
   Refunds in Vowena are **voluntary**. The protocol does not force refunds on cancellation. Merchants decide when and how much to refund based on their own policies. The protocol provides the mechanism and the verifiable receipt.
@@ -20,7 +20,7 @@ Vowena supports on-chain refunds initiated by the merchant. When a merchant issu
     The merchant calls `refund(sub_id, amount)` with the subscription ID and the amount to refund.
   </Step>
   <Step title="Authorization">
-    The contract calls `merchant.require_auth()` — confirming the caller is the plan's merchant. Only the merchant who owns the plan can issue refunds for subscriptions on that plan.
+    The contract calls `merchant.require_auth()` - confirming the caller is the plan's merchant. Only the merchant who owns the plan can issue refunds for subscriptions on that plan.
   </Step>
   <Step title="Token transfer">
     The contract calls `token.transfer(merchant, subscriber, amount)`. This is a direct transfer from the merchant's wallet to the subscriber's wallet. The contract acts as the executor but never holds the tokens.
@@ -38,7 +38,7 @@ Vowena supports on-chain refunds initiated by the merchant. When a merchant issu
 
 ## Partial Refunds
 
-Refunds support **any amount** — there is no requirement to refund the full billing amount. Common scenarios:
+Refunds support **any amount** - there is no requirement to refund the full billing amount. Common scenarios:
 
 | Scenario | Refund Amount | Example |
 |---|---|---|

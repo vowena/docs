@@ -3,7 +3,7 @@ title: "Keeper Setup"
 description: "Configure automated billing for your Vowena subscriptions. Use the built-in dashboard keeper or run a standalone keeper bot for full control."
 ---
 
-A keeper is any process that calls `charge()` on due subscriptions. The Vowena protocol is permissionless — anyone can trigger a charge, and the contract validates all conditions on-chain. You just need something to make the call on schedule.
+A keeper is any process that calls `charge()` on due subscriptions. The Vowena protocol is permissionless - anyone can trigger a charge, and the contract validates all conditions on-chain. You just need something to make the call on schedule.
 
 There are two options: the built-in dashboard keeper (zero setup) or a standalone bot you run yourself.
 
@@ -27,10 +27,10 @@ There are two options: the built-in dashboard keeper (zero setup) or a standalon
     2. The keeper activates for all your plans immediately
 
     The keeper status panel shows:
-    - **Last run** — Timestamp of the most recent keeper execution
-    - **Next scheduled run** — When the keeper will run again
-    - **Charged count** — Number of subscriptions successfully charged in the last run
-    - **Failed count** — Number of charges that failed (insufficient balance, expired allowance)
+    - **Last run** - Timestamp of the most recent keeper execution
+    - **Next scheduled run** - When the keeper will run again
+    - **Charged count** - Number of subscriptions successfully charged in the last run
+    - **Failed count** - Number of charges that failed (insufficient balance, expired allowance)
 
     ### Manual Trigger
 
@@ -71,7 +71,7 @@ There are two options: the built-in dashboard keeper (zero setup) or a standalon
         | `INTERVAL_MS` | How often the keeper checks for due subscriptions (in milliseconds) | `60000` (every minute) |
 
         <Warning>
-          The `KEEPER_SECRET` is a Stellar secret key that signs charge transactions. Treat it like a private key — never commit it to version control, never share it, and never expose it in client-side code. Use environment variables or a secrets manager.
+          The `KEEPER_SECRET` is a Stellar secret key that signs charge transactions. Treat it like a private key - never commit it to version control, never share it, and never expose it in client-side code. Use environment variables or a secrets manager.
         </Warning>
       </Step>
 
@@ -98,15 +98,15 @@ There are two options: the built-in dashboard keeper (zero setup) or a standalon
       <Step title="Production Hardening">
         For a production deployment, consider the following:
 
-        - **Use the event indexer** — Instead of querying the contract for all subscriptions each cycle, run the SDK's event indexer to maintain a local database of subscriptions and their billing state. This is far more efficient at scale.
-        - **Process manager** — Run the keeper with `pm2`, `systemd`, or inside a Docker container to ensure it restarts on failure.
-        - **Monitoring** — Set up alerts for failed charges, keeper downtime, or unexpected errors. The keeper logs structured JSON output for easy integration with monitoring tools.
-        - **Multiple keepers** — It's safe to run multiple keeper instances. If two keepers try to charge the same subscription simultaneously, the contract will reject the duplicate — only the first transaction succeeds. No double-charging is possible.
+        - **Use the event indexer** - Instead of querying the contract for all subscriptions each cycle, run the SDK's event indexer to maintain a local database of subscriptions and their billing state. This is far more efficient at scale.
+        - **Process manager** - Run the keeper with `pm2`, `systemd`, or inside a Docker container to ensure it restarts on failure.
+        - **Monitoring** - Set up alerts for failed charges, keeper downtime, or unexpected errors. The keeper logs structured JSON output for easy integration with monitoring tools.
+        - **Multiple keepers** - It's safe to run multiple keeper instances. If two keepers try to charge the same subscription simultaneously, the contract will reject the duplicate - only the first transaction succeeds. No double-charging is possible.
       </Step>
     </Steps>
 
     <Note>
-      The keeper wallet pays Stellar transaction fees for each charge — approximately $0.00001 per transaction. The keeper does **not** receive the subscription payment. Payments flow directly from the subscriber's wallet to the merchant's wallet via the smart contract. The keeper simply triggers the transfer.
+      The keeper wallet pays Stellar transaction fees for each charge - approximately $0.00001 per transaction. The keeper does **not** receive the subscription payment. Payments flow directly from the subscriber's wallet to the merchant's wallet via the smart contract. The keeper simply triggers the transfer.
     </Note>
   </Tab>
 </Tabs>
@@ -134,13 +134,13 @@ There are two options: the built-in dashboard keeper (zero setup) or a standalon
 
 <AccordionGroup>
   <Accordion title="What happens if the keeper goes down?">
-    Nothing is lost. Subscriptions remain active on-chain. When the keeper comes back online, it picks up all overdue subscriptions and charges them. Subscribers in their grace period won't be paused until the grace window expires — giving you time to restore the keeper.
+    Nothing is lost. Subscriptions remain active on-chain. When the keeper comes back online, it picks up all overdue subscriptions and charges them. Subscribers in their grace period won't be paused until the grace window expires - giving you time to restore the keeper.
   </Accordion>
   <Accordion title="Can someone else run a keeper for my subscriptions?">
-    Yes. The `charge()` function is permissionless — anyone can call it. Third-party keeper networks, your subscribers, or even the subscribers' own automation can trigger charges. The contract validates everything regardless of who submits the transaction.
+    Yes. The `charge()` function is permissionless - anyone can call it. Third-party keeper networks, your subscribers, or even the subscribers' own automation can trigger charges. The contract validates everything regardless of who submits the transaction.
   </Accordion>
   <Accordion title="How much does it cost to run a keeper?">
-    Each charge transaction costs approximately $0.00001 in Stellar network fees. For 1,000 subscriptions billed monthly, that's roughly $0.01 per month in transaction fees. The keeper wallet needs a small XLM balance to cover fees — 10 XLM is enough for hundreds of thousands of transactions.
+    Each charge transaction costs approximately $0.00001 in Stellar network fees. For 1,000 subscriptions billed monthly, that's roughly $0.01 per month in transaction fees. The keeper wallet needs a small XLM balance to cover fees - 10 XLM is enough for hundreds of thousands of transactions.
   </Accordion>
   <Accordion title="Does the keeper need USDC?">
     No. The keeper only signs and submits `charge()` transactions. The USDC transfer happens from the subscriber's wallet to the merchant's wallet. The keeper wallet only needs XLM for transaction fees.

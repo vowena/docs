@@ -1,13 +1,13 @@
 ---
 title: "get_subscription"
-description: "Returns the Subscription struct for a given subscription ID. Read-only — no signature required."
+description: "Returns the full Subscription struct including status, billing history, next billing time, and migration state. Read-only, no signature required."
 ---
 
 ```rust
 fn get_subscription(env: Env, sub_id: u64) -> Subscription
 ```
 
-Returns the full `Subscription` struct for the given subscription ID. This is a read-only function that queries contract state directly — no transaction signature is required.
+Returns the full `Subscription` struct for the given subscription ID. This is a read-only function that queries contract state directly - no transaction signature is required.
 
 ---
 

@@ -1,13 +1,13 @@
 ---
 title: "Plans"
-description: "How merchants create, configure, and manage subscription plans on Vowena — including pricing, trials, grace periods, and the price ceiling mechanism."
+description: "How merchants create, configure, and manage subscription plans on Vowena - including pricing, trials, grace periods, and the price ceiling mechanism."
 ---
 
 ## What is a Plan?
 
 A plan is the billing template that a merchant publishes on-chain. It defines **what** subscribers are paying for, **how much**, **how often**, and under **what terms**. Subscribers choose a plan and create a subscription against it.
 
-Plans are **shared objects** — one plan can have thousands of active subscriptions. The plan itself stores no per-subscriber state.
+Plans are **shared objects** - one plan can have thousands of active subscriptions. The plan itself stores no per-subscriber state.
 
 ---
 
@@ -92,7 +92,7 @@ stellar contract invoke \
 The price ceiling is one of Vowena's core consumer protection features. When a subscriber signs up, they authorize a token allowance based on the **ceiling**, not the current amount.
 
 <Warning>
-  The price ceiling is **immutable after plan creation**. A merchant cannot raise the ceiling — ever. This is by design: it guarantees that subscribers know the absolute maximum they could ever be charged per period.
+  The price ceiling is **immutable after plan creation**. A merchant cannot raise the ceiling - ever. This is by design: it guarantees that subscribers know the absolute maximum they could ever be charged per period.
 </Warning>
 
 ### How it works
@@ -115,9 +115,9 @@ The price ceiling is one of Vowena's core consumer protection features. When a s
 | Scenario | Amount | Ceiling | Allowed? |
 |---|---|---|---|
 | Initial plan | 10 USDC | 15 USDC | Yes |
-| Small raise | 12 USDC | 15 USDC | Yes — within ceiling |
-| Promotion | 8 USDC | 15 USDC | Yes — can lower freely |
-| Big raise | 20 USDC | 15 USDC | No — exceeds ceiling, use [migration](/protocol/migrations) |
+| Small raise | 12 USDC | 15 USDC | Yes - within ceiling |
+| Promotion | 8 USDC | 15 USDC | Yes - can lower freely |
+| Big raise | 20 USDC | 15 USDC | No - exceeds ceiling, use [migration](/protocol/migrations) |
 
 ---
 
@@ -140,7 +140,7 @@ Plans are intentionally immutable once created. The only mutable field is `amoun
 
 ## Deactivating a Plan
 
-Merchants can deactivate a plan to stop new subscriptions. Existing subscriptions continue to bill normally — deactivation only prevents new `subscribe()` calls.
+Merchants can deactivate a plan to stop new subscriptions. Existing subscriptions continue to bill normally - deactivation only prevents new `subscribe()` calls.
 
 ```typescript
 const tx = await client.deactivatePlan({
@@ -150,7 +150,7 @@ const tx = await client.deactivatePlan({
 ```
 
 <Note>
-  Deactivation is a soft state change. The plan data remains on-chain and existing subscribers are unaffected. There is no "delete plan" — on-chain data is permanent.
+  Deactivation is a soft state change. The plan data remains on-chain and existing subscribers are unaffected. There is no "delete plan" - on-chain data is permanent.
 </Note>
 
 ---

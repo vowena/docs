@@ -1,13 +1,13 @@
 ---
 title: "request_migration"
-description: "Requests migration of all subscribers from one plan to another. Subscribers must individually accept or reject."
+description: "Requests migration of all active subscribers from an old plan to a new one. Each subscriber must accept or reject. Both plans must belong to the same merchant."
 ---
 
 ```rust
 fn request_migration(env: Env, merchant: Address, old_plan_id: u64, new_plan_id: u64)
 ```
 
-Initiates a migration from an old plan to a new plan. This sets the `migration_target` field on all active subscriptions under the old plan. Each subscriber must individually call [`accept_migration`](/api-reference/accept-migration) or [`reject_migration`](/api-reference/reject-migration) — the migration is never automatic.
+Initiates a migration from an old plan to a new plan. This sets the `migration_target` field on all active subscriptions under the old plan. Each subscriber must individually call [`accept_migration`](/api-reference/accept-migration) or [`reject_migration`](/api-reference/reject-migration) - the migration is never automatic.
 
 ---
 

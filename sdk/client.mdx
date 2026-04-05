@@ -1,6 +1,6 @@
 ---
 title: "VowenaClient Reference"
-description: "Complete API reference for VowenaClient — every method signature, parameter, return type, and usage example."
+description: "Complete API reference for VowenaClient. Every write method, read method, and submit function with signatures, parameters, and TypeScript examples."
 ---
 
 The `VowenaClient` is the primary interface for interacting with the Vowena smart contract. Write methods return an assembled XDR string for wallet signing. Read methods query on-chain state directly.
@@ -49,7 +49,7 @@ const client = new VowenaClient({
     | `maxPeriods` | `number` | No | Maximum billing periods, 0 = unlimited (default: 0) |
     | `gracePeriod` | `number` | No | Grace period in seconds for failed charges (default: 2592000) |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -69,13 +69,13 @@ const client = new VowenaClient({
     | `subscriber` | `string` | Yes | Stellar address of the subscriber |
     | `planId` | `number` | Yes | ID of the plan to subscribe to |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
     ## buildCharge
 
-    Charges a subscription for the current billing period. This is permissionless — anyone can call it.
+    Charges a subscription for the current billing period. This is permissionless - anyone can call it.
 
     ```typescript
     const xdr = await client.buildCharge(
@@ -89,7 +89,7 @@ const client = new VowenaClient({
     | `callerAddress` | `string` | Yes | Stellar address of the caller (pays the tx fee) |
     | `subId` | `number` | Yes | Subscription ID to charge |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -109,7 +109,7 @@ const client = new VowenaClient({
     | `caller` | `string` | Yes | Stellar address of the subscriber or merchant |
     | `subId` | `number` | Yes | Subscription ID to cancel |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -131,7 +131,7 @@ const client = new VowenaClient({
     | `subId` | `number` | Yes | Subscription ID to refund |
     | `amount` | `bigint` | Yes | Refund amount in stroops |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -153,7 +153,7 @@ const client = new VowenaClient({
     | `planId` | `number` | Yes | Plan ID to update |
     | `newAmount` | `bigint` | Yes | New amount per period in stroops |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     <Warning>
       The new amount cannot exceed the plan's `priceCeiling`. This protects subscribers from unexpected price increases beyond what they originally authorized.
@@ -179,7 +179,7 @@ const client = new VowenaClient({
     | `oldPlanId` | `number` | Yes | Plan ID to migrate from |
     | `newPlanId` | `number` | Yes | Plan ID to migrate to |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -199,7 +199,7 @@ const client = new VowenaClient({
     | `subscriber` | `string` | Yes | Stellar address of the subscriber |
     | `subId` | `number` | Yes | Subscription ID to migrate |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -219,7 +219,7 @@ const client = new VowenaClient({
     | `subscriber` | `string` | Yes | Stellar address of the subscriber |
     | `subId` | `number` | Yes | Subscription ID whose migration to reject |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -239,7 +239,7 @@ const client = new VowenaClient({
     | `subscriber` | `string` | Yes | Stellar address of the subscriber |
     | `subId` | `number` | Yes | Subscription ID to reactivate |
 
-    **Returns:** `Promise<string>` — Assembled XDR transaction string.
+    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
   </Tab>
   <Tab title="Read Methods">

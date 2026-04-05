@@ -1,13 +1,13 @@
 ---
 title: "refund"
-description: "Issues a refund to a subscriber. The merchant transfers funds from their own wallet."
+description: "Issues a partial or full refund to a subscriber. The merchant authorizes a transfer from their own wallet, recorded on-chain as a verifiable receipt."
 ---
 
 ```rust
 fn refund(env: Env, sub_id: u64, amount: i128)
 ```
 
-Refunds a subscriber by transferring tokens from the merchant's wallet to the subscriber's wallet. The refund is a direct `transfer` call — the merchant pays from their own balance, not from the contract.
+Refunds a subscriber by transferring tokens from the merchant's wallet to the subscriber's wallet. The refund is a direct `transfer` call - the merchant pays from their own balance, not from the contract.
 
 ---
 

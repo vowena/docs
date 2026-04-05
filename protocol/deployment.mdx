@@ -1,6 +1,6 @@
 ---
 title: "Deployment Guide"
-description: "Step-by-step guide to building, deploying, and initializing the Vowena smart contract on Stellar's Soroban platform — for both testnet and mainnet."
+description: "Step-by-step guide to building, deploying, and initializing the Vowena smart contract on Stellar's Soroban platform - for both testnet and mainnet."
 ---
 
 ## Prerequisites
@@ -8,9 +8,9 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
 <Info>
   Before deploying Vowena, ensure you have the following installed:
 
-  - **Rust** (latest stable) — [rustup.rs](https://rustup.rs)
-  - **wasm32 target** — `rustup target add wasm32-unknown-unknown`
-  - **Stellar CLI** — `cargo install stellar-cli` or via [Stellar docs](https://developers.stellar.org/docs/tools/cli)
+  - **Rust** (latest stable) - [rustup.rs](https://rustup.rs)
+  - **wasm32 target** - `rustup target add wasm32-unknown-unknown`
+  - **Stellar CLI** - `cargo install stellar-cli` or via [Stellar docs](https://developers.stellar.org/docs/tools/cli)
   - A funded Stellar account (testnet faucet or mainnet XLM for fees)
 </Info>
 
@@ -36,7 +36,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     This produces the optimized WASM binary at `target/wasm32v1-none/release/vowena.wasm`.
 
     <Tip>
-      The compiled WASM is approximately **18.5 KB** — well within Soroban's size limits. The contract exports **17 functions**.
+      The compiled WASM is approximately **18.5 KB** - well within Soroban's size limits. The contract exports **17 functions**.
     </Tip>
   </Step>
 
@@ -50,7 +50,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
           --source $YOUR_SECRET_KEY
         ```
 
-        This returns the **contract ID** — save it. You will need it for every subsequent interaction.
+        This returns the **contract ID** - save it. You will need it for every subsequent interaction.
 
         ```
         # Example output:
@@ -127,7 +127,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
       </Tab>
     </Tabs>
 
-    This should return an error like `Plan not found` — which confirms the contract is deployed and responding. No plans exist yet because none have been created.
+    This should return an error like `Plan not found` - which confirms the contract is deployed and responding. No plans exist yet because none have been created.
   </Step>
 
   <Step title="Create your first plan">

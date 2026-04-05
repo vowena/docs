@@ -14,7 +14,7 @@ USDC on Stellar uses **7 decimal places**. The smallest unit is called a **stroo
 All on-chain amounts are stored and transmitted as stroops represented by `bigint` values. The SDK provides two helper functions to convert between human-readable strings and stroops.
 
 <Tip>
-  Why stroops? Floating-point arithmetic introduces rounding errors that are unacceptable for financial transactions. By using integer math with `bigint`, every calculation is exact — no precision loss, no rounding surprises.
+  Why stroops? Floating-point arithmetic introduces rounding errors that are unacceptable for financial transactions. By using integer math with `bigint`, every calculation is exact - no precision loss, no rounding surprises.
 </Tip>
 
 ---
@@ -40,7 +40,7 @@ function toStroops(amount: string): bigint;
 | --- | --- | --- |
 | `amount` | `string` | Human-readable decimal amount (e.g., `"9.99"`, `"100"`, `"0.0000001"`) |
 
-**Returns:** `bigint` — The amount in stroops.
+**Returns:** `bigint` - The amount in stroops.
 
 ---
 
@@ -65,7 +65,7 @@ function fromStroops(stroops: bigint): string;
 | --- | --- | --- |
 | `stroops` | `bigint` | Amount in stroops |
 
-**Returns:** `string` — Human-readable decimal string.
+**Returns:** `string` - Human-readable decimal string.
 
 ---
 

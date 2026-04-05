@@ -1,13 +1,13 @@
 ---
 title: "get_merchant_plans"
-description: "Returns all plan IDs belonging to a merchant. Read-only — no signature required."
+description: "Returns all plan IDs belonging to a specific merchant address. Read-only query that requires no wallet signature. Use this to discover a merchant's plans."
 ---
 
 ```rust
 fn get_merchant_plans(env: Env, merchant: Address) -> Vec<u64>
 ```
 
-Returns a vector of all plan IDs created by the given merchant address. This is a read-only function — no transaction signature is required.
+Returns a vector of all plan IDs created by the given merchant address. This is a read-only function - no transaction signature is required.
 
 ---
 
@@ -27,7 +27,7 @@ None. This is a read-only query.
 
 ## Return value
 
-`Vec<u64>` — a list of plan IDs belonging to the merchant. Returns an empty vector if the merchant has no plans.
+`Vec<u64>` - a list of plan IDs belonging to the merchant. Returns an empty vector if the merchant has no plans.
 
 ---
 

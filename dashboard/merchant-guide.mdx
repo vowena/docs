@@ -1,15 +1,15 @@
 ---
 title: "Merchant Guide"
-description: "Step-by-step guide for merchants using the Vowena Dashboard. Create plans, share them with subscribers, monitor billing, issue refunds, and configure auto-charging."
+description: "Step-by-step guide for merchants using the Vowena Dashboard. Create plans, manage subscribers, monitor billing, and configure auto-charging."
 ---
 
-This guide walks you through the full merchant experience on the Vowena Dashboard — from connecting your wallet to monitoring recurring revenue.
+This guide walks you through the full merchant experience on the Vowena Dashboard - from connecting your wallet to monitoring recurring revenue.
 
 <Steps>
   <Step title="Connect Your Wallet">
     Visit [app.vowena.xyz](https://app.vowena.xyz) and click **Connect Wallet** in the top right corner. The dashboard will prompt Freighter (or your installed Stellar wallet) to authorize the connection.
 
-    Once connected, your Stellar wallet address becomes your merchant identity. There is no separate signup — if your address has created plans, you see the merchant dashboard. If not, you see the create plan prompt.
+    Once connected, your Stellar wallet address becomes your merchant identity. There is no separate signup - if your address has created plans, you see the merchant dashboard. If not, you see the create plan prompt.
 
     <Tip>
       If you don't have Freighter yet, install it from [freighter.app](https://www.freighter.app/). It's a browser extension available for Chrome, Firefox, and Brave. Make sure you're connected to the correct network (Testnet for testing, Mainnet for production).
@@ -29,7 +29,7 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     | **Trial Periods** | Number of billing periods before the first charge. Set to 0 for no trial. | `1` (one free month) |
     | **Max Periods** | Total number of billing periods before the subscription auto-expires. Set to 0 for unlimited. | `12` (1 year cap) |
     | **Grace Period** | Time window (in seconds) after a failed charge before the subscription pauses. Gives the subscriber time to top up their wallet. | `259200` (3 days) |
-    | **Price Ceiling** | The maximum amount you can ever charge per period for this plan. Subscribers approve this ceiling in their wallet — you can raise your price up to this limit without requiring re-authorization. | `14.99` |
+    | **Price Ceiling** | The maximum amount you can ever charge per period for this plan. Subscribers approve this ceiling in their wallet - you can raise your price up to this limit without requiring re-authorization. | `14.99` |
 
     Click **Create Plan**. The dashboard builds a `create_plan` transaction, and Freighter will ask you to sign it. Once confirmed on-chain, your plan appears in the Plans list.
 
@@ -94,17 +94,17 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     Each subscriber row shows:
     - **Wallet address** (truncated, with copy button)
     - **Plan name** and billing amount
-    - **Status badge** — Active (green), Paused (yellow), Cancelled (red), Expired (gray)
-    - **Next billing date** — when the next charge is due
-    - **Periods billed** — how many successful charges have been made
-    - **Total paid** — cumulative amount collected from this subscriber
+    - **Status badge** - Active (green), Paused (yellow), Cancelled (red), Expired (gray)
+    - **Next billing date** - when the next charge is due
+    - **Periods billed** - how many successful charges have been made
+    - **Total paid** - cumulative amount collected from this subscriber
 
     Click any subscriber to expand their full billing history: every charge, failed charge, refund, and status change with timestamps.
 
-    Use the **Refund** button to issue a partial or full refund for any charge. Refunds are on-chain transactions — the USDC is transferred from your wallet back to the subscriber.
+    Use the **Refund** button to issue a partial or full refund for any charge. Refunds are on-chain transactions - the USDC is transferred from your wallet back to the subscriber.
 
     <Note>
-      Refunds require you to have sufficient USDC balance. The contract transfers tokens from your wallet to the subscriber — it does not hold funds in escrow.
+      Refunds require you to have sufficient USDC balance. The contract transfers tokens from your wallet to the subscriber - it does not hold funds in escrow.
     </Note>
   </Step>
 
@@ -112,12 +112,12 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     Navigate to **Merchant > Analytics** for a high-level view of your subscription business.
 
     The analytics dashboard includes:
-    - **Total MRR** — Monthly Recurring Revenue calculated from all active subscriptions
-    - **Active subscribers** — Count of currently active subscriptions across all plans
-    - **Churn rate** — Percentage of subscribers who cancelled in the current period
-    - **Failed charges** — Number of charges that failed due to insufficient balance or expired allowance
-    - **Revenue timeline** — A Recharts line graph showing revenue over time
-    - **Event log** — Scrollable feed of recent billing events (charges, failures, cancellations)
+    - **Total MRR** - Monthly Recurring Revenue calculated from all active subscriptions
+    - **Active subscribers** - Count of currently active subscriptions across all plans
+    - **Churn rate** - Percentage of subscribers who cancelled in the current period
+    - **Failed charges** - Number of charges that failed due to insufficient balance or expired allowance
+    - **Revenue timeline** - A Recharts line graph showing revenue over time
+    - **Event log** - Scrollable feed of recent billing events (charges, failures, cancellations)
 
     <Tip>
       A high failed-charge rate usually means subscribers are running low on USDC. Consider adding a reminder notification in your app before billing day, or extending your grace period to give subscribers more time to top up.
@@ -157,9 +157,9 @@ Since the subscriber's wallet already approved spending up to the price ceiling,
 ### Creating Additional Plans
 
 There is no limit to the number of plans you can create. Common patterns include:
-- **Tiered pricing** — Basic, Pro, and Enterprise plans with different amounts
-- **Annual vs monthly** — Same features, different billing periods (often with a discount for annual)
-- **Regional pricing** — Different price points for different markets
+- **Tiered pricing** - Basic, Pro, and Enterprise plans with different amounts
+- **Annual vs monthly** - Same features, different billing periods (often with a discount for annual)
+- **Regional pricing** - Different price points for different markets
 
 ### Migrating Subscribers
 

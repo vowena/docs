@@ -1,12 +1,12 @@
 ---
 title: "Dashboard Overview"
-description: "The Vowena Dashboard is a full-stack Next.js app for managing on-chain subscriptions. Merchants create plans and monitor billing. Subscribers manage all their subscriptions in one place."
+description: "The Vowena Dashboard is a Next.js app for managing on-chain subscriptions. Merchants create plans and subscribers manage billing in one place."
 ---
 
 The Vowena Dashboard at [app.vowena.xyz](https://app.vowena.xyz) is the primary interface for interacting with the Vowena protocol. It serves both merchants and subscribers from a single application, with your connected wallet determining your experience.
 
 <Info>
-  The smart contract is always the source of truth. The dashboard's database is a convenience layer — it indexes on-chain data into Postgres for fast querying, but every action you take in the dashboard builds and submits a real Soroban transaction.
+  The smart contract is always the source of truth. The dashboard's database is a convenience layer - it indexes on-chain data into Postgres for fast querying, but every action you take in the dashboard builds and submits a real Soroban transaction.
 </Info>
 
 ---
@@ -28,7 +28,7 @@ There are no usernames, passwords, or email addresses. Your Stellar wallet addre
 
 ## Two Experiences
 
-The dashboard adapts based on what you do. Any wallet can act as both a merchant and a subscriber — there is no account type to choose.
+The dashboard adapts based on what you do. Any wallet can act as both a merchant and a subscriber - there is no account type to choose.
 
 <Columns cols={2}>
   <Card title="Merchant" icon="store" href="/dashboard/merchant-guide">
@@ -63,13 +63,13 @@ The dashboard runs three backend services that keep the off-chain database in sy
 
 <AccordionGroup>
   <Accordion title="Event Indexer">
-    A background service that continuously polls Soroban RPC for Vowena contract events. Every `PlanCreated`, `Subscribed`, `ChargeSucceeded`, `ChargeFailed`, `SubscriptionCancelled`, and other event is parsed and written to Postgres. This is what powers instant queries — instead of making RPC calls for every page load, the dashboard reads from its local database.
+    A background service that continuously polls Soroban RPC for Vowena contract events. Every `PlanCreated`, `Subscribed`, `ChargeSucceeded`, `ChargeFailed`, `SubscriptionCancelled`, and other event is parsed and written to Postgres. This is what powers instant queries - instead of making RPC calls for every page load, the dashboard reads from its local database.
   </Accordion>
   <Accordion title="Keeper Service">
     An automated cron job that calls `charge()` for all subscriptions that are due. Merchants can enable or disable this per-plan from the dashboard. The keeper iterates through due subscriptions, builds charge transactions, signs them with the dashboard's keeper key, and submits them to the network.
   </Accordion>
   <Accordion title="Plan Metadata">
-    Plans on-chain are identified by numeric IDs and contain only billing parameters. The dashboard stores additional off-chain metadata — human-readable plan names, descriptions, and branding — in Postgres. This metadata is optional and never touches the smart contract.
+    Plans on-chain are identified by numeric IDs and contain only billing parameters. The dashboard stores additional off-chain metadata - human-readable plan names, descriptions, and branding - in Postgres. This metadata is optional and never touches the smart contract.
   </Accordion>
 </AccordionGroup>
 

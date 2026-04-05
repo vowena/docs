@@ -5,7 +5,7 @@ description: "Run an automated keeper bot that charges due subscriptions on sche
 
 ## What is a Keeper?
 
-A keeper is an automated script that calls `charge()` on the Vowena contract for subscriptions that are due. Because `charge()` is **permissionless**, anyone can trigger it — the contract validates all conditions on-chain. The keeper simply pays the tiny transaction fee (~$0.00001 in XLM), while the subscription payment flows directly from the subscriber to the merchant.
+A keeper is an automated script that calls `charge()` on the Vowena contract for subscriptions that are due. Because `charge()` is **permissionless**, anyone can trigger it - the contract validates all conditions on-chain. The keeper simply pays the tiny transaction fee (~$0.00001 in XLM), while the subscription payment flows directly from the subscriber to the merchant.
 
 <Info>
   You don't need to run your own keeper. The [Vowena Dashboard](/dashboard/keeper-setup) provides a managed keeper service. This page is for developers who want to self-host or customize their keeper.
@@ -21,7 +21,7 @@ A keeper is an automated script that calls `charge()` on the Vowena contract for
 4. It submits the transaction to the network
 5. If the charge succeeds, USDC transfers from subscriber to merchant. If it fails (not yet due, insufficient balance, etc.), the contract rejects it harmlessly.
 
-The keeper's wallet only needs a small XLM balance for transaction fees. It never handles or holds USDC — payments go directly between subscriber and merchant.
+The keeper's wallet only needs a small XLM balance for transaction fees. It never handles or holds USDC - payments go directly between subscriber and merchant.
 
 ---
 
@@ -35,7 +35,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
 
     ```bash
     # Generate a keypair (or use an existing one)
-    # Save the secret key — you'll need it in the next step
+    # Save the secret key - you'll need it in the next step
     ```
 
     A few XLM is sufficient for thousands of charge transactions.
@@ -46,8 +46,8 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
 
     | Variable | Required | Default | Description |
     | --- | --- | --- | --- |
-    | `CONTRACT_ID` | Yes | — | Vowena contract address (e.g., `CABC...XYZ`) |
-    | `KEEPER_SECRET` | Yes | — | Stellar secret key for the keeper wallet (`S...`) |
+    | `CONTRACT_ID` | Yes | - | Vowena contract address (e.g., `CABC...XYZ`) |
+    | `KEEPER_SECRET` | Yes | - | Stellar secret key for the keeper wallet (`S...`) |
     | `RPC_URL` | No | `https://soroban-testnet.stellar.org` | Soroban RPC endpoint |
     | `NETWORK_PASSPHRASE` | No | `Test SDF Network ; September 2015` | Network passphrase |
     | `INTERVAL_MS` | No | `60000` | Polling interval in milliseconds |
@@ -97,7 +97,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
 
 ## How charge() Is Permissionless
 
-When a subscriber signs the `subscribe()` transaction, they authorize a SEP-41 token allowance to the Vowena contract. From that point on, the contract itself can pull funds via `transfer_from()` — it does not matter who initiates the `charge()` call. The contract enforces all rules:
+When a subscriber signs the `subscribe()` transaction, they authorize a SEP-41 token allowance to the Vowena contract. From that point on, the contract itself can pull funds via `transfer_from()` - it does not matter who initiates the `charge()` call. The contract enforces all rules:
 
 - The billing period must have elapsed
 - The subscription must be active
@@ -105,7 +105,7 @@ When a subscriber signs the `subscribe()` transaction, they authorize a SEP-41 t
 - Trial periods must be complete
 - The max period limit must not be exceeded
 
-The caller (keeper) only pays the transaction fee. The USDC payment goes directly from subscriber to merchant — never through the keeper's wallet.
+The caller (keeper) only pays the transaction fee. The USDC payment goes directly from subscriber to merchant - never through the keeper's wallet.
 
 ---
 
@@ -125,7 +125,7 @@ The caller (keeper) only pays the transaction fee. The USDC payment goes directl
   </Accordion>
 
   <Accordion title="Run multiple instances carefully">
-    If you run multiple keeper instances, they may attempt to charge the same subscription simultaneously. The contract handles this safely — only the first charge succeeds, and subsequent attempts fail harmlessly. However, you will pay unnecessary transaction fees. Use a coordination layer or partition subscription IDs across keepers.
+    If you run multiple keeper instances, they may attempt to charge the same subscription simultaneously. The contract handles this safely - only the first charge succeeds, and subsequent attempts fail harmlessly. However, you will pay unnecessary transaction fees. Use a coordination layer or partition subscription IDs across keepers.
   </Accordion>
 </AccordionGroup>
 

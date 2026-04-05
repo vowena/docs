@@ -1,6 +1,6 @@
 ---
 title: "create_plan"
-description: "Creates a new subscription billing plan with pricing, billing period, trial length, and subscriber protections."
+description: "Creates a new subscription billing plan on-chain with configurable pricing, billing period, trial length, grace period, and price ceiling protections."
 ---
 
 ```rust
@@ -17,7 +17,7 @@ fn create_plan(
 ) -> u64
 ```
 
-Creates a new billing plan on-chain. The plan defines the terms of recurring payments — token, amount, billing period, trial length, and price protection ceiling. Returns the auto-incremented `plan_id`.
+Creates a new billing plan on-chain. The plan defines the terms of recurring payments - token, amount, billing period, trial length, and price protection ceiling. Returns the auto-incremented `plan_id`.
 
 ---
 
@@ -48,7 +48,7 @@ The merchant address must sign the transaction.
 
 ## Return value
 
-`u64` — the newly created plan ID.
+`u64` - the newly created plan ID.
 
 ---
 
@@ -132,5 +132,5 @@ The merchant address must sign the transaction.
 </Accordion>
 
 <Tip>
-  Set `price_ceiling` thoughtfully. It protects subscribers from unexpected price hikes — the merchant can call `update_plan_amount` to raise the price, but never above the ceiling. If you need to exceed the ceiling, create a new plan and use the [migration flow](/api-reference/request-migration).
+  Set `price_ceiling` thoughtfully. It protects subscribers from unexpected price hikes - the merchant can call `update_plan_amount` to raise the price, but never above the ceiling. If you need to exceed the ceiling, create a new plan and use the [migration flow](/api-reference/request-migration).
 </Tip>

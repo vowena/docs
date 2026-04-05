@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "Go from zero to a working subscription in 5 minutes. Install the SDK, create a plan, subscribe, charge, and cancel."
+description: "Go from zero to a working on-chain subscription in 5 minutes. Install the Vowena SDK, create a billing plan, subscribe a wallet, charge, and cancel."
 ---
 
 Get a complete subscription lifecycle running on Stellar testnet in under 5 minutes.
@@ -28,7 +28,7 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
     </CodeGroup>
 
     <Tip>
-      The SDK is a lightweight wrapper around the Vowena Soroban contract. It builds transactions locally — you sign and submit them with your own wallet or keypair.
+      The SDK is a lightweight wrapper around the Vowena Soroban contract. It builds transactions locally - you sign and submit them with your own wallet or keypair.
     </Tip>
   </Step>
 
@@ -118,7 +118,7 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
   </Step>
 
   <Step title="Subscribe (Subscriber)">
-    A subscriber authorizes the plan. This single transaction calls `subscribe()` on the Vowena contract **and** sets the SEP-41 token allowance — one signature covers both.
+    A subscriber authorizes the plan. This single transaction calls `subscribe()` on the Vowena contract **and** sets the SEP-41 token allowance - one signature covers both.
 
     ```typescript
     // Build the subscribe transaction
@@ -134,7 +134,7 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
     ```
 
     <Tip>
-      The subscriber's wallet will display exactly what is being approved: the token (USDC), the spending ceiling (price_ceiling from the plan), and the contract authorized to pull funds. Full transparency — no hidden permissions.
+      The subscriber's wallet will display exactly what is being approved: the token (USDC), the spending ceiling (price_ceiling from the plan), and the contract authorized to pull funds. Full transparency - no hidden permissions.
     </Tip>
   </Step>
 
@@ -185,7 +185,7 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
     ```
 
     <Note>
-      Cancellation is **immediate and on-chain**. No approval from the merchant is needed. The subscriber can also cancel directly through any Stellar wallet or block explorer that supports Soroban contract invocations — the Vowena frontend is not required.
+      Cancellation is **immediate and on-chain**. No approval from the merchant is needed. The subscriber can also cancel directly through any Stellar wallet or block explorer that supports Soroban contract invocations - the Vowena frontend is not required.
     </Note>
   </Step>
 </Steps>
@@ -240,7 +240,7 @@ await client.submitTransaction(await sign(cancelTx));
     Understand plans, subscriptions, allowances, and the billing lifecycle in depth.
   </Card>
   <Card title="How It Works" icon="diagram-project" href="/how-it-works">
-    Visual walkthrough of the full protocol flow — from plan creation to cancellation.
+    Visual walkthrough of the full protocol flow - from plan creation to cancellation.
   </Card>
   <Card title="SDK Reference" icon="npm" href="/sdk/client">
     Complete SDK documentation with all methods, types, and configuration options.

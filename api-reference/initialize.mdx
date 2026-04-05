@@ -1,13 +1,13 @@
 ---
 title: "initialize"
-description: "One-time contract setup that sets the admin address and initializes internal counters."
+description: "One-time contract initialization that sets the admin address and starts plan and subscription ID counters. Rejects subsequent calls."
 ---
 
 ```rust
 fn initialize(env: Env, admin: Address)
 ```
 
-Sets the admin address and initializes the auto-incrementing counters (`NextPlanId = 1`, `NextSubId = 1`). This function can only be called once — subsequent calls will fail with `AlreadyInitialized`.
+Sets the admin address and initializes the auto-incrementing counters (`NextPlanId = 1`, `NextSubId = 1`). This function can only be called once - subsequent calls will fail with `AlreadyInitialized`.
 
 <Warning>
   This is a one-time setup function. Once called, it cannot be called again. Make sure the `admin` address is correct before deploying.
@@ -25,7 +25,7 @@ Sets the admin address and initializes the auto-incrementing counters (`NextPlan
 
 ## Authorization
 
-None. This function has no `require_auth()` call — it relies on the fact that it can only succeed once. The first caller sets the admin.
+None. This function has no `require_auth()` call - it relies on the fact that it can only succeed once. The first caller sets the admin.
 
 ---
 

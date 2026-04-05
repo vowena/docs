@@ -1,13 +1,13 @@
 ---
 title: "get_plan"
-description: "Returns the Plan struct for a given plan ID. Read-only — no signature required."
+description: "Returns the full Plan struct for a given plan ID, including amount, period, trial settings, grace period, and price ceiling. Read-only, no signature required."
 ---
 
 ```rust
 fn get_plan(env: Env, plan_id: u64) -> Plan
 ```
 
-Returns the full `Plan` struct for the given plan ID. This is a read-only function that queries contract state directly — no transaction signature is required.
+Returns the full `Plan` struct for the given plan ID. This is a read-only function that queries contract state directly - no transaction signature is required.
 
 ---
 

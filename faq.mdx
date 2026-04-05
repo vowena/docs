@@ -1,13 +1,13 @@
 ---
 title: "FAQ"
-description: "Frequently asked questions about the Vowena protocol"
+description: "Frequently asked questions about the Vowena protocol covering billing, subscriptions, keepers, migrations, security, and technical architecture."
 ---
 
 ## General
 
 <AccordionGroup>
   <Accordion title="What blockchain is Vowena on?">
-    Vowena runs on **Stellar** via **Soroban**, Stellar's smart contract platform. Stellar offers ~$0.00001 transaction fees, 5-second finality, and native USDC support — making on-chain subscriptions economically viable for the first time.
+    Vowena runs on **Stellar** via **Soroban**, Stellar's smart contract platform. Stellar offers ~$0.00001 transaction fees, 5-second finality, and native USDC support - making on-chain subscriptions economically viable for the first time.
   </Accordion>
 
   <Accordion title="What tokens are supported?">
@@ -19,11 +19,11 @@ description: "Frequently asked questions about the Vowena protocol"
   </Accordion>
 
   <Accordion title="Is Vowena a single contract or multiple contracts?">
-    Vowena is a **single Soroban smart contract** deployed once on Stellar. All merchants share the same contract instance — plans and subscriptions are differentiated by on-chain data, not by separate deployments. This means one deployment serves the entire ecosystem.
+    Vowena is a **single Soroban smart contract** deployed once on Stellar. All merchants share the same contract instance - plans and subscriptions are differentiated by on-chain data, not by separate deployments. This means one deployment serves the entire ecosystem.
   </Accordion>
 
   <Accordion title="Is the contract upgradeable?">
-    The contract has an **admin address** set during initialization that could be used for upgrades via Soroban's standard upgrade mechanism. The admin cannot access subscriber funds — the contract holds permission to pull funds, not the funds themselves.
+    The contract has an **admin address** set during initialization that could be used for upgrades via Soroban's standard upgrade mechanism. The admin cannot access subscriber funds - the contract holds permission to pull funds, not the funds themselves.
   </Accordion>
 
   <Accordion title="What wallets are supported?">
@@ -35,7 +35,7 @@ description: "Frequently asked questions about the Vowena protocol"
 
 <AccordionGroup>
   <Accordion title="Can the merchant raise prices without my consent?">
-    **No.** Merchants can only adjust prices within the **price ceiling** you agreed to when subscribing. Any change beyond the ceiling requires creating a new plan and explicitly requesting your migration — you see the new price in your wallet and must approve it. This is stronger consumer protection than any traditional payment system.
+    **No.** Merchants can only adjust prices within the **price ceiling** you agreed to when subscribing. Any change beyond the ceiling requires creating a new plan and explicitly requesting your migration - you see the new price in your wallet and must approve it. This is stronger consumer protection than any traditional payment system.
   </Accordion>
 
   <Accordion title="What happens if I don't have enough balance?">
@@ -55,8 +55,8 @@ description: "Frequently asked questions about the Vowena protocol"
   <Accordion title="What's the difference between Paused and Cancelled?">
     | Status | Meaning | Can recover? |
     |--------|---------|-------------|
-    | **Paused** | Billing failed and grace period expired. | Yes — call `reactivate()` to re-approve allowance and resume. |
-    | **Cancelled** | Terminated by you, the merchant, or auto-cancelled after extended pause. | No — cancellation is irreversible. You'd need to create a new subscription. |
+    | **Paused** | Billing failed and grace period expired. | Yes - call `reactivate()` to re-approve allowance and resume. |
+    | **Cancelled** | Terminated by you, the merchant, or auto-cancelled after extended pause. | No - cancellation is irreversible. You'd need to create a new subscription. |
   </Accordion>
 
   <Accordion title="What happens if the merchant's app shuts down?">
@@ -85,7 +85,7 @@ description: "Frequently asked questions about the Vowena protocol"
   <Accordion title="How do migrations work?">
     When a merchant wants to change pricing:
     1. They create a **new plan** with the new price
-    2. They call `request_migration()` — your subscription gets flagged as "migration pending"
+    2. They call `request_migration()` - your subscription gets flagged as "migration pending"
     3. You see the migration in the dashboard with old vs new price compared
     4. You **accept** (signs new allowance at new price) or **reject** (stay on current plan at current price)
 
@@ -97,17 +97,17 @@ description: "Frequently asked questions about the Vowena protocol"
 
 <AccordionGroup>
   <Accordion title="What is the price ceiling?">
-    The price ceiling is the **maximum amount** you can adjust a plan's billing to without requiring subscriber re-authorization. For example, if you create a plan at $9.99/month with a $14.99 ceiling, you can raise the price up to $14.99 using `update_plan_amount()` — subscribers continue billing at the new amount without needing to re-approve. Beyond the ceiling, you must create a new plan and migrate subscribers.
+    The price ceiling is the **maximum amount** you can adjust a plan's billing to without requiring subscriber re-authorization. For example, if you create a plan at $9.99/month with a $14.99 ceiling, you can raise the price up to $14.99 using `update_plan_amount()` - subscribers continue billing at the new amount without needing to re-approve. Beyond the ceiling, you must create a new plan and migrate subscribers.
 
     <Tip>Set the ceiling thoughtfully. Too low limits your flexibility. Too high may deter subscribers who see the maximum possible charge in their wallet approval.</Tip>
   </Accordion>
 
   <Accordion title="Can merchants refund subscribers?">
-    **Yes.** Call `refund(sub_id, amount)` to transfer tokens from your wallet back to the subscriber. The merchant authorizes the transfer (it's your own funds). Partial refunds are supported — specify any amount. The refund is recorded on-chain as a `RefundIssued` event, creating a verifiable receipt.
+    **Yes.** Call `refund(sub_id, amount)` to transfer tokens from your wallet back to the subscriber. The merchant authorizes the transfer (it's your own funds). Partial refunds are supported - specify any amount. The refund is recorded on-chain as a `RefundIssued` event, creating a verifiable receipt.
   </Accordion>
 
   <Accordion title="What is a keeper?">
-    A keeper is any script, bot, or person that calls the `charge()` function for due subscriptions. The function is **permissionless** — anyone can call it, but only the merchant receives the payment. Options:
+    A keeper is any script, bot, or person that calls the `charge()` function for due subscriptions. The function is **permissionless** - anyone can call it, but only the merchant receives the payment. Options:
     - **Dashboard keeper**: Built-in auto-billing in the Vowena dashboard
     - **Standalone bot**: Run the keeper from `sdk/keeper/`
     - **Your own**: Build custom billing logic using the SDK
@@ -129,7 +129,7 @@ description: "Frequently asked questions about the Vowena protocol"
 
 <AccordionGroup>
   <Accordion title="Why does charge() pre-check balance and allowance?">
-    This is a critical design decision. In Soroban, if `transfer_from()` panics (insufficient balance or allowance), the **entire transaction reverts** — including any state changes the contract made before the call. This means the contract couldn't record `failed_at` or emit a `ChargeFailed` event.
+    This is a critical design decision. In Soroban, if `transfer_from()` panics (insufficient balance or allowance), the **entire transaction reverts** - including any state changes the contract made before the call. This means the contract couldn't record `failed_at` or emit a `ChargeFailed` event.
 
     By checking `token.balance()` and `token.allowance()` *before* calling `transfer_from()`, the contract can:
     - Record the failure timestamp (`failed_at`)
@@ -153,7 +153,7 @@ description: "Frequently asked questions about the Vowena protocol"
   </Accordion>
 
   <Accordion title="What if a persistent entry gets archived?">
-    Soroban's restore mechanism allows archived entries to be brought back. Subscription and plan data is **never permanently lost** — it can always be restored by paying the restoration fee. The `extend_ttl()` function exists to proactively prevent archival.
+    Soroban's restore mechanism allows archived entries to be brought back. Subscription and plan data is **never permanently lost** - it can always be restored by paying the restoration fee. The `extend_ttl()` function exists to proactively prevent archival.
   </Accordion>
 
   <Accordion title="How large is the contract?">

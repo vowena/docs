@@ -3,7 +3,7 @@ title: "Subscriber Guide"
 description: "Manage all your Vowena subscriptions from one dashboard. View billing history, handle plan migrations, and cancel any subscription with a single click."
 ---
 
-The Vowena Dashboard gives subscribers a single place to manage every on-chain subscription across all merchants. No more hunting through transaction history — everything is in one view.
+The Vowena Dashboard gives subscribers a single place to manage every on-chain subscription across all merchants. No more hunting through transaction history - everything is in one view.
 
 <Steps>
   <Step title="Connect Your Wallet">
@@ -12,20 +12,20 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
     Your wallet address is your identity. The dashboard queries the Vowena contract for every subscription tied to your address and displays them automatically. There is no signup form and no profile to fill out.
 
     <Tip>
-      Make sure your wallet is connected to the correct network — Testnet for testing, Mainnet for real subscriptions. The dashboard detects the network from your wallet.
+      Make sure your wallet is connected to the correct network - Testnet for testing, Mainnet for real subscriptions. The dashboard detects the network from your wallet.
     </Tip>
   </Step>
 
   <Step title="View Your Subscriptions">
-    The **Universal Subscription Manager** is your home screen. It shows every Vowena subscription you hold — across all merchants, all plans, all statuses.
+    The **Universal Subscription Manager** is your home screen. It shows every Vowena subscription you hold - across all merchants, all plans, all statuses.
 
     Each subscription card displays:
-    - **Merchant** — The merchant's wallet address (and name, if they set one in the dashboard)
-    - **Amount** — How much you're charged per period (e.g., 9.99 USDC)
-    - **Billing period** — Weekly, monthly, quarterly, annual, or custom
-    - **Status** — Active, Paused, Cancelled, or Expired
-    - **Next billing date** — When the next charge will be attempted
-    - **Total paid** — Cumulative amount charged across all periods
+    - **Merchant** - The merchant's wallet address (and name, if they set one in the dashboard)
+    - **Amount** - How much you're charged per period (e.g., 9.99 USDC)
+    - **Billing period** - Weekly, monthly, quarterly, annual, or custom
+    - **Status** - Active, Paused, Cancelled, or Expired
+    - **Next billing date** - When the next charge will be attempted
+    - **Total paid** - Cumulative amount charged across all periods
 
     <Check>
       The Universal Subscription Manager works independently of any merchant's infrastructure. Even if a merchant's website goes offline, your subscriptions are still visible and manageable here because the data comes from the blockchain.
@@ -35,15 +35,15 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
   <Step title="Review Billing History">
     Click any subscription card to expand its full billing history. Every event is recorded:
 
-    - **Successful charges** — Amount, period number, and timestamp
-    - **Failed charges** — Amount, failure reason (insufficient balance or expired allowance), and timestamp
-    - **Refunds** — Amount refunded by the merchant and timestamp
-    - **Status changes** — When the subscription went from Active to Paused, or was reactivated
+    - **Successful charges** - Amount, period number, and timestamp
+    - **Failed charges** - Amount, failure reason (insufficient balance or expired allowance), and timestamp
+    - **Refunds** - Amount refunded by the merchant and timestamp
+    - **Status changes** - When the subscription went from Active to Paused, or was reactivated
 
     The history is sourced from on-chain events indexed by the dashboard. Every entry corresponds to a real Soroban transaction that you can verify on a block explorer.
 
     <Check>
-      You can never be charged more than the price ceiling you approved at subscription time. This is enforced by the smart contract — not by the dashboard, not by the merchant, and not by any off-chain system.
+      You can never be charged more than the price ceiling you approved at subscription time. This is enforced by the smart contract - not by the dashboard, not by the merchant, and not by any off-chain system.
     </Check>
   </Step>
 
@@ -60,8 +60,8 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
 
     You have two options:
 
-    - **Accept** — The dashboard builds a transaction that subscribes you to the new plan with a new token allowance. Freighter will show you exactly what you're approving. Your old subscription is cancelled and the new one begins.
-    - **Reject** — You stay on your current plan with no changes. The merchant cannot force a migration.
+    - **Accept** - The dashboard builds a transaction that subscribes you to the new plan with a new token allowance. Freighter will show you exactly what you're approving. Your old subscription is cancelled and the new one begins.
+    - **Reject** - You stay on your current plan with no changes. The merchant cannot force a migration.
 
     <Check>
       Migrations are always opt-in. A merchant can request a migration, but only you can authorize the new allowance. If you reject, your current subscription continues unchanged at the original price.
@@ -112,7 +112,7 @@ One of the core benefits of on-chain subscriptions is that you are never locked 
 </AccordionGroup>
 
 <Check>
-  No single point of failure can trap you in a subscription. The contract is permissionless — any Stellar tool that can invoke Soroban contracts can cancel your subscription. The Vowena Dashboard is a convenience, not a requirement.
+  No single point of failure can trap you in a subscription. The contract is permissionless - any Stellar tool that can invoke Soroban contracts can cancel your subscription. The Vowena Dashboard is a convenience, not a requirement.
 </Check>
 
 ---

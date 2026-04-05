@@ -1,6 +1,6 @@
 ---
 title: "reject_migration"
-description: "Rejects a pending plan migration. The subscriber stays on their current plan."
+description: "Rejects a pending plan migration request. The subscriber stays on their current plan at the current price. Clears the migration flag from the subscription."
 ---
 
 ```rust
@@ -66,7 +66,7 @@ None (`void`).
       networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
-    // Reject the pending migration — stay on current plan
+    // Reject the pending migration - stay on current plan
     const tx = await client.buildRejectMigration(
       "GSUBSCRIBER...ADDR",   // Subscriber's address
       subscriptionId            // Subscription ID
