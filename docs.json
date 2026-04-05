@@ -27,7 +27,7 @@
     "primary": {
       "type": "button",
       "label": "Launch App",
-      "href": "https://app.vowena.xyz"
+      "href": "https://dashboard.vowena.xyz"
     }
   },
   "navigation": {
