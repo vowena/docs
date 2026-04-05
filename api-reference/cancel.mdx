@@ -7,7 +7,7 @@ description: "Cancels a subscription immediately and irreversibly. Can be called
 fn cancel(env: Env, caller: Address, sub_id: u64)
 ```
 
-Cancels a subscription. Cancellation is **immediate and irreversible** - the subscription status is set to `Cancelled` and no further charges can be processed. Either the subscriber or the merchant who owns the plan can cancel.
+Cancels a subscription. Cancellation is **immediate and irreversible**. The subscription status is set to `Cancelled` and no further charges can be processed. Either the subscriber or the merchant who owns the plan can cancel.
 
 ---
 

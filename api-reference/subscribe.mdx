@@ -7,7 +7,7 @@ description: "Subscribes to a billing plan by setting a token allowance and crea
 fn subscribe(env: Env, subscriber: Address, plan_id: u64) -> u64
 ```
 
-Subscribes a user to an existing plan. This function creates the subscription record and sets the SEP-41 token allowance in a single transaction - the subscriber signs once and both operations are authorized.
+Subscribes a user to an existing plan. This function creates the subscription record and sets the SEP-41 token allowance in a single transaction. The subscriber signs once and both operations are authorized.
 
 Returns the auto-incremented `sub_id`.
 
@@ -31,7 +31,7 @@ subscriber.require_auth();
 The subscriber's single signature covers both the `subscribe()` contract call **and** the nested `token.approve()` call. Soroban's auth tree bundles both operations into one authorization.
 
 <Tip>
-  The subscriber signs once. Their wallet will display exactly what is being authorized: the Vowena contract call and the token allowance (amount = `price_ceiling * periods`, spender = Vowena contract). No hidden permissions - full transparency.
+  The subscriber signs once. Their wallet will display exactly what is being authorized: the Vowena contract call and the token allowance (amount = `price_ceiling * periods`, spender = Vowena contract). No hidden permissions. Full transparency.
 </Tip>
 
 ---

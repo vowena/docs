@@ -1,18 +1,18 @@
 ---
 title: "charge"
-description: "Charges a due subscription by transferring tokens from subscriber to merchant. Permissionless - anyone can call this function to trigger billing."
+description: "Charges a due subscription by transferring tokens from subscriber to merchant. Permissionless. Anyone can call this function to trigger billing."
 ---
 
 ```rust
 fn charge(env: Env, sub_id: u64) -> bool
 ```
 
-Attempts to charge a subscription that is due for billing. This is the only write function in Vowena that requires **no authorization** - anyone can call it. The contract validates all conditions on-chain and either transfers funds or handles the failure gracefully.
+Attempts to charge a subscription that is due for billing. This is the only write function in Vowena that requires **no authorization**. Anyone can call it. The contract validates all conditions on-chain and either transfers funds or handles the failure gracefully.
 
 Returns `true` if the charge succeeded, `false` if it did not.
 
 <Warning>
-  `charge()` is **permissionless by design**. There is no `require_auth()` call. This enables keeper bots, third-party services, or anyone to trigger billing without the merchant's private key. The contract enforces all safety checks - timing, balance, allowance, and subscription status - so permissionless calling is safe.
+  `charge()` is **permissionless by design**. There is no `require_auth()` call. This enables keeper bots, third-party services, or anyone to trigger billing without the merchant's private key. The contract enforces all safety checks (timing, balance, allowance, and subscription status), so permissionless calling is safe.
 </Warning>
 
 ---
@@ -92,7 +92,7 @@ The contract checks, in order:
       networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
-    // Anyone can build and submit this - no specific signer required
+    // Anyone can build and submit this. No specific signer required
     const tx = await client.buildCharge(
       "GCALLER...ADDR",   // Any address (pays the tx fee)
       subscriptionId       // Subscription ID to charge
