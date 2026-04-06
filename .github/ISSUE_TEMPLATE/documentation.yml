@@ -1,0 +1,28 @@
+name: Documentation improvement
+description: Suggest a docs improvement or missing guide
+title: "docs: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is missing or unclear?
+      placeholder: The quickstart explains how to create a plan, but not how to charge it on testnet.
+    validations:
+      required: true
+  - type: textarea
+    id: audience
+    attributes:
+      label: Who is blocked?
+      description: Tell us whether this affects merchants, SDK users, contract contributors, operators, or everyone.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested improvement
+      placeholder: Add a short "next steps" section that links to the keeper and charge guides.
+  - type: textarea
+    id: references
+    attributes:
+      label: Related pages or references
+      description: Link to any existing pages, issues, or screenshots

@@ -1,0 +1,33 @@
+name: Docs bug
+description: Report an incorrect, broken, or misleading documentation page
+title: "fix: "
+body:
+  - type: textarea
+    id: page
+    attributes:
+      label: Page URL or file path
+      placeholder: https://docs.vowena.xyz/quickstart or quickstart.mdx
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong?
+      placeholder: The code snippet references a method name that no longer exists in the SDK.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should it say instead?
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues first.
+          required: true
+        - label: This is not a security disclosure.
+          required: true
