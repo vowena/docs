@@ -31,7 +31,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
 
 <Steps>
   <Step title="Fund a Keeper Wallet">
-    Create a new Stellar keypair and fund it with a small amount of XLM for transaction fees. On testnet, use the [Stellar Friendbot](https://laboratory.stellar.org/).
+    Create a new Stellar keypair and fund it with a small amount of XLM for transaction fees.
 
     ```bash
     # Generate a keypair (or use an existing one)
@@ -48,7 +48,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
     | --- | --- | --- | --- |
     | `CONTRACT_ID` | Yes | - | Vowena contract address (e.g., `CABC...XYZ`) |
     | `KEEPER_SECRET` | Yes | - | Stellar secret key for the keeper wallet (`S...`) |
-    | `RPC_URL` | No | `https://soroban-testnet.stellar.org` | Soroban RPC endpoint |
+    | `RPC_URL` | No | `https://soroban-mainnet.stellar.org` | Soroban RPC endpoint |
     | `NETWORK_PASSPHRASE` | No | `Test SDF Network ; September 2015` | Network passphrase |
     | `INTERVAL_MS` | No | `60000` | Polling interval in milliseconds |
 
@@ -67,7 +67,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
     ```bash
     CONTRACT_ID=CABC...XYZ \
     KEEPER_SECRET=SDEF...123 \
-    RPC_URL=https://soroban-testnet.stellar.org \
+    RPC_URL=https://soroban-mainnet.stellar.org \
     NETWORK_PASSPHRASE="Test SDF Network ; September 2015" \
     INTERVAL_MS=30000 \
     npx ts-node keeper/src/index.ts

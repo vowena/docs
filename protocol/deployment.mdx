@@ -1,6 +1,6 @@
 ---
 title: "Deployment Guide"
-description: "Step-by-step guide to building, deploying, and initializing the Vowena smart contract on Stellar's Soroban platform - for both testnet and mainnet."
+description: "Step-by-step guide to building, deploying, and initializing the Vowena smart contract on Stellar's Soroban platform - for both mainnet and testnet."
 ---
 
 ## Prerequisites
@@ -11,7 +11,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
   - **Rust** (latest stable) - [rustup.rs](https://rustup.rs)
   - **wasm32 target** - `rustup target add wasm32-unknown-unknown`
   - **Stellar CLI** - `cargo install stellar-cli` or via [Stellar docs](https://developers.stellar.org/docs/tools/cli)
-  - A funded Stellar account (testnet faucet or mainnet XLM for fees)
+  - A funded Stellar account (mainnet XLM for fees, or testnet faucet for testing)
 </Info>
 
 ---
@@ -42,6 +42,18 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
 
   <Step title="Deploy to the network">
     <Tabs>
+      <Tab title="Mainnet">
+        ```bash
+        stellar contract deploy \
+          --wasm target/wasm32v1-none/release/vowena.wasm \
+          --network mainnet \
+          --source $YOUR_SECRET_KEY
+        ```
+
+        <Warning>
+          Mainnet deployment costs real XLM. Ensure your account is funded and double-check the WASM binary before deploying. Contract upgrades are possible but require the admin key.
+        </Warning>
+      </Tab>
       <Tab title="Testnet">
         ```bash
         stellar contract deploy \
@@ -57,18 +69,6 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
         # CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
         ```
       </Tab>
-      <Tab title="Mainnet">
-        ```bash
-        stellar contract deploy \
-          --wasm target/wasm32v1-none/release/vowena.wasm \
-          --network mainnet \
-          --source $YOUR_SECRET_KEY
-        ```
-
-        <Warning>
-          Mainnet deployment costs real XLM. Ensure your account is funded and double-check the WASM binary before deploying. Contract upgrades are possible but require the admin key.
-        </Warning>
-      </Tab>
     </Tabs>
   </Step>
 
@@ -76,21 +76,21 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     After deployment, initialize the contract with an admin address:
 
     <Tabs>
-      <Tab title="Testnet">
-        ```bash
-        stellar contract invoke \
-          --id $CONTRACT_ID \
-          --network testnet \
-          --source $YOUR_SECRET_KEY \
-          -- initialize \
-          --admin $ADMIN_ADDRESS
-        ```
-      </Tab>
       <Tab title="Mainnet">
         ```bash
         stellar contract invoke \
           --id $CONTRACT_ID \
           --network mainnet \
+          --source $YOUR_SECRET_KEY \
+          -- initialize \
+          --admin $ADMIN_ADDRESS
+        ```
+      </Tab>
+      <Tab title="Testnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network testnet \
           --source $YOUR_SECRET_KEY \
           -- initialize \
           --admin $ADMIN_ADDRESS
@@ -107,20 +107,20 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     Confirm the contract is live by calling a read-only function:
 
     <Tabs>
-      <Tab title="Testnet">
-        ```bash
-        stellar contract invoke \
-          --id $CONTRACT_ID \
-          --network testnet \
-          -- get_plan \
-          --plan_id 1
-        ```
-      </Tab>
       <Tab title="Mainnet">
         ```bash
         stellar contract invoke \
           --id $CONTRACT_ID \
           --network mainnet \
+          -- get_plan \
+          --plan_id 1
+        ```
+      </Tab>
+      <Tab title="Testnet">
+        ```bash
+        stellar contract invoke \
+          --id $CONTRACT_ID \
+          --network testnet \
           -- get_plan \
           --plan_id 1
         ```
@@ -134,11 +134,11 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     Test the full flow by creating a plan:
 
     <Tabs>
-      <Tab title="Testnet">
+      <Tab title="Mainnet">
         ```bash
         stellar contract invoke \
           --id $CONTRACT_ID \
-          --network testnet \
+          --network mainnet \
           --source $YOUR_SECRET_KEY \
           -- create_plan \
           --merchant $MERCHANT_ADDRESS \
@@ -151,11 +151,11 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
           --price_ceiling 150000000
         ```
       </Tab>
-      <Tab title="Mainnet">
+      <Tab title="Testnet">
         ```bash
         stellar contract invoke \
           --id $CONTRACT_ID \
-          --network mainnet \
+          --network testnet \
           --source $YOUR_SECRET_KEY \
           -- create_plan \
           --merchant $MERCHANT_ADDRESS \
@@ -171,7 +171,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     </Tabs>
 
     <Tip>
-      On testnet, you can get test USDC from the [Stellar testnet faucet](https://laboratory.stellar.org). Use the test token address for the `--token` parameter.
+      On testnet, you can get test USDC from the [Stellar Laboratory](https://laboratory.stellar.org). Use the test token address for the `--token` parameter.
     </Tip>
   </Step>
 </Steps>
@@ -244,8 +244,8 @@ export ADMIN_ADDRESS="G..."
 # Merchant address
 export MERCHANT_ADDRESS="G..."
 
-# USDC token contract (testnet)
-export USDC_TOKEN_ADDRESS="CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
+# USDC token contract
+export USDC_TOKEN_ADDRESS="CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI"
 ```
 
 <Warning>

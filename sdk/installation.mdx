@@ -1,6 +1,6 @@
 ---
 title: "Installation & Setup"
-description: "Install the Vowena TypeScript SDK from npm, configure your VowenaClient for Stellar testnet or mainnet, and explore all available exports and type definitions."
+description: "Install the Vowena TypeScript SDK from npm, configure your VowenaClient for Stellar mainnet or testnet, and explore all available exports and type definitions."
 ---
 
 ## Install the SDK
@@ -41,9 +41,9 @@ The `VowenaClient` is the main entry point for all contract interactions. It bui
 import { VowenaClient, NETWORKS } from "vowena";
 
 const client = new VowenaClient({
-  contractId: NETWORKS.testnet.contractId,
-  rpcUrl: NETWORKS.testnet.rpcUrl,
-  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+  contractId: NETWORKS.mainnet.contractId,
+  rpcUrl: NETWORKS.mainnet.rpcUrl,
+  networkPassphrase: NETWORKS.mainnet.networkPassphrase,
 });
 ```
 
@@ -54,24 +54,6 @@ const client = new VowenaClient({
 The SDK ships with pre-configured network constants via the `NETWORKS` object.
 
 <Tabs>
-  <Tab title="Testnet">
-    ```typescript
-    import { VowenaClient, NETWORKS } from "vowena";
-
-    const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
-    });
-    ```
-
-    | Property | Value |
-    | --- | --- |
-    | `rpcUrl` | `https://soroban-testnet.stellar.org` |
-    | `networkPassphrase` | `Test SDF Network ; September 2015` |
-    | `contractId` | Pre-deployed testnet contract |
-    | `usdcAddress` | Testnet USDC token contract |
-  </Tab>
   <Tab title="Mainnet">
     ```typescript
     import { VowenaClient, NETWORKS } from "vowena";
@@ -89,6 +71,24 @@ The SDK ships with pre-configured network constants via the `NETWORKS` object.
     | `networkPassphrase` | `Public Global Stellar Network ; September 2015` |
     | `contractId` | Production mainnet contract |
     | `usdcAddress` | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI` |
+  </Tab>
+  <Tab title="Testnet">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "vowena";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+    ```
+
+    | Property | Value |
+    | --- | --- |
+    | `rpcUrl` | `https://soroban-testnet.stellar.org` |
+    | `networkPassphrase` | `Test SDF Network ; September 2015` |
+    | `contractId` | Pre-deployed testnet contract |
+    | `usdcAddress` | Testnet USDC token contract |
   </Tab>
   <Tab title="Custom RPC">
     ```typescript

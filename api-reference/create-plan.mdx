@@ -78,14 +78,14 @@ The merchant address must sign the transaction.
     import { VowenaClient, NETWORKS, toStroops } from "vowena";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
     });
 
     const tx = await client.buildCreatePlan({
       merchant: "GMERCHANT...ADDR",
-      token: NETWORKS.testnet.usdcAddress,
+      token: NETWORKS.mainnet.usdcAddress,
       amount: toStroops("9.99"),          // 99900000n stroops
       period: 2_592_000,                  // 30 days
       trialPeriods: 1,                    // 1 free period
@@ -103,7 +103,7 @@ The merchant address must sign the transaction.
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network testnet \
+      --network mainnet \
       --source MERCHANT_SECRET \
       -- \
       create_plan \

@@ -48,7 +48,7 @@ A **plan** is an immutable billing template created by a merchant on-chain. It d
     ```typescript
     const tx = await client.buildCreatePlan({
       merchant: "GMERCHANT...ADDR",
-      token: NETWORKS.testnet.usdcAddress,
+      token: NETWORKS.mainnet.usdcAddress,
       amount: toStroops("9.99"),
       period: 2_592_000,        // 30 days
       priceCeiling: toStroops("14.99"),
@@ -324,9 +324,9 @@ Grace periods provide a safety net for failed charges, preventing immediate subs
     import { VowenaKeeper, NETWORKS } from "vowena";
 
     const keeper = new VowenaKeeper({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
       signerSecretKey: "SKEEPER...SECRET",
     });
 

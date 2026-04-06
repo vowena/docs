@@ -80,7 +80,7 @@ const partialTx = await client.refund({
 # Full refund
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network mainnet \
   -- refund \
   --merchant $MERCHANT_ADDRESS \
   --sub_id 42 \
@@ -89,7 +89,7 @@ stellar contract invoke \
 # Partial refund (3.50 USDC)
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network mainnet \
   -- refund \
   --merchant $MERCHANT_ADDRESS \
   --sub_id 42 \

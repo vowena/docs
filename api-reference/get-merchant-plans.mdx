@@ -45,9 +45,9 @@ None. Returns an empty vector if the merchant has no plans.
     import { VowenaClient, NETWORKS } from "vowena";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
     });
 
     const planIds = await client.getMerchantPlans("GMERCHANT...ADDR");
@@ -64,7 +64,7 @@ None. Returns an empty vector if the merchant has no plans.
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network testnet \
+      --network mainnet \
       -- \
       get_merchant_plans \
       --merchant GMERCHANT...ADDR

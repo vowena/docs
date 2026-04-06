@@ -119,14 +119,14 @@ import {
 import { VowenaClient, NETWORKS, toStroops, SECONDS_PER_MONTH } from "vowena";
 
 const client = new VowenaClient({
-  contractId: NETWORKS.testnet.contractId,
-  rpcUrl: NETWORKS.testnet.rpcUrl,
-  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+  contractId: NETWORKS.mainnet.contractId,
+  rpcUrl: NETWORKS.mainnet.rpcUrl,
+  networkPassphrase: NETWORKS.mainnet.networkPassphrase,
 });
 
 const xdr = await client.buildCreatePlan({
   merchant: "GMERCHANT...ADDR",
-  token: NETWORKS.testnet.usdcAddress,
+  token: NETWORKS.mainnet.usdcAddress,
   amount: toStroops("9.99"),          // 99900000n
   period: SECONDS_PER_MONTH,          // 2592000
   priceCeiling: toStroops("14.99"),   // 149900000n

@@ -60,9 +60,9 @@ None (`void`).
     import { VowenaClient, NETWORKS, toStroops } from "vowena";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
     });
 
     // Merchant refunds 5.00 USDC to the subscriber
@@ -79,7 +79,7 @@ None (`void`).
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network testnet \
+      --network mainnet \
       --source MERCHANT_SECRET \
       -- \
       refund \

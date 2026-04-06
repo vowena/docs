@@ -83,9 +83,9 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
     import { VowenaClient, NETWORKS } from "vowena";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
     });
 
     const tx = await client.buildSubscribe(
@@ -102,7 +102,7 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network testnet \
+      --network mainnet \
       --source SUBSCRIBER_SECRET \
       -- \
       subscribe \

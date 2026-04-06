@@ -66,7 +66,7 @@ There are two options: the built-in dashboard keeper (zero setup) or a standalon
         |----------|-------------|---------|
         | `CONTRACT_ID` | The Vowena contract address on your target network | `CABC...XYZ` |
         | `KEEPER_SECRET` | Secret key of the wallet that will sign charge transactions | `SABC...XYZ` |
-        | `RPC_URL` | Soroban RPC endpoint | `https://soroban-testnet.stellar.org` |
+        | `RPC_URL` | Soroban RPC endpoint | `https://soroban-mainnet.stellar.org` |
         | `NETWORK_PASSPHRASE` | Stellar network passphrase | `Test SDF Network ; September 2015` |
         | `INTERVAL_MS` | How often the keeper checks for due subscriptions (in milliseconds) | `60000` (every minute) |
 
@@ -81,7 +81,7 @@ There are two options: the built-in dashboard keeper (zero setup) or a standalon
         ```bash
         CONTRACT_ID=CABC...XYZ \
         KEEPER_SECRET=SABC...XYZ \
-        RPC_URL=https://soroban-testnet.stellar.org \
+        RPC_URL=https://soroban-mainnet.stellar.org \
         NETWORK_PASSPHRASE="Test SDF Network ; September 2015" \
         INTERVAL_MS=60000 \
         npx ts-node keeper/src/index.ts

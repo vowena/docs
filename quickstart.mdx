@@ -3,10 +3,10 @@ title: "Quickstart"
 description: "Go from zero to a working on-chain subscription in 5 minutes. Install the Vowena SDK, create a billing plan, subscribe a wallet, charge, and cancel."
 ---
 
-Get a complete subscription lifecycle running on Stellar testnet in under 5 minutes.
+Get a complete subscription lifecycle running on Stellar in under 5 minutes.
 
 <Info>
-  This guide uses the Vowena TypeScript SDK. You'll need Node.js 18+ and a Stellar testnet account with USDC. You can get testnet USDC from the [Stellar Laboratory](https://laboratory.stellar.org/).
+  This guide uses the Vowena TypeScript SDK. You'll need Node.js 18+ and a Stellar account with USDC.
 </Info>
 
 <Steps>
@@ -36,17 +36,6 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
     Initialize the `VowenaClient` with your network configuration.
 
     <Tabs>
-      <Tab title="Testnet">
-        ```typescript
-        import { VowenaClient, NETWORKS } from "vowena";
-
-        const client = new VowenaClient({
-          contractId: NETWORKS.testnet.contractId,
-          rpcUrl: NETWORKS.testnet.rpcUrl,
-          networkPassphrase: NETWORKS.testnet.networkPassphrase,
-        });
-        ```
-      </Tab>
       <Tab title="Mainnet">
         ```typescript
         import { VowenaClient, NETWORKS } from "vowena";
@@ -55,6 +44,17 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
           contractId: NETWORKS.mainnet.contractId,
           rpcUrl: NETWORKS.mainnet.rpcUrl,
           networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+        });
+        ```
+      </Tab>
+      <Tab title="Testnet">
+        ```typescript
+        import { VowenaClient, NETWORKS } from "vowena";
+
+        const client = new VowenaClient({
+          contractId: NETWORKS.testnet.contractId,
+          rpcUrl: NETWORKS.testnet.rpcUrl,
+          networkPassphrase: NETWORKS.testnet.networkPassphrase,
         });
         ```
       </Tab>
@@ -72,7 +72,7 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
     </Tabs>
 
     <Note>
-      `NETWORKS.testnet` provides pre-configured values for `contractId`, `rpcUrl`, `networkPassphrase`, and `usdcAddress` so you don't need to look them up.
+      `NETWORKS.mainnet` provides pre-configured values for `contractId`, `rpcUrl`, `networkPassphrase`, and `usdcAddress` so you don't need to look them up.
     </Note>
   </Step>
 
@@ -85,7 +85,7 @@ Get a complete subscription lifecycle running on Stellar testnet in under 5 minu
     // Build the create_plan transaction
     const tx = await client.buildCreatePlan({
       merchant: "GMERCHANT...ADDR",        // Merchant's Stellar address
-      token: NETWORKS.testnet.usdcAddress,  // USDC token contract
+      token: NETWORKS.mainnet.usdcAddress,  // USDC token contract
       amount: toStroops("9.99"),            // 9.99 USDC per period → 99900000n
       period: 2_592_000,                    // 30 days in seconds
       priceCeiling: toStroops("14.99"),     // Max price before re-auth needed
@@ -200,15 +200,15 @@ Here's the complete flow in a single script:
 import { VowenaClient, NETWORKS, toStroops } from "vowena";
 
 const client = new VowenaClient({
-  contractId: NETWORKS.testnet.contractId,
-  rpcUrl: NETWORKS.testnet.rpcUrl,
-  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+  contractId: NETWORKS.mainnet.contractId,
+  rpcUrl: NETWORKS.mainnet.rpcUrl,
+  networkPassphrase: NETWORKS.mainnet.networkPassphrase,
 });
 
 // 1. Merchant creates a plan
 const createTx = await client.buildCreatePlan({
   merchant: "GMERCHANT...ADDR",
-  token: NETWORKS.testnet.usdcAddress,
+  token: NETWORKS.mainnet.usdcAddress,
   amount: toStroops("9.99"),
   period: 2_592_000,
   priceCeiling: toStroops("14.99"),

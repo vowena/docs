@@ -15,7 +15,7 @@ Fetches events from the Soroban RPC in a single request. Useful for one-off quer
 import { getEvents } from "vowena";
 
 const { events, latestLedger } = await getEvents(
-  "https://soroban-testnet.stellar.org",
+  "https://soroban-mainnet.stellar.org",
   "CABC...CONTRACT",
   12345678,  // startLedger
   100        // limit (optional)
@@ -74,7 +74,7 @@ import { VowenaEventPoller } from "vowena";
 
 const poller = new VowenaEventPoller({
   contractId: "C...",
-  rpcUrl: "https://soroban-testnet.stellar.org",
+  rpcUrl: "https://soroban-mainnet.stellar.org",
   onEvent: (event) => console.log(event.type, event.data),
   intervalMs: 5000,
 });
@@ -142,8 +142,8 @@ The Vowena contract emits the following event types:
 import { VowenaEventPoller, NETWORKS } from "vowena";
 
 const poller = new VowenaEventPoller({
-  contractId: NETWORKS.testnet.contractId,
-  rpcUrl: NETWORKS.testnet.rpcUrl,
+  contractId: NETWORKS.mainnet.contractId,
+  rpcUrl: NETWORKS.mainnet.rpcUrl,
   onEvent: (event) => {
     if (event.type === "charge_ok") {
       console.log(`Charge succeeded at ledger ${event.ledger}`, event.data);

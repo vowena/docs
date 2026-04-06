@@ -61,9 +61,9 @@ Only the subscriber on the subscription can accept the migration. The subscriber
     import { VowenaClient, NETWORKS } from "vowena";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
     });
 
     // Accept the pending migration
@@ -81,7 +81,7 @@ Only the subscriber on the subscription can accept the migration. The subscriber
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network testnet \
+      --network mainnet \
       --source SUBSCRIBER_SECRET \
       -- \
       accept_migration \

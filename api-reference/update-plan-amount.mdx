@@ -62,9 +62,9 @@ None (`void`).
     import { VowenaClient, NETWORKS, toStroops } from "vowena";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
     });
 
     // Raise the price from 9.99 to 12.99 (within the 14.99 ceiling)
@@ -81,7 +81,7 @@ None (`void`).
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network testnet \
+      --network mainnet \
       --source MERCHANT_SECRET \
       -- \
       update_plan_amount \

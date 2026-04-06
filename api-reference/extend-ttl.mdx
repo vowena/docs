@@ -56,9 +56,9 @@ None. If the plan or subscription does not exist, the function is a no-op.
     import { VowenaClient, NETWORKS } from "vowena";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.testnet.contractId,
-      rpcUrl: NETWORKS.testnet.rpcUrl,
-      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
     });
 
     // Extend TTL for plan 1 and subscription 5
@@ -75,7 +75,7 @@ None. If the plan or subscription does not exist, the function is a no-op.
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network testnet \
+      --network mainnet \
       --source ANY_SECRET_KEY \
       -- \
       extend_ttl \

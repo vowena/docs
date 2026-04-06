@@ -12,7 +12,7 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
     Your wallet address is your identity. The dashboard queries the Vowena contract for every subscription tied to your address and displays them automatically. There is no signup form and no profile to fill out.
 
     <Tip>
-      Make sure your wallet is connected to the correct network - Testnet for testing, Mainnet for real subscriptions. The dashboard detects the network from your wallet.
+      Make sure your wallet is connected to the correct network. The dashboard detects the network from your wallet.
     </Tip>
   </Step>
 
@@ -103,7 +103,7 @@ One of the core benefits of on-chain subscriptions is that you are never locked 
     soroban contract invoke \
       --id CVOWENA_CONTRACT_ID \
       --source YOUR_SECRET_KEY \
-      --network testnet \
+      --network mainnet \
       -- cancel \
       --caller YOUR_PUBLIC_KEY \
       --sub_id YOUR_SUBSCRIPTION_ID
