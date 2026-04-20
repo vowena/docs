@@ -12,7 +12,7 @@ The Vowena contract emits events for every significant state change - plan creat
 Fetches events from the Soroban RPC in a single request. Useful for one-off queries or building your own polling loop.
 
 ```typescript
-import { getEvents } from "vowena";
+import { getEvents } from "@vowena/sdk";
 
 const { events, latestLedger } = await getEvents(
   "https://soroban-mainnet.stellar.org",
@@ -70,7 +70,7 @@ interface VowenaEvent {
 For continuous monitoring, use `VowenaEventPoller`. It polls the RPC at a configurable interval and invokes your callback for each new event.
 
 ```typescript
-import { VowenaEventPoller } from "vowena";
+import { VowenaEventPoller } from "@vowena/sdk";
 
 const poller = new VowenaEventPoller({
   contractId: "C...",
@@ -139,7 +139,7 @@ The Vowena contract emits the following event types:
 ## Example: Logging All Charges
 
 ```typescript
-import { VowenaEventPoller, NETWORKS } from "vowena";
+import { VowenaEventPoller, NETWORKS } from "@vowena/sdk";
 
 const poller = new VowenaEventPoller({
   contractId: NETWORKS.mainnet.contractId,

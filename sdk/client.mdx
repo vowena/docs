@@ -6,7 +6,7 @@ description: "Complete API reference for VowenaClient. Every write method, read 
 The `VowenaClient` is the primary interface for interacting with the Vowena smart contract. Write methods return an assembled XDR string for wallet signing. Read methods query on-chain state directly.
 
 ```typescript
-import { VowenaClient, NETWORKS } from "vowena";
+import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
 const client = new VowenaClient({
   contractId: NETWORKS.mainnet.contractId,

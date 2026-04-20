@@ -15,15 +15,15 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
 
     <CodeGroup>
       ```bash npm
-      npm install vowena
+      npm install @vowena/sdk
       ```
 
       ```bash yarn
-      yarn add vowena
+      yarn add @vowena/sdk
       ```
 
       ```bash pnpm
-      pnpm add vowena
+      pnpm add @vowena/sdk
       ```
     </CodeGroup>
 
@@ -38,7 +38,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     <Tabs>
       <Tab title="Mainnet">
         ```typescript
-        import { VowenaClient, NETWORKS } from "vowena";
+        import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
         const client = new VowenaClient({
           contractId: NETWORKS.mainnet.contractId,
@@ -49,7 +49,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
       </Tab>
       <Tab title="Testnet">
         ```typescript
-        import { VowenaClient, NETWORKS } from "vowena";
+        import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
         const client = new VowenaClient({
           contractId: NETWORKS.testnet.contractId,
@@ -60,7 +60,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
       </Tab>
       <Tab title="Custom RPC">
         ```typescript
-        import { VowenaClient } from "vowena";
+        import { VowenaClient } from "@vowena/sdk";
 
         const client = new VowenaClient({
           contractId: "CABC...XYZ",
@@ -80,7 +80,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     Define a subscription plan. This is an on-chain transaction that stores the plan parameters permanently.
 
     ```typescript
-    import { toStroops, NETWORKS } from "vowena";
+    import { toStroops, NETWORKS } from "@vowena/sdk";
 
     // Build the create_plan transaction
     const tx = await client.buildCreatePlan({
@@ -197,7 +197,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
 Here's the complete flow in a single script:
 
 ```typescript
-import { VowenaClient, NETWORKS, toStroops } from "vowena";
+import { VowenaClient, NETWORKS, toStroops } from "@vowena/sdk";
 
 const client = new VowenaClient({
   contractId: NETWORKS.mainnet.contractId,

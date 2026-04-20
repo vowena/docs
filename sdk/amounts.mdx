@@ -24,7 +24,7 @@ All on-chain amounts are stored and transmitted as stroops represented by `bigin
 Converts a human-readable amount string to a `bigint` in stroops.
 
 ```typescript
-import { toStroops } from "vowena";
+import { toStroops } from "@vowena/sdk";
 
 const amount = toStroops("9.99");
 // → 99900000n
@@ -49,7 +49,7 @@ function toStroops(amount: string): bigint;
 Converts a `bigint` in stroops back to a human-readable string.
 
 ```typescript
-import { fromStroops } from "vowena";
+import { fromStroops } from "@vowena/sdk";
 
 const display = fromStroops(99900000n);
 // → "9.99"
@@ -95,7 +95,7 @@ import {
   SECONDS_PER_DAY,
   SECONDS_PER_MONTH,
   SECONDS_PER_YEAR,
-} from "vowena";
+} from "@vowena/sdk";
 ```
 
 | Constant | Value | Description |
@@ -116,7 +116,7 @@ import {
 ### Creating a Plan with Correct Amounts
 
 ```typescript
-import { VowenaClient, NETWORKS, toStroops, SECONDS_PER_MONTH } from "vowena";
+import { VowenaClient, NETWORKS, toStroops, SECONDS_PER_MONTH } from "@vowena/sdk";
 
 const client = new VowenaClient({
   contractId: NETWORKS.mainnet.contractId,
@@ -137,7 +137,7 @@ const xdr = await client.buildCreatePlan({
 ### Displaying a Subscription Price
 
 ```typescript
-import { fromStroops } from "vowena";
+import { fromStroops } from "@vowena/sdk";
 
 const plan = await client.getPlan(42, callerAddress);
 const priceDisplay = `$${fromStroops(plan.amount)} USDC / month`;
