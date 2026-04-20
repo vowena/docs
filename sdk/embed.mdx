@@ -1,0 +1,249 @@
+---
+title: "Embed"
+description: "Add Vowena subscribe buttons and pricing tables to any app in three lines of code. Plan ID in, signed subscription out."
+---
+
+Vowena's embed layer turns any plan ID into a production-ready subscribe button. The button fetches plan details from chain, handles wallet connection across every major Stellar wallet, shows the authorization prompt, and returns a signed subscription. You write three lines. Your customers subscribe in thirty seconds.
+
+```html
+<div id="subscribe"></div>
+<script type="module">
+  import { VowenaSubscribe } from "@vowena/sdk/embed";
+  VowenaSubscribe.mount("#subscribe", { planId: 42 });
+</script>
+```
+
+That's the entire integration. Plan 42 is a globally unique integer. The component reads it, renders the correct price, period, and trial info, and handles everything else.
+
+---
+
+## Quick start
+
+<Tabs>
+  <Tab title="Vanilla JS">
+    ```ts
+    import { VowenaSubscribe } from "@vowena/sdk/embed";
+
+    VowenaSubscribe.mount("#subscribe-pro", {
+      planId: 42,
+    });
+    ```
+
+    `mount()` returns a `VowenaInstance` with `unmount()` and `refresh()` methods. Safe to call multiple times — each mount is isolated.
+  </Tab>
+
+  <Tab title="React">
+    ```tsx
+    import { VowenaProvider, SubscribeButton } from "@vowena/sdk/react";
+
+    export function Pricing() {
+      return (
+        <VowenaProvider network="mainnet">
+          <SubscribeButton planId={42}>
+            Subscribe to Pro
+          </SubscribeButton>
+        </VowenaProvider>
+      );
+    }
+    ```
+
+    `VowenaProvider` initializes the wallet kit once per tree. Place it near your app root.
+  </Tab>
+
+  <Tab title="Next.js">
+    ```tsx
+    "use client";
+
+    import { VowenaProvider, SubscribeButton } from "@vowena/sdk/react";
+
+    export function Pricing() {
+      return (
+        <VowenaProvider network="mainnet">
+          <SubscribeButton planId={42}>Subscribe</SubscribeButton>
+        </VowenaProvider>
+      );
+    }
+    ```
+
+    The embed is client-side only (wallets live in the browser). Mark the file with `"use client"`.
+  </Tab>
+</Tabs>
+
+---
+
+## Pricing table
+
+Pass an array of plan IDs to render a full pricing page. Each card fetches its plan in parallel and renders price, period, trial, and a subscribe button.
+
+<Tabs>
+  <Tab title="Vanilla JS">
+    ```ts
+    import { VowenaSubscribe } from "@vowena/sdk/embed";
+
+    VowenaSubscribe.mountPricingTable("#pricing", {
+      planIds: [42, 43, 44],
+      highlight: 43,
+    });
+    ```
+  </Tab>
+
+  <Tab title="React">
+    ```tsx
+    import { PricingTable } from "@vowena/sdk/react";
+
+    <PricingTable
+      planIds={[42, 43, 44]}
+      highlight={43}
+    />
+    ```
+  </Tab>
+</Tabs>
+
+`highlight` marks one plan as "Most popular" — a visual accent, no functional change.
+
+---
+
+## What happens when a user clicks Subscribe
+
+<Steps>
+  <Step title="Wallet connection">
+    If no wallet is connected, a modal shows Freighter, LOBSTR, Albedo, Rabet, and xBull. The user picks one and approves the connection. The chosen wallet persists across the session.
+  </Step>
+
+  <Step title="Authorization prompt">
+    The embed renders a human-readable summary:
+    *"Subscribing to **Pro** · 9.99 USDC every month · 7-day trial · cancel anytime. You'll approve up to 20.00 USDC per period for 24 periods."*
+
+    The authorization cap comes from the plan's `priceCeiling` and `maxPeriods` — the merchant can't charge more than the ceiling, ever.
+  </Step>
+
+  <Step title="Sign and submit">
+    The embed calls `buildSubscribe()`, asks the wallet to sign nested Soroban authorization entries, and submits the transaction. This is one click for the user.
+  </Step>
+
+  <Step title="Success state">
+    On success, the embed shows the subscription ID, the next billing date, and a link to the Vowena dashboard where the subscriber can manage it. An `onSuccess` callback fires with the full subscription object.
+  </Step>
+</Steps>
+
+---
+
+## API reference
+
+### `VowenaSubscribe.mount(target, options)`
+
+```ts
+function mount(
+  target: string | HTMLElement,
+  options: MountOptions,
+): VowenaInstance;
+
+interface MountOptions {
+  planId: number;
+  network?: "testnet" | "mainnet";  // default: "mainnet"
+  label?: string;                    // button text, default: "Subscribe"
+  onSuccess?: (sub: Subscription) => void;
+  onError?: (err: Error) => void;
+  onCancel?: () => void;
+}
+
+interface VowenaInstance {
+  unmount(): void;
+  refresh(): Promise<void>;           // re-fetches plan from chain
+}
+```
+
+### `VowenaSubscribe.mountPricingTable(target, options)`
+
+```ts
+function mountPricingTable(
+  target: string | HTMLElement,
+  options: PricingTableOptions,
+): VowenaInstance;
+
+interface PricingTableOptions {
+  planIds: number[];
+  network?: "testnet" | "mainnet";
+  highlight?: number;                 // plan ID to visually emphasize
+  onSuccess?: (sub: Subscription) => void;
+  onError?: (err: Error) => void;
+}
+```
+
+### React components
+
+```tsx
+<VowenaProvider network="mainnet">
+  {children}
+</VowenaProvider>
+
+<SubscribeButton
+  planId={42}
+  label="Subscribe to Pro"
+  onSuccess={(sub) => router.push(`/thanks?sub=${sub.id}`)}
+>
+  {/* Optional custom children override the default button content */}
+</SubscribeButton>
+
+<PricingTable
+  planIds={[42, 43, 44]}
+  highlight={43}
+  onSuccess={(sub) => trackConversion(sub.id)}
+/>
+```
+
+All event callbacks (`onSuccess`, `onError`, `onCancel`) are fully typed with the SDK's `Subscription` and `Error` types.
+
+---
+
+## How to find your plan ID
+
+<Steps>
+  <Step title="Open your workspace in the Vowena dashboard">
+    Go to `app.vowena.xyz`, open the workspace, click the **Plans** tab.
+  </Step>
+
+  <Step title="Copy the plan ID">
+    Each plan card shows its ID. Click the copy icon.
+  </Step>
+
+  <Step title="Paste into your embed">
+    That's the only merchant-specific value you'll ever hardcode. The plan already knows your wallet address, token, amount, period, and ceiling — the embed reads all of it from chain.
+  </Step>
+</Steps>
+
+If you update the plan amount later via `updatePlanAmount`, every embed using that plan ID reflects the new price on next render. No redeploy.
+
+---
+
+## What's not here (yet)
+
+- **Zero-JS `<script>` CDN embed** — coming v0.3. React + vanilla JS covers every bundler today.
+- **Theming API** — v0.3. The embed ships with Vowena's default brand tokens.
+- **Customer portal embed** — subscribers manage their subscriptions at `app.vowena.xyz/subscriptions`. An embeddable portal is on the roadmap.
+
+---
+
+## How it works under the hood
+
+The embed is a thin layer around the existing SDK:
+
+1. On mount, `client.getPlan(planId, callerAddress)` fetches the plan from chain.
+2. Plan fields (`merchant`, `amount`, `period`, `priceCeiling`, `maxPeriods`, `trialPeriods`) render the button and authorization prompt.
+3. On click, [Stellar Wallets Kit](https://github.com/Creit-Tech/Stellar-Wallets-Kit) handles wallet selection and signing — Freighter, LOBSTR, Albedo, Rabet, xBull all work out of the box.
+4. `client.buildSubscribe()` assembles the XDR. The wallet signs the nested `token.approve()` authorization for the ceiling × maxPeriods allowance.
+5. `client.submitTransaction()` broadcasts. On success, the embed calls `client.getSubscription()` with the new ID and passes it to `onSuccess`.
+
+No server. No API keys. No webhooks. The plan ID is the only shared state, and it's on-chain.
+
+---
+
+## Peer dependencies
+
+`@vowena/sdk/embed` and `@vowena/sdk/react` depend on `@creit.tech/stellar-wallets-kit` for wallet UX. Install it alongside:
+
+```bash
+npm install @vowena/sdk @creit.tech/stellar-wallets-kit
+```
+
+If you already have a wallet kit instance elsewhere in your app, pass it to `VowenaProvider` via the `walletKit` prop to avoid double-initialization.
