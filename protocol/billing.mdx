@@ -8,7 +8,11 @@ description: "The complete charge flow in Vowena: permissionless billing, pre-ch
 `charge()` is the heart of the Vowena protocol. It is called every billing period for every active subscription, and its design drives most of the contract's architecture decisions.
 
 <Info>
-  **`charge()` is permissionless.** It takes no authorization. There is no `require_auth()` call. Anyone - the merchant, a keeper bot, a random third party - can call `charge(sub_id)` and trigger billing. The protocol validates everything on-chain: only the merchant receives funds, only the correct amount is transferred, and only at the right time.
+  **`charge()` is permissionless.** It takes no authorization. There is no
+  `require_auth()` call. Anyone - the merchant, a keeper bot, a random third
+  party - can call `charge(sub_id)` and trigger billing. The protocol validates
+  everything on-chain: only the merchant receives funds, only the correct amount
+  is transferred, and only at the right time.
 </Info>
 
 This design means there is **no single point of failure** for billing. If the merchant's server goes down, a keeper network can continue charging. If all keepers go down, the merchant can charge manually. The protocol does not care who submits the transaction.
@@ -28,15 +32,20 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
     If the subscription is **Paused** and an entire billing period has elapsed since it was paused, the contract transitions it to **Cancelled**, emits `SubscriptionCancelled`, and returns `false`.
 
     This is how paused subscriptions eventually terminate - they get one extra period to recover before being permanently cancelled.
+
   </Step>
 
-  <Step title="Check status is Active">
-    If the subscription status is not `Active`, the function returns `false`. Only active subscriptions can be charged. This catches `Cancelled`, `Expired`, and freshly-paused subscriptions.
-  </Step>
+<Step title="Check status is Active">
+  If the subscription status is not `Active`, the function returns `false`. Only
+  active subscriptions can be charged. This catches `Cancelled`, `Expired`, and
+  freshly-paused subscriptions.
+</Step>
 
-  <Step title="Check billing time">
-    The contract verifies that the current ledger timestamp is **at or after** `next_billing_time`. If the subscription is not yet due, the function returns `false`. You cannot charge early.
-  </Step>
+<Step title="Check billing time">
+  The contract verifies that the current ledger timestamp is **at or after**
+  `next_billing_time`. If the subscription is not yet due, the function returns
+  `false`. You cannot charge early.
+</Step>
 
   <Step title="Check max periods (expiry)">
     If the plan has `max_periods > 0` and `periods_billed >= max_periods`, the subscription is transitioned to **Expired**, a `SubscriptionExpired` event is emitted, and the function returns `false`.
@@ -50,12 +59,14 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
     - Returns `true`
 
     **No token transfer occurs during trials.** The allowance is preserved for paid periods.
+
   </Step>
 
   <Step title="Check grace period expiry">
     If the subscription has a `failed_at` timestamp (a previous charge failed) **and** the current time exceeds `failed_at + grace_period`, the subscription is transitioned to **Paused**. A `SubscriptionPaused` event is emitted and the function returns `false`.
 
     This means the subscriber had a grace window to top up and the window has closed.
+
   </Step>
 
   <Step title="Pre-check balance and allowance">
@@ -72,6 +83,7 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
 
       By pre-checking, the contract detects insufficient funds **before** calling `transfer_from`. It can then record the failure, start the grace clock, emit events, and return `false` - all within a successful transaction that persists to the ledger.
     </Warning>
+
   </Step>
 
   <Step title="Insufficient funds path">
@@ -82,6 +94,7 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
     - Returns `false`
 
     The transaction **succeeds** (is recorded on-chain) even though the charge failed. This is intentional - it creates an auditable record of the failure and starts the grace period countdown.
+
   </Step>
 
   <Step title="Successful charge">
@@ -93,6 +106,7 @@ Every call to `charge(sub_id)` executes the following steps in order. If any ste
     4. Clears `failed_at` (resets to `0` - any previous grace clock is cancelled)
     5. Emits `ChargeBilled` with the amount and updated period count
     6. Returns `true`
+
   </Step>
 </Steps>
 
@@ -107,6 +121,7 @@ The grace period creates a recovery window when a charge fails. Here is the comp
     `charge()` is called, pre-check finds insufficient funds. `failed_at` is set to the current timestamp. Subscription remains **Active**. Grace clock starts ticking.
 
     The subscriber now has `grace_period` seconds to top up their wallet.
+
   </Accordion>
   <Accordion title="Successful charge during grace">
     If the subscriber tops up and `charge()` is called again before grace expires:
@@ -116,6 +131,7 @@ The grace period creates a recovery window when a charge fails. Here is the comp
     - Subscription stays **Active** as if nothing happened
 
     The grace period is completely reset.
+
   </Accordion>
   <Accordion title="Grace period expires">
     If `charge()` is called after `failed_at + grace_period`:
@@ -124,6 +140,7 @@ The grace period creates a recovery window when a charge fails. Here is the comp
     - Returns `false`
 
     The subscription is now paused but recoverable via `reactivate()`.
+
   </Accordion>
   <Accordion title="Paused for one more period">
     If a full billing period passes while the subscription is Paused and `charge()` is called again:
@@ -132,24 +149,29 @@ The grace period creates a recovery window when a charge fails. Here is the comp
     - Returns `false`
 
     The subscription is now permanently over.
+
   </Accordion>
 </AccordionGroup>
 
 <Tip>
-  Set `grace_period` generously. A grace period of `259200` (3 days) gives subscribers time to receive failure notifications, transfer funds, and recover - without losing their subscription.
+  Set `grace_period` generously. A grace period of `259200` (3 days) gives
+  subscribers time to receive failure notifications, transfer funds, and recover
+  - without losing their subscription.
 </Tip>
 
 ---
 
 ## Charge Return Values
 
-| Return | Meaning | State Change |
-|---|---|---|
-| `true` | Charge succeeded (or trial period advanced) | `periods_billed` incremented, `next_billing_time` advanced |
-| `false` | Charge could not be processed | Depends on reason: status may change to Paused, Cancelled, or Expired; or `failed_at` set |
+| Return  | Meaning                                     | State Change                                                                              |
+| ------- | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `true`  | Charge succeeded (or trial period advanced) | `periods_billed` incremented, `next_billing_time` advanced                                |
+| `false` | Charge could not be processed               | Depends on reason: status may change to Paused, Cancelled, or Expired; or `failed_at` set |
 
 <Note>
-  A `false` return is **not** a transaction failure. The transaction succeeds and is recorded on-chain. The `false` indicates that no token transfer occurred. Always check the emitted events to understand what happened.
+  A `false` return is **not** a transaction failure. The transaction succeeds
+  and is recorded on-chain. The `false` indicates that no token transfer
+  occurred. Always check the emitted events to understand what happened.
 </Note>
 
 ---
@@ -160,18 +182,24 @@ Because `charge()` requires no authorization, it enables a **keeper bot** ecosys
 
 <Columns cols={3}>
   <Card title="Merchant bot" icon="store">
-    The merchant runs their own cron job or backend service that calls `charge()` for each subscription when billing time arrives.
+    The merchant runs their own cron job or backend service that calls
+    `charge()` for each subscription when billing time arrives.
   </Card>
   <Card title="Third-party keeper" icon="robot">
-    An independent keeper service monitors all active subscriptions and calls `charge()` on time. The [Vowena SDK](/sdk/keeper) includes a ready-made keeper implementation.
+    An independent keeper service monitors all active subscriptions and calls
+    `charge()` on time. The [Vowena SDK](/sdk/keeper) includes a ready-made
+    keeper implementation.
   </Card>
   <Card title="Manual fallback" icon="hand">
-    In the worst case, anyone can call `charge()` from a block explorer or CLI. The protocol enforces all rules regardless of who submits the transaction.
+    In the worst case, anyone can call `charge()` from a block explorer or CLI.
+    The protocol enforces all rules regardless of who submits the transaction.
   </Card>
 </Columns>
 
 <Info>
-  Keepers pay the Stellar transaction fee (~$0.00001). The economic incentive for third-party keepers can come from merchant tips, protocol rewards, or bundled services. The protocol itself does not charge fees.
+  Keepers pay the Stellar transaction fee (~$0.00001). The economic incentive
+  for third-party keepers can come from merchant tips, protocol rewards, or
+  bundled services. The protocol itself does not charge fees.
 </Info>
 
 ---
@@ -180,15 +208,20 @@ Because `charge()` requires no authorization, it enables a **keeper bot** ecosys
 
 <CardGroup cols={2}>
   <Card title="No single point of failure" icon="arrows-split-up-and-left">
-    Permissionless charging means billing continues even if the merchant's infrastructure goes offline.
+    Permissionless charging means billing continues even if the merchant's
+    infrastructure goes offline.
   </Card>
   <Card title="Auditable failures" icon="file-circle-check">
-    Pre-checking balance before transfer ensures that every failed charge is recorded on-chain with a timestamp, enabling grace periods and notifications.
+    Pre-checking balance before transfer ensures that every failed charge is
+    recorded on-chain with a timestamp, enabling grace periods and
+    notifications.
   </Card>
   <Card title="Atomic state transitions" icon="atom">
-    Every charge call either completes fully or records the failure. There is no partial state - no "payment sent but not recorded" scenario.
+    Every charge call either completes fully or records the failure. There is no
+    partial state - no "payment sent but not recorded" scenario.
   </Card>
   <Card title="No custody risk" icon="lock-open">
-    Funds move directly from subscriber to merchant via `transfer_from`. The contract never holds or custodies any tokens.
+    Funds move directly from subscriber to merchant via `transfer_from`. The
+    contract never holds or custodies any tokens.
   </Card>
 </CardGroup>

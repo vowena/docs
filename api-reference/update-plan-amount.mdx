@@ -13,9 +13,9 @@ Updates the per-period billing amount of an existing plan. The new amount must b
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| `plan_id` | `u64` | The ID of the plan to update. |
+| Name         | Type   | Description                                    |
+| ------------ | ------ | ---------------------------------------------- |
+| `plan_id`    | `u64`  | The ID of the plan to update.                  |
 | `new_amount` | `i128` | The new billing amount per period, in stroops. |
 
 ---
@@ -38,19 +38,19 @@ None (`void`).
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event          | Topics                  | Data                 |
+| -------------- | ----------------------- | -------------------- |
 | `plan_updated` | `plan_id`, `new_amount` | Updated plan details |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 6 | `PlanNotFound` | No plan exists with the given `plan_id`. |
-| 3 | `InvalidAmount` | `new_amount` is zero or negative. |
-| 10 | `AmountExceedsCeiling` | `new_amount` exceeds the plan's `price_ceiling`. |
+| Code | Name                   | Description                                      |
+| ---- | ---------------------- | ------------------------------------------------ |
+| 6    | `PlanNotFound`         | No plan exists with the given `plan_id`.         |
+| 3    | `InvalidAmount`        | `new_amount` is zero or negative.                |
+| 10   | `AmountExceedsCeiling` | `new_amount` exceeds the plan's `price_ceiling`. |
 
 ---
 
@@ -76,6 +76,7 @@ None (`void`).
     const signedXdr = await signTransaction(tx);
     await client.submitTransaction(signedXdr);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -92,9 +93,15 @@ None (`void`).
 </Tabs>
 
 <Tip>
-  Since the token allowance is set against the `price_ceiling` (not the current `amount`), updating the amount within the ceiling does not require subscribers to re-authorize. All existing subscriptions will be charged the new amount on their next billing cycle.
+  Since the token allowance is set against the `price_ceiling` (not the current
+  `amount`), updating the amount within the ceiling does not require subscribers
+  to re-authorize. All existing subscriptions will be charged the new amount on
+  their next billing cycle.
 </Tip>
 
 <Note>
-  If you need to set a price above the current ceiling, you must create a new plan and use the [migration flow](/api-reference/request-migration) to move subscribers. This ensures subscribers always have explicit control over their maximum exposure.
+  If you need to set a price above the current ceiling, you must create a new
+  plan and use the [migration flow](/api-reference/request-migration) to move
+  subscribers. This ensures subscribers always have explicit control over their
+  maximum exposure.
 </Note>

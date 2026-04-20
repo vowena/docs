@@ -10,7 +10,10 @@ In traditional payment systems, a merchant can silently change your subscription
 Vowena makes this structurally impossible.
 
 <Check>
-  **A merchant cannot raise prices above the ceiling without explicit subscriber consent.** The migration system enforces this at the smart contract level - not through a policy, not through a terms of service, but through code that cannot be bypassed.
+  **A merchant cannot raise prices above the ceiling without explicit subscriber
+  consent.** The migration system enforces this at the smart contract level -
+  not through a policy, not through a terms of service, but through code that
+  cannot be bypassed.
 </Check>
 
 Plans are immutable (except for the amount within the ceiling). If a merchant needs to change the billing period, raise the price above the ceiling, switch tokens, or alter any other structural parameter, they must:
@@ -39,6 +42,7 @@ Plans are immutable (except for the amount within the ceiling). If a merchant ne
       price_ceiling: 20_0000000n, // New ceiling
     });
     ```
+
   </Step>
 
   <Step title="Merchant requests migration">
@@ -62,12 +66,14 @@ Plans are immutable (except for the amount within the ceiling). If a merchant ne
     <Note>
       This step does **not** change the subscription status or stop billing. Subscriptions on the old plan continue to be charged at the old price until the subscriber acts.
     </Note>
+
   </Step>
 
   <Step title="Subscribers see the migration">
     Each affected subscriber will see `migration_target != 0` on their subscription. The [Vowena Dashboard](/dashboard/subscriber-guide) shows a banner prompting action. Keeper bots and SDK event listeners can trigger notifications.
 
     The subscriber can view the new plan's terms - including the new price, ceiling, and period - before deciding.
+
   </Step>
 
   <Step title="Subscriber accepts or rejects">
@@ -105,6 +111,7 @@ Plans are immutable (except for the amount within the ceiling). If a merchant ne
         ```
       </Tab>
     </Tabs>
+
   </Step>
 </Steps>
 
@@ -115,22 +122,29 @@ Plans are immutable (except for the amount within the ceiling). If a merchant ne
 <CardGroup cols={2}>
   <Card title="No silent changes" icon="eye">
     <Check>
-      Every price change requires a new plan, a migration request, and explicit subscriber acceptance. The subscriber sees the new price in their wallet before signing.
+      Every price change requires a new plan, a migration request, and explicit
+      subscriber acceptance. The subscriber sees the new price in their wallet
+      before signing.
     </Check>
   </Card>
   <Card title="Right to refuse" icon="hand">
     <Check>
-      Rejecting a migration has zero consequences. The subscription continues at the original price on the original plan. The merchant cannot force the change.
+      Rejecting a migration has zero consequences. The subscription continues at
+      the original price on the original plan. The merchant cannot force the
+      change.
     </Check>
   </Card>
   <Card title="No disruption during migration" icon="plug">
     <Check>
-      The old subscription keeps billing normally while the migration is pending. There is no gap in service, no "pending" state that blocks charges.
+      The old subscription keeps billing normally while the migration is
+      pending. There is no gap in service, no "pending" state that blocks
+      charges.
     </Check>
   </Card>
   <Card title="Transparent on-chain" icon="link">
     <Check>
-      Both the old and new plan are visible on-chain. Anyone can compare the terms. The `MigrationRequested` event links the two plans publicly.
+      Both the old and new plan are visible on-chain. Anyone can compare the
+      terms. The `MigrationRequested` event links the two plans publicly.
     </Check>
   </Card>
 </CardGroup>
@@ -139,16 +153,19 @@ Plans are immutable (except for the amount within the ceiling). If a merchant ne
 
 ## Comparison with Traditional Systems
 
-| Aspect | Traditional (Credit Card) | Vowena |
-|---|---|---|
-| Price increase notice | Email (often buried) | On-chain migration request, wallet prompt |
-| Subscriber action needed | Often opt-out (charged by default) | Opt-in (must explicitly accept) |
-| Time pressure | "Changes take effect in 30 days" | No deadline - old plan continues indefinitely |
-| Auditability | Statement after the fact | All terms visible on-chain before accepting |
-| Enforcement | Consumer protection law (varies by country) | Smart contract code (global, deterministic) |
+| Aspect                   | Traditional (Credit Card)                   | Vowena                                        |
+| ------------------------ | ------------------------------------------- | --------------------------------------------- |
+| Price increase notice    | Email (often buried)                        | On-chain migration request, wallet prompt     |
+| Subscriber action needed | Often opt-out (charged by default)          | Opt-in (must explicitly accept)               |
+| Time pressure            | "Changes take effect in 30 days"            | No deadline - old plan continues indefinitely |
+| Auditability             | Statement after the fact                    | All terms visible on-chain before accepting   |
+| Enforcement              | Consumer protection law (varies by country) | Smart contract code (global, deterministic)   |
 
 <Warning>
-  Merchants should communicate migrations through their own channels (email, in-app notifications) in addition to the on-chain mechanism. While the protocol ensures subscribers can always check on-chain, good UX means proactively informing users about upcoming changes.
+  Merchants should communicate migrations through their own channels (email,
+  in-app notifications) in addition to the on-chain mechanism. While the
+  protocol ensures subscribers can always check on-chain, good UX means
+  proactively informing users about upcoming changes.
 </Warning>
 
 ---
@@ -164,7 +181,9 @@ If every subscriber rejects the migration, they all stay on the old plan. The me
 The merchant **cannot** force-cancel subscriptions or stop billing to coerce migration.
 
 <Check>
-  The protocol is structurally designed so that the power asymmetry between merchant and subscriber is inverted compared to traditional systems. The subscriber always has the final say.
+  The protocol is structurally designed so that the power asymmetry between
+  merchant and subscriber is inverted compared to traditional systems. The
+  subscriber always has the final say.
 </Check>
 
 ---

@@ -23,16 +23,16 @@ Creates a new billing plan on-chain. The plan defines the terms of recurring pay
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| `merchant` | `Address` | The merchant's Stellar address. Must sign the transaction. |
-| `token` | `Address` | The SEP-41 token contract address (e.g., USDC). |
-| `amount` | `i128` | Amount charged per billing period, in stroops (7 decimal places). |
-| `period` | `u64` | Billing period duration in seconds (e.g., `2592000` for 30 days). |
-| `trial_periods` | `u32` | Number of free trial periods before billing begins. Use `0` for no trial. |
-| `max_periods` | `u32` | Maximum number of billing periods. Use `0` for unlimited. |
-| `grace_period` | `u64` | Grace window in seconds after a failed charge before the subscription pauses. |
-| `price_ceiling` | `i128` | Maximum amount the plan can ever charge per period, in stroops. Protects subscribers from price increases. |
+| Name            | Type      | Description                                                                                                |
+| --------------- | --------- | ---------------------------------------------------------------------------------------------------------- |
+| `merchant`      | `Address` | The merchant's Stellar address. Must sign the transaction.                                                 |
+| `token`         | `Address` | The SEP-41 token contract address (e.g., USDC).                                                            |
+| `amount`        | `i128`    | Amount charged per billing period, in stroops (7 decimal places).                                          |
+| `period`        | `u64`     | Billing period duration in seconds (e.g., `2592000` for 30 days).                                          |
+| `trial_periods` | `u32`     | Number of free trial periods before billing begins. Use `0` for no trial.                                  |
+| `max_periods`   | `u32`     | Maximum number of billing periods. Use `0` for unlimited.                                                  |
+| `grace_period`  | `u64`     | Grace window in seconds after a failed charge before the subscription pauses.                              |
+| `price_ceiling` | `i128`    | Maximum amount the plan can ever charge per period, in stroops. Protects subscribers from price increases. |
 
 ---
 
@@ -54,19 +54,19 @@ The merchant address must sign the transaction.
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event          | Topics                | Data          |
+| -------------- | --------------------- | ------------- |
 | `plan_created` | `merchant`, `plan_id` | `Plan` struct |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 3 | `InvalidAmount` | `amount` is zero or negative. |
-| 4 | `InvalidPeriod` | `period` is zero. |
-| 5 | `CeilingBelowAmount` | `price_ceiling` is less than `amount`. |
+| Code | Name                 | Description                            |
+| ---- | -------------------- | -------------------------------------- |
+| 3    | `InvalidAmount`      | `amount` is zero or negative.          |
+| 4    | `InvalidPeriod`      | `period` is zero.                      |
+| 5    | `CeilingBelowAmount` | `price_ceiling` is less than `amount`. |
 
 ---
 
@@ -98,6 +98,7 @@ The merchant address must sign the transaction.
     const result = await client.submitTransaction(signedXdr);
     console.log("Plan ID:", result.planId); // e.g., 1
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -122,15 +123,19 @@ The merchant address must sign the transaction.
 <Accordion title="How stroops work">
   Stellar tokens use 7 decimal places. The SDK's `toStroops()` helper converts human-readable amounts:
 
-  ```typescript
-  toStroops("9.99")   // → 99900000n
-  toStroops("14.99")  // → 149900000n
-  toStroops("1.00")   // → 10000000n
-  ```
+```typescript
+toStroops("9.99"); // → 99900000n
+toStroops("14.99"); // → 149900000n
+toStroops("1.00"); // → 10000000n
+```
 
-  When using the CLI, pass the raw stroop value directly.
+When using the CLI, pass the raw stroop value directly.
+
 </Accordion>
 
 <Tip>
-  Set `price_ceiling` thoughtfully. It protects subscribers from unexpected price hikes - the merchant can call `update_plan_amount` to raise the price, but never above the ceiling. If you need to exceed the ceiling, create a new plan and use the [migration flow](/api-reference/request-migration).
+  Set `price_ceiling` thoughtfully. It protects subscribers from unexpected
+  price hikes - the merchant can call `update_plan_amount` to raise the price,
+  but never above the ceiling. If you need to exceed the ceiling, create a new
+  plan and use the [migration flow](/api-reference/request-migration).
 </Tip>

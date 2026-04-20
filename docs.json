@@ -37,13 +37,7 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "index",
-              "quickstart",
-              "concepts",
-              "how-it-works",
-              "faq"
-            ]
+            "pages": ["index", "quickstart", "concepts", "how-it-works", "faq"]
           }
         ]
       },
@@ -69,9 +63,7 @@
           },
           {
             "group": "Deploy",
-            "pages": [
-              "protocol/deployment"
-            ]
+            "pages": ["protocol/deployment"]
           }
         ]
       },
@@ -80,19 +72,11 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "sdk/installation",
-              "sdk/client"
-            ]
+            "pages": ["sdk/installation", "sdk/client"]
           },
           {
             "group": "Features",
-            "pages": [
-              "sdk/embed",
-              "sdk/amounts",
-              "sdk/events",
-              "sdk/keeper"
-            ]
+            "pages": ["sdk/embed", "sdk/amounts", "sdk/events", "sdk/keeper"]
           }
         ]
       },
@@ -101,9 +85,7 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "api-reference/introduction"
-            ]
+            "pages": ["api-reference/introduction"]
           },
           {
             "group": "Core",
@@ -180,14 +162,7 @@
     }
   },
   "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "cursor",
-      "vscode"
-    ]
+    "options": ["copy", "view", "chatgpt", "claude", "cursor", "vscode"]
   },
   "footer": {
     "socials": {

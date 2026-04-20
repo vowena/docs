@@ -10,15 +10,16 @@ fn initialize(env: Env, admin: Address)
 Sets the admin address and initializes the auto-incrementing counters (`NextPlanId = 1`, `NextSubId = 1`). This function can only be called once - subsequent calls will fail with `AlreadyInitialized`.
 
 <Warning>
-  This is a one-time setup function. Once called, it cannot be called again. Make sure the `admin` address is correct before deploying.
+  This is a one-time setup function. Once called, it cannot be called again.
+  Make sure the `admin` address is correct before deploying.
 </Warning>
 
 ---
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name    | Type      | Description                                                |
+| ------- | --------- | ---------------------------------------------------------- |
 | `admin` | `Address` | The admin address that will be stored in instance storage. |
 
 ---
@@ -43,9 +44,9 @@ None.
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 1 | `AlreadyInitialized` | The contract has already been initialized. |
+| Code | Name                 | Description                                |
+| ---- | -------------------- | ------------------------------------------ |
+| 1    | `AlreadyInitialized` | The contract has already been initialized. |
 
 ---
 
@@ -64,6 +65,7 @@ None.
       initialize \
       --admin GADMIN...ADDR
     ```
+
   </Tab>
   <Tab title="SDK">
     While `initialize` is typically called via the CLI, the SDK does expose it:
@@ -84,9 +86,12 @@ None.
     const signedXdr = await signTransaction(tx);
     await client.submitTransaction(signedXdr);
     ```
+
   </Tab>
 </Tabs>
 
 <Note>
-  After initialization, the admin address is stored in instance storage and shares the contract's TTL. The counters start at 1, so the first plan created will have `plan_id = 1` and the first subscription will have `sub_id = 1`.
+  After initialization, the admin address is stored in instance storage and
+  shares the contract's TTL. The counters start at 1, so the first plan created
+  will have `plan_id = 1` and the first subscription will have `sub_id = 1`.
 </Note>

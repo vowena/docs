@@ -8,11 +8,11 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
 <Info>
   Before deploying Vowena, ensure you have the following installed:
 
-  - **Rust** (latest stable) - [rustup.rs](https://rustup.rs)
-  - **wasm32 target** - `rustup target add wasm32-unknown-unknown`
-  - **Stellar CLI** - `cargo install stellar-cli` or via [Stellar docs](https://developers.stellar.org/docs/tools/cli)
-  - A funded Stellar account (mainnet XLM for fees, or testnet faucet for testing)
-</Info>
+- **Rust** (latest stable) - [rustup.rs](https://rustup.rs)
+- **wasm32 target** - `rustup target add wasm32-unknown-unknown`
+- **Stellar CLI** - `cargo install stellar-cli` or via [Stellar docs](https://developers.stellar.org/docs/tools/cli)
+- A funded Stellar account (mainnet XLM for fees, or testnet faucet for testing)
+  </Info>
 
 ---
 
@@ -38,6 +38,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     <Tip>
       The compiled WASM is approximately **18.5 KB** - well within Soroban's size limits. The contract exports **17 functions**.
     </Tip>
+
   </Step>
 
   <Step title="Deploy to the network">
@@ -70,6 +71,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
         ```
       </Tab>
     </Tabs>
+
   </Step>
 
   <Step title="Initialize the contract">
@@ -101,6 +103,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     <Note>
       The admin address is used only for TTL management (`extend_ttl`). It cannot access funds, modify plans, or interfere with subscriptions. See [Security](/protocol/security) for details.
     </Note>
+
   </Step>
 
   <Step title="Verify the deployment">
@@ -128,6 +131,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     </Tabs>
 
     This should return an error like `Plan not found` - which confirms the contract is deployed and responding. No plans exist yet because none have been created.
+
   </Step>
 
   <Step title="Create your first plan">
@@ -173,6 +177,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
     <Tip>
       On testnet, you can get test USDC from the [Stellar Laboratory](https://laboratory.stellar.org). Use the test token address for the `--token` parameter.
     </Tip>
+
   </Step>
 </Steps>
 
@@ -198,6 +203,7 @@ cargo test
     - Refund processing
     - TTL extension
     - Edge cases (double charge, early charge, unauthorized access)
+
   </Accordion>
   <Accordion title="Running specific tests">
     ```bash
@@ -210,6 +216,7 @@ cargo test
     # Run only billing tests
     cargo test billing
     ```
+
   </Accordion>
 </AccordionGroup>
 
@@ -217,13 +224,13 @@ cargo test
 
 ## Contract Specifications
 
-| Property | Value |
-|---|---|
-| WASM size | ~18.5 KB |
-| Exported functions | 17 |
-| Storage types | Instance + Persistent |
-| Token standard | SEP-41 (SAC) |
-| Soroban SDK | Latest stable |
+| Property           | Value                 |
+| ------------------ | --------------------- |
+| WASM size          | ~18.5 KB              |
+| Exported functions | 17                    |
+| Storage types      | Instance + Persistent |
+| Token standard     | SEP-41 (SAC)          |
+| Soroban SDK        | Latest stable         |
 
 ---
 
@@ -249,7 +256,8 @@ export USDC_TOKEN_ADDRESS="CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJM
 ```
 
 <Warning>
-  Never commit secret keys to version control. Use environment variables or a secrets manager. The values above are examples only.
+  Never commit secret keys to version control. Use environment variables or a
+  secrets manager. The values above are examples only.
 </Warning>
 
 ---
@@ -263,7 +271,11 @@ export USDC_TOKEN_ADDRESS="CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJM
   <Card title="Keeper Setup" icon="robot" href="/dashboard/keeper-setup">
     Set up a keeper bot to automate billing.
   </Card>
-  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+  <Card
+    title="API Reference"
+    icon="terminal"
+    href="/api-reference/introduction"
+  >
     Complete reference for every contract function.
   </Card>
   <Card title="Architecture" icon="sitemap" href="/protocol/overview">

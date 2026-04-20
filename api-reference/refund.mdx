@@ -13,10 +13,10 @@ Refunds a subscriber by transferring tokens from the merchant's wallet to the su
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| `sub_id` | `u64` | The subscription ID to refund. |
-| `amount` | `i128` | The refund amount in stroops. |
+| Name     | Type   | Description                    |
+| -------- | ------ | ------------------------------ |
+| `sub_id` | `u64`  | The subscription ID to refund. |
+| `amount` | `i128` | The refund amount in stroops.  |
 
 ---
 
@@ -38,17 +38,17 @@ None (`void`).
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event    | Topics                           | Data           |
+| -------- | -------------------------------- | -------------- |
 | `refund` | `subscriber`, `sub_id`, `amount` | Refund details |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
+| Code | Name          | Description                                     |
+| ---- | ------------- | ----------------------------------------------- |
+| 8    | `SubNotFound` | No subscription exists with the given `sub_id`. |
 
 ---
 
@@ -74,6 +74,7 @@ None (`void`).
     const signedXdr = await signTransaction(tx);
     await client.submitTransaction(signedXdr);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -90,5 +91,7 @@ None (`void`).
 </Tabs>
 
 <Info>
-  The refund amount is not validated against previous charges. The merchant can refund any amount they choose, including partial refunds. The merchant must have sufficient token balance to cover the refund.
+  The refund amount is not validated against previous charges. The merchant can
+  refund any amount they choose, including partial refunds. The merchant must
+  have sufficient token balance to cover the refund.
 </Info>

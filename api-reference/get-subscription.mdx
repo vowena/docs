@@ -13,8 +13,8 @@ Returns the full `Subscription` struct for the given subscription ID. This is a 
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name     | Type  | Description                             |
+| -------- | ----- | --------------------------------------- |
 | `sub_id` | `u64` | The ID of the subscription to retrieve. |
 
 ---
@@ -29,26 +29,26 @@ None. This is a read-only query.
 
 `Subscription` struct with the following fields:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `u64` | Unique subscription identifier |
-| `plan_id` | `u64` | The plan this subscription belongs to |
-| `subscriber` | `Address` | Subscriber's wallet address |
-| `status` | `SubscriptionStatus` | Current lifecycle state (`Active`, `Paused`, `Cancelled`, `Expired`) |
-| `created_at` | `u64` | Ledger timestamp at creation |
-| `periods_billed` | `u32` | Number of periods successfully charged |
-| `next_billing_time` | `u64` | Timestamp when next charge is due |
-| `failed_at` | `u64` | Timestamp of last failed charge (0 = none) |
-| `migration_target` | `u64` | Target plan ID for pending migration (0 = none) |
-| `cancelled_at` | `u64` | Timestamp of cancellation (0 = not cancelled) |
+| Field               | Type                 | Description                                                          |
+| ------------------- | -------------------- | -------------------------------------------------------------------- |
+| `id`                | `u64`                | Unique subscription identifier                                       |
+| `plan_id`           | `u64`                | The plan this subscription belongs to                                |
+| `subscriber`        | `Address`            | Subscriber's wallet address                                          |
+| `status`            | `SubscriptionStatus` | Current lifecycle state (`Active`, `Paused`, `Cancelled`, `Expired`) |
+| `created_at`        | `u64`                | Ledger timestamp at creation                                         |
+| `periods_billed`    | `u32`                | Number of periods successfully charged                               |
+| `next_billing_time` | `u64`                | Timestamp when next charge is due                                    |
+| `failed_at`         | `u64`                | Timestamp of last failed charge (0 = none)                           |
+| `migration_target`  | `u64`                | Target plan ID for pending migration (0 = none)                      |
+| `cancelled_at`      | `u64`                | Timestamp of cancellation (0 = not cancelled)                        |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
+| Code | Name          | Description                                     |
+| ---- | ------------- | ----------------------------------------------- |
+| 8    | `SubNotFound` | No subscription exists with the given `sub_id`. |
 
 ---
 
@@ -77,6 +77,7 @@ None. This is a read-only query.
       console.log("Migration pending to plan:", sub.migrationTarget);
     }
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash

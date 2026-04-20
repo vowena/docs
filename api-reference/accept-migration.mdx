@@ -13,10 +13,10 @@ Accepts a pending migration for a subscription. This cancels the old subscriptio
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name         | Type      | Description                                                  |
+| ------------ | --------- | ------------------------------------------------------------ |
 | `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
-| `sub_id` | `u64` | The old subscription ID with a pending migration. |
+| `sub_id`     | `u64`     | The old subscription ID with a pending migration.            |
 
 ---
 
@@ -38,18 +38,18 @@ Only the subscriber on the subscription can accept the migration. The subscriber
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event        | Topics                                   | Data              |
+| ------------ | ---------------------------------------- | ----------------- |
 | `mig_accept` | `subscriber`, `old_sub_id`, `new_sub_id` | Migration details |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 9 | `Unauthorized` | Caller is not the subscriber on this subscription. |
-| 12 | `NoMigrationPending` | No migration has been requested for this subscription. |
+| Code | Name                 | Description                                            |
+| ---- | -------------------- | ------------------------------------------------------ |
+| 9    | `Unauthorized`       | Caller is not the subscriber on this subscription.     |
+| 12   | `NoMigrationPending` | No migration has been requested for this subscription. |
 
 ---
 
@@ -76,6 +76,7 @@ Only the subscriber on the subscription can accept the migration. The subscriber
     const result = await client.submitTransaction(signedXdr);
     console.log("New subscription ID:", result.subscriptionId);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -92,5 +93,8 @@ Only the subscriber on the subscription can accept the migration. The subscriber
 </Tabs>
 
 <Info>
-  The new subscription inherits the subscriber's billing history context but starts fresh on the new plan's terms. The old subscription is permanently cancelled. The new allowance is calculated based on the new plan's `price_ceiling` and `max_periods`.
+  The new subscription inherits the subscriber's billing history context but
+  starts fresh on the new plan's terms. The old subscription is permanently
+  cancelled. The new allowance is calculated based on the new plan's
+  `price_ceiling` and `max_periods`.
 </Info>

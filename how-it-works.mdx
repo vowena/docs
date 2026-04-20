@@ -6,7 +6,8 @@ description: "A visual step-by-step walkthrough of the Vowena protocol - from pl
 This page walks through the complete lifecycle of a Vowena subscription. By the end, you'll understand exactly how trustless recurring payments work on Stellar.
 
 <Info>
-  This is the "aha moment" page. If you read one page in the docs, make it this one.
+  This is the "aha moment" page. If you read one page in the docs, make it this
+  one.
 </Info>
 
 ---
@@ -36,6 +37,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     <Tip>
       Plans are like product listings on the blockchain. A merchant might create multiple plans for different tiers: Basic, Pro, Enterprise - each with different amounts and periods.
     </Tip>
+
   </Step>
 
   <Step title="Subscriber Discovers the Plan">
@@ -57,6 +59,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     </CardGroup>
 
     The subscriber can inspect all plan parameters before subscribing - amount, period, ceiling, trial, max periods, and grace period are all transparent.
+
   </Step>
 
   <Step title="Subscriber Calls subscribe()">
@@ -87,6 +90,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     <Warning>
       The subscriber should always verify the wallet prompt carefully. The token address, spending amount, and contract address should all match expectations. Legitimate Vowena subscriptions will always show the official Vowena contract as the spender.
     </Warning>
+
   </Step>
 
   <Step title="One Signature Covers Everything">
@@ -111,6 +115,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     After submission, the blockchain now holds:
     - A **subscription record** in the Vowena contract (status: Active)
     - A **token allowance** in the USDC contract (Vowena can pull funds)
+
   </Step>
 
   <Step title="Each Period, a Keeper Calls charge()">
@@ -131,6 +136,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     <Tip>
       Keepers are economically incentivized. The transaction fee is negligible ($0.00001), and merchants want their revenue collected on time. Third-party keepers may earn service fees for maintaining reliable charging.
     </Tip>
+
   </Step>
 
   <Step title="Contract Validates and Transfers">
@@ -160,6 +166,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
         The contract updates `last_charged_at`, increments `periods_charged`, and checks if `max_periods` has been reached (if set).
       </Step>
     </Steps>
+
   </Step>
 
   <Step title="Subscriber Can Cancel Anytime">
@@ -176,6 +183,7 @@ This page walks through the complete lifecycle of a Vowena subscription. By the 
     - <Icon icon="xmark" /> Any specific frontend
 
     Any Stellar wallet, CLI tool, or block explorer that supports Soroban contract calls can execute the cancellation. The subscription status immediately becomes **Cancelled**, and no further charges can occur.
+
   </Step>
 </Steps>
 
@@ -192,29 +200,37 @@ Vowena provides **four layers of protection**:
     The subscriber can always call `cancel()` directly on the Vowena contract. This requires no cooperation from the merchant. Any Stellar wallet or Soroban-compatible tool can submit this transaction.
 
     The merchant's app being offline is irrelevant - the smart contract is always available on the Stellar network.
+
   </Card>
 
   <Card title="2. Universal Subscription Manager" icon="list-check">
     The Vowena Dashboard includes a **Universal Subscription Manager** - a UI that lets any subscriber view and manage all their Vowena subscriptions across every merchant, regardless of which app they originally subscribed through.
 
     Even if a merchant's frontend disappears, the subscriber can find and cancel their subscriptions through the dashboard.
+
   </Card>
 
   <Card title="3. Auto-Expiry (max_periods)" icon="hourglass-end">
     If a plan was created with `max_periods` set (e.g., 12 for an annual subscription billed monthly), the subscription automatically expires after that many billing cycles. No action required from anyone.
 
     Even for plans with `max_periods: 0` (unlimited), the next two protections still apply.
+
   </Card>
 
   <Card title="4. Allowance Expiration" icon="clock">
     Token allowances on Soroban have a **ledger-based expiration**. The `approve()` call sets an expiry ledger, after which the allowance automatically becomes invalid.
 
     If no one renews the allowance (which requires the subscriber's signature), the contract loses the ability to pull funds. The subscription effectively becomes unchargeable.
+
   </Card>
 </CardGroup>
 
 <Note>
-  These protections work in layers. Even if the subscriber takes no action at all, the allowance expiration ensures that a forgotten subscription cannot be charged indefinitely. This is fundamentally different from traditional credit card subscriptions, where charges can continue until the card expires or the subscriber contacts their bank.
+  These protections work in layers. Even if the subscriber takes no action at
+  all, the allowance expiration ensures that a forgotten subscription cannot be
+  charged indefinitely. This is fundamentally different from traditional credit
+  card subscriptions, where charges can continue until the card expires or the
+  subscriber contacts their bank.
 </Note>
 
 ---
@@ -223,16 +239,14 @@ Vowena provides **four layers of protection**:
 
 <Columns cols={2}>
   <Card title="What You Trust" icon="check">
-    - The Stellar network to process transactions
-    - The Soroban VM to execute contract logic correctly
-    - The USDC token contract (issued by Circle)
-    - The Vowena contract code (open source, auditable)
+    - The Stellar network to process transactions - The Soroban VM to execute
+    contract logic correctly - The USDC token contract (issued by Circle) - The
+    Vowena contract code (open source, auditable)
   </Card>
   <Card title="What You Don't Trust" icon="xmark">
-    - The merchant to be honest (contract enforces rules)
-    - The keeper to be reliable (anyone can be a keeper)
-    - Vowena the company (protocol is permissionless)
-    - Any single frontend (multiple access points exist)
+    - The merchant to be honest (contract enforces rules) - The keeper to be
+    reliable (anyone can be a keeper) - Vowena the company (protocol is
+    permissionless) - Any single frontend (multiple access points exist)
   </Card>
 </Columns>
 

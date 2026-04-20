@@ -13,11 +13,11 @@ Initiates a migration from an old plan to a new plan. This sets the `migration_t
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| `merchant` | `Address` | The merchant's Stellar address. Must own both plans. |
-| `old_plan_id` | `u64` | The plan ID to migrate subscribers from. |
-| `new_plan_id` | `u64` | The plan ID to migrate subscribers to. |
+| Name          | Type      | Description                                          |
+| ------------- | --------- | ---------------------------------------------------- |
+| `merchant`    | `Address` | The merchant's Stellar address. Must own both plans. |
+| `old_plan_id` | `u64`     | The plan ID to migrate subscribers from.             |
+| `new_plan_id` | `u64`     | The plan ID to migrate subscribers to.               |
 
 ---
 
@@ -39,18 +39,18 @@ None (`void`).
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event     | Topics                       | Data              |
+| --------- | ---------------------------- | ----------------- |
 | `mig_req` | `old_plan_id`, `new_plan_id` | Migration details |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 11 | `MerchantMismatch` | The old and new plans belong to different merchants. |
-| 7 | `PlanInactive` | The new plan is not active. |
+| Code | Name               | Description                                          |
+| ---- | ------------------ | ---------------------------------------------------- |
+| 11   | `MerchantMismatch` | The old and new plans belong to different merchants. |
+| 7    | `PlanInactive`     | The new plan is not active.                          |
 
 ---
 
@@ -77,6 +77,7 @@ None (`void`).
     const signedXdr = await signTransaction(tx);
     await client.submitTransaction(signedXdr);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -94,9 +95,15 @@ None (`void`).
 </Tabs>
 
 <Note>
-  Requesting a migration does not move anyone. It sets a pending flag on each subscription. Subscribers can continue to be billed on the old plan until they explicitly accept or reject. This ensures subscribers always have full control.
+  Requesting a migration does not move anyone. It sets a pending flag on each
+  subscription. Subscribers can continue to be billed on the old plan until they
+  explicitly accept or reject. This ensures subscribers always have full
+  control.
 </Note>
 
 <Tip>
-  Migrations are the correct way to handle price changes that exceed the `price_ceiling`. Create a new plan with the new pricing, then request a migration. Subscribers who accept will get a new allowance set against the new ceiling.
+  Migrations are the correct way to handle price changes that exceed the
+  `price_ceiling`. Create a new plan with the new pricing, then request a
+  migration. Subscribers who accept will get a new allowance set against the new
+  ceiling.
 </Tip>

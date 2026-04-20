@@ -6,7 +6,8 @@ description: "Go from zero to a working on-chain subscription in 5 minutes. Inst
 Get a complete subscription lifecycle running on Stellar in under 5 minutes.
 
 <Info>
-  This guide uses the Vowena TypeScript SDK. You'll need Node.js 18+ and a Stellar account with USDC.
+  This guide uses the Vowena TypeScript SDK. You'll need Node.js 18+ and a
+  Stellar account with USDC.
 </Info>
 
 <Steps>
@@ -30,6 +31,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     <Tip>
       The SDK is a lightweight wrapper around the Vowena Soroban contract. It builds transactions locally - you sign and submit them with your own wallet or keypair.
     </Tip>
+
   </Step>
 
   <Step title="Create a Client">
@@ -74,6 +76,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     <Note>
       `NETWORKS.mainnet` provides pre-configured values for `contractId`, `rpcUrl`, `networkPassphrase`, and `usdcAddress` so you don't need to look them up.
     </Note>
+
   </Step>
 
   <Step title="Create a Plan (Merchant)">
@@ -115,6 +118,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
 
       USDC on Stellar uses 7 decimal places (stroops), matching the native XLM precision.
     </Accordion>
+
   </Step>
 
   <Step title="Subscribe (Subscriber)">
@@ -136,6 +140,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     <Tip>
       The subscriber's wallet will display exactly what is being approved: the token (USDC), the spending ceiling (price_ceiling from the plan), and the contract authorized to pull funds. Full transparency - no hidden permissions.
     </Tip>
+
   </Step>
 
   <Step title="Charge (Keeper / Anyone)">
@@ -166,6 +171,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     <Info>
       You don't need to run your own keeper. The [Vowena Dashboard](/dashboard/keeper-setup) includes a built-in keeper service, or you can use third-party keeper networks.
     </Info>
+
   </Step>
 
   <Step title="Cancel">
@@ -187,6 +193,7 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     <Note>
       Cancellation is **immediate and on-chain**. No approval from the merchant is needed. The subscriber can also cancel directly through any Stellar wallet or block explorer that supports Soroban contract invocations - the Vowena frontend is not required.
     </Note>
+
   </Step>
 </Steps>
 
@@ -223,11 +230,17 @@ const subTx = await client.buildSubscribe("GSUB...ADDR", planResult.planId);
 const subResult = await client.submitTransaction(await sign(subTx));
 
 // 3. After billing period elapses, anyone charges
-const chargeTx = await client.buildCharge("GKEEPER...ADDR", subResult.subscriptionId);
+const chargeTx = await client.buildCharge(
+  "GKEEPER...ADDR",
+  subResult.subscriptionId,
+);
 await client.submitTransaction(await sign(chargeTx));
 
 // 4. Subscriber cancels when they want
-const cancelTx = await client.buildCancel("GSUB...ADDR", subResult.subscriptionId);
+const cancelTx = await client.buildCancel(
+  "GSUB...ADDR",
+  subResult.subscriptionId,
+);
 await client.submitTransaction(await sign(cancelTx));
 ```
 
@@ -237,13 +250,16 @@ await client.submitTransaction(await sign(cancelTx));
 
 <CardGroup cols={2}>
   <Card title="Core Concepts" icon="lightbulb" href="/concepts">
-    Understand plans, subscriptions, allowances, and the billing lifecycle in depth.
+    Understand plans, subscriptions, allowances, and the billing lifecycle in
+    depth.
   </Card>
   <Card title="How It Works" icon="diagram-project" href="/how-it-works">
-    Visual walkthrough of the full protocol flow - from plan creation to cancellation.
+    Visual walkthrough of the full protocol flow - from plan creation to
+    cancellation.
   </Card>
   <Card title="SDK Reference" icon="npm" href="/sdk/client">
-    Complete SDK documentation with all methods, types, and configuration options.
+    Complete SDK documentation with all methods, types, and configuration
+    options.
   </Card>
   <Card title="Run a Keeper" icon="robot" href="/sdk/keeper">
     Set up an automated keeper bot to charge subscriptions on schedule.

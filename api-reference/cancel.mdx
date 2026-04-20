@@ -13,10 +13,10 @@ Cancels a subscription. Cancellation is **immediate and irreversible**. The subs
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name     | Type      | Description                                                                      |
+| -------- | --------- | -------------------------------------------------------------------------------- |
 | `caller` | `Address` | The address initiating the cancellation. Must be the subscriber or the merchant. |
-| `sub_id` | `u64` | The subscription ID to cancel. |
+| `sub_id` | `u64`     | The subscription ID to cancel.                                                   |
 
 ---
 
@@ -27,6 +27,7 @@ caller.require_auth();
 ```
 
 The `caller` must be either:
+
 - The **subscriber** on the subscription, or
 - The **merchant** on the plan the subscription belongs to.
 
@@ -42,18 +43,18 @@ None (`void`).
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event        | Topics                 | Data                     |
+| ------------ | ---------------------- | ------------------------ |
 | `sub_cancel` | `subscriber`, `sub_id` | `cancelled_at` timestamp |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
-| 9 | `Unauthorized` | Caller is neither the subscriber nor the merchant. |
+| Code | Name           | Description                                        |
+| ---- | -------------- | -------------------------------------------------- |
+| 8    | `SubNotFound`  | No subscription exists with the given `sub_id`.    |
+| 9    | `Unauthorized` | Caller is neither the subscriber nor the merchant. |
 
 ---
 
@@ -79,6 +80,7 @@ None (`void`).
     const signedXdr = await signTransaction(tx);
     await client.submitTransaction(signedXdr);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -95,5 +97,8 @@ None (`void`).
 </Tabs>
 
 <Note>
-  Cancellation does not issue a refund. If the merchant wants to refund remaining time, they should call [`refund()`](/api-reference/refund) separately. The token allowance remains on-chain but becomes irrelevant since the contract will never call `transfer_from` on a cancelled subscription.
+  Cancellation does not issue a refund. If the merchant wants to refund
+  remaining time, they should call [`refund()`](/api-reference/refund)
+  separately. The token allowance remains on-chain but becomes irrelevant since
+  the contract will never call `transfer_from` on a cancelled subscription.
 </Note>

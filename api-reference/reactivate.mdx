@@ -13,10 +13,10 @@ Reactivates a subscription that was paused due to failed charges. The function r
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name         | Type      | Description                                                  |
+| ------------ | --------- | ------------------------------------------------------------ |
 | `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
-| `sub_id` | `u64` | The subscription ID to reactivate. |
+| `sub_id`     | `u64`     | The subscription ID to reactivate.                           |
 
 ---
 
@@ -38,8 +38,8 @@ Only the subscriber can reactivate their own subscription. The subscriber's sign
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event       | Topics                 | Data                 |
+| ----------- | ---------------------- | -------------------- |
 | `sub_react` | `subscriber`, `sub_id` | Reactivation details |
 
 Additional events may be emitted from the implicit charge attempt (`charge_ok` or `charge_fail`).
@@ -48,11 +48,11 @@ Additional events may be emitted from the implicit charge attempt (`charge_ok` o
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
-| 9 | `Unauthorized` | Caller is not the subscriber on this subscription. |
-| 13 | `NotPaused` | The subscription is not in `Paused` status. Only paused subscriptions can be reactivated. |
+| Code | Name           | Description                                                                               |
+| ---- | -------------- | ----------------------------------------------------------------------------------------- |
+| 8    | `SubNotFound`  | No subscription exists with the given `sub_id`.                                           |
+| 9    | `Unauthorized` | Caller is not the subscriber on this subscription.                                        |
+| 13   | `NotPaused`    | The subscription is not in `Paused` status. Only paused subscriptions can be reactivated. |
 
 ---
 
@@ -79,6 +79,7 @@ Additional events may be emitted from the implicit charge attempt (`charge_ok` o
     const result = await client.submitTransaction(signedXdr);
     console.log("Charged on reactivation:", result.charged); // true or false
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -95,5 +96,9 @@ Additional events may be emitted from the implicit charge attempt (`charge_ok` o
 </Tabs>
 
 <Info>
-  Before reactivating, make sure the subscriber's wallet has sufficient USDC balance. The reactivation will re-approve the token allowance and immediately attempt to charge the overdue period. If the balance is still insufficient, the subscription returns to `Active` status but the charge will fail again on the next `charge()` call.
+  Before reactivating, make sure the subscriber's wallet has sufficient USDC
+  balance. The reactivation will re-approve the token allowance and immediately
+  attempt to charge the overdue period. If the balance is still insufficient,
+  the subscription returns to `Active` status but the charge will fail again on
+  the next `charge()` call.
 </Info>

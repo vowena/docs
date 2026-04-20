@@ -13,10 +13,10 @@ Rejects a pending migration for a subscription. The `migration_target` field is 
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name         | Type      | Description                                                  |
+| ------------ | --------- | ------------------------------------------------------------ |
 | `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
-| `sub_id` | `u64` | The subscription ID with a pending migration. |
+| `sub_id`     | `u64`     | The subscription ID with a pending migration.                |
 
 ---
 
@@ -38,18 +38,18 @@ None (`void`).
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event        | Topics                 | Data              |
+| ------------ | ---------------------- | ----------------- |
 | `mig_reject` | `subscriber`, `sub_id` | Rejection details |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 9 | `Unauthorized` | Caller is not the subscriber on this subscription. |
-| 12 | `NoMigrationPending` | No migration has been requested for this subscription. |
+| Code | Name                 | Description                                            |
+| ---- | -------------------- | ------------------------------------------------------ |
+| 9    | `Unauthorized`       | Caller is not the subscriber on this subscription.     |
+| 12   | `NoMigrationPending` | No migration has been requested for this subscription. |
 
 ---
 
@@ -75,6 +75,7 @@ None (`void`).
     const signedXdr = await signTransaction(tx);
     await client.submitTransaction(signedXdr);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -91,5 +92,7 @@ None (`void`).
 </Tabs>
 
 <Note>
-  Rejecting a migration has no side effects. The subscription continues as normal on the current plan, billing proceeds unchanged, and the subscriber can still cancel at any time.
+  Rejecting a migration has no side effects. The subscription continues as
+  normal on the current plan, billing proceeds unchanged, and the subscriber can
+  still cancel at any time.
 </Note>

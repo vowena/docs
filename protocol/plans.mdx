@@ -13,19 +13,19 @@ Plans are **shared objects** - one plan can have thousands of active subscriptio
 
 ## Plan Fields
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | `u64` | Auto-incremented unique identifier assigned at creation |
-| `merchant` | `Address` | The Stellar address that receives subscription payments |
-| `token` | `Address` | The SAC token contract used for billing (e.g., USDC) |
-| `amount` | `i128` | Amount charged per billing period (in token's smallest unit, e.g., stroops) |
-| `period` | `u64` | Billing period length in seconds (e.g., `2592000` for ~30 days) |
-| `trial_periods` | `u32` | Number of free periods before billing begins (`0` = no trial) |
-| `max_periods` | `u32` | Maximum number of billing periods before auto-expiry (`0` = unlimited) |
-| `grace_period` | `u64` | Time in seconds after a failed charge before the subscription pauses |
-| `price_ceiling` | `i128` | Maximum amount the merchant can ever set via `update_plan_amount` |
-| `created_at` | `u64` | Ledger timestamp when the plan was created |
-| `active` | `bool` | Whether the plan accepts new subscriptions (`true` by default) |
+| Field           | Type      | Description                                                                 |
+| --------------- | --------- | --------------------------------------------------------------------------- |
+| `id`            | `u64`     | Auto-incremented unique identifier assigned at creation                     |
+| `merchant`      | `Address` | The Stellar address that receives subscription payments                     |
+| `token`         | `Address` | The SAC token contract used for billing (e.g., USDC)                        |
+| `amount`        | `i128`    | Amount charged per billing period (in token's smallest unit, e.g., stroops) |
+| `period`        | `u64`     | Billing period length in seconds (e.g., `2592000` for ~30 days)             |
+| `trial_periods` | `u32`     | Number of free periods before billing begins (`0` = no trial)               |
+| `max_periods`   | `u32`     | Maximum number of billing periods before auto-expiry (`0` = unlimited)      |
+| `grace_period`  | `u64`     | Time in seconds after a failed charge before the subscription pauses        |
+| `price_ceiling` | `i128`    | Maximum amount the merchant can ever set via `update_plan_amount`           |
+| `created_at`    | `u64`     | Ledger timestamp when the plan was created                                  |
+| `active`        | `bool`    | Whether the plan accepts new subscriptions (`true` by default)              |
 
 ---
 
@@ -42,6 +42,7 @@ Plans are **shared objects** - one plan can have thousands of active subscriptio
     - `price_ceiling` must be greater than or equal to `amount`
 
     If any check fails, the transaction reverts with a descriptive error.
+
   </Step>
   <Step title="Plan is stored">
     The contract increments `NextPlanId`, constructs the `Plan` struct, and writes it to persistent storage under `DataKey::Plan(id)`. The plan ID is also appended to the merchant's index at `DataKey::MerchantPlans(merchant)`.
@@ -58,16 +59,17 @@ import { VowenaClient } from "@vowena/sdk";
 const client = new VowenaClient({ contractId, networkPassphrase, rpcUrl });
 
 const tx = await client.createPlan({
-  merchant: merchantKeypair.publicKey(),
-  token: USDC_CONTRACT_ID,
-  amount: 10_0000000n,        // 10 USDC (7 decimals)
-  period: 2592000n,           // ~30 days
-  trial_periods: 1,           // 1 free period
-  max_periods: 12,            // 12 months max
-  grace_period: 259200n,      // 3 days grace
-  price_ceiling: 15_0000000n, // Can raise up to 15 USDC
+merchant: merchantKeypair.publicKey(),
+token: USDC_CONTRACT_ID,
+amount: 10_0000000n, // 10 USDC (7 decimals)
+period: 2592000n, // ~30 days
+trial_periods: 1, // 1 free period
+max_periods: 12, // 12 months max
+grace_period: 259200n, // 3 days grace
+price_ceiling: 15_0000000n, // Can raise up to 15 USDC
 });
-```
+
+````
 
 ```bash Stellar CLI
 stellar contract invoke \
@@ -82,7 +84,8 @@ stellar contract invoke \
   --max_periods 12 \
   --grace_period 259200 \
   --price_ceiling 150000000
-```
+````
+
 </CodeGroup>
 
 ---
@@ -92,32 +95,42 @@ stellar contract invoke \
 The price ceiling is one of Vowena's core consumer protection features. When a subscriber signs up, they authorize a token allowance based on the **ceiling**, not the current amount.
 
 <Warning>
-  The price ceiling is **immutable after plan creation**. A merchant cannot raise the ceiling - ever. This is by design: it guarantees that subscribers know the absolute maximum they could ever be charged per period.
+  The price ceiling is **immutable after plan creation**. A merchant cannot
+  raise the ceiling - ever. This is by design: it guarantees that subscribers
+  know the absolute maximum they could ever be charged per period.
 </Warning>
 
 ### How it works
 
 <Columns cols={2}>
   <Card title="Merchant flexibility" icon="sliders">
-    The merchant can call `update_plan_amount` to adjust the price **up or down**, as long as the new amount stays at or below the ceiling. This allows for small price adjustments, seasonal promotions, or inflation adjustments without requiring subscribers to re-authorize.
+    The merchant can call `update_plan_amount` to adjust the price **up or
+    down**, as long as the new amount stays at or below the ceiling. This allows
+    for small price adjustments, seasonal promotions, or inflation adjustments
+    without requiring subscribers to re-authorize.
   </Card>
   <Card title="Subscriber guarantee" icon="shield-halved">
-    The subscriber's token allowance is calculated from `price_ceiling * periods`, not `amount * periods`. Even if the merchant raises the price to the ceiling, the allowance already covers it. The subscriber never needs to sign again.
+    The subscriber's token allowance is calculated from `price_ceiling *
+    periods`, not `amount * periods`. Even if the merchant raises the price to
+    the ceiling, the allowance already covers it. The subscriber never needs to
+    sign again.
   </Card>
 </Columns>
 
 <Tip>
-  Set your price ceiling thoughtfully. Too low and you cannot adjust prices. Too high and subscribers may hesitate to approve a large allowance. A ceiling of 1.5x to 2x your initial price is a reasonable default.
+  Set your price ceiling thoughtfully. Too low and you cannot adjust prices. Too
+  high and subscribers may hesitate to approve a large allowance. A ceiling of
+  1.5x to 2x your initial price is a reasonable default.
 </Tip>
 
 ### Example
 
-| Scenario | Amount | Ceiling | Allowed? |
-|---|---|---|---|
-| Initial plan | 10 USDC | 15 USDC | Yes |
-| Small raise | 12 USDC | 15 USDC | Yes - within ceiling |
-| Promotion | 8 USDC | 15 USDC | Yes - can lower freely |
-| Big raise | 20 USDC | 15 USDC | No - exceeds ceiling, use [migration](/protocol/migrations) |
+| Scenario     | Amount  | Ceiling | Allowed?                                                    |
+| ------------ | ------- | ------- | ----------------------------------------------------------- |
+| Initial plan | 10 USDC | 15 USDC | Yes                                                         |
+| Small raise  | 12 USDC | 15 USDC | Yes - within ceiling                                        |
+| Promotion    | 8 USDC  | 15 USDC | Yes - can lower freely                                      |
+| Big raise    | 20 USDC | 15 USDC | No - exceeds ceiling, use [migration](/protocol/migrations) |
 
 ---
 
@@ -133,7 +146,9 @@ Plans are intentionally immutable once created. The only mutable field is `amoun
 - The price ceiling itself
 
 <Warning>
-  If you need to change any immutable field, create a new plan and use the [migration system](/protocol/migrations) to move subscribers over with their explicit consent.
+  If you need to change any immutable field, create a new plan and use the
+  [migration system](/protocol/migrations) to move subscribers over with their
+  explicit consent.
 </Warning>
 
 ---
@@ -150,7 +165,9 @@ const tx = await client.deactivatePlan({
 ```
 
 <Note>
-  Deactivation is a soft state change. The plan data remains on-chain and existing subscribers are unaffected. There is no "delete plan" - on-chain data is permanent.
+  Deactivation is a soft state change. The plan data remains on-chain and
+  existing subscribers are unaffected. There is no "delete plan" - on-chain data
+  is permanent.
 </Note>
 
 ---

@@ -15,10 +15,10 @@ Returns the auto-incremented `sub_id`.
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name         | Type      | Description                                                  |
+| ------------ | --------- | ------------------------------------------------------------ |
 | `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
-| `plan_id` | `u64` | The ID of the plan to subscribe to. |
+| `plan_id`    | `u64`     | The ID of the plan to subscribe to.                          |
 
 ---
 
@@ -31,7 +31,10 @@ subscriber.require_auth();
 The subscriber's single signature covers both the `subscribe()` contract call **and** the nested `token.approve()` call. Soroban's auth tree bundles both operations into one authorization.
 
 <Tip>
-  The subscriber signs once. Their wallet will display exactly what is being authorized: the Vowena contract call and the token allowance (amount = `price_ceiling * periods`, spender = Vowena contract). No hidden permissions. Full transparency.
+  The subscriber signs once. Their wallet will display exactly what is being
+  authorized: the Vowena contract call and the token allowance (amount =
+  `price_ceiling * periods`, spender = Vowena contract). No hidden permissions.
+  Full transparency.
 </Tip>
 
 ---
@@ -60,18 +63,18 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
 
 ## Events emitted
 
-| Event | Topics | Data |
-|-------|--------|------|
+| Event         | Topics                            | Data                  |
+| ------------- | --------------------------------- | --------------------- |
 | `sub_created` | `subscriber`, `sub_id`, `plan_id` | `Subscription` struct |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 6 | `PlanNotFound` | No plan exists with the given `plan_id`. |
-| 7 | `PlanInactive` | The plan is not accepting new subscribers. |
+| Code | Name           | Description                                |
+| ---- | -------------- | ------------------------------------------ |
+| 6    | `PlanNotFound` | No plan exists with the given `plan_id`.   |
+| 7    | `PlanInactive` | The plan is not accepting new subscribers. |
 
 ---
 
@@ -97,6 +100,7 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
     const result = await client.submitTransaction(signedXdr);
     console.log("Subscription ID:", result.subscriptionId);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -113,5 +117,7 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
 </Tabs>
 
 <Note>
-  If the plan has trial periods, the subscription starts immediately but billing begins after the trial ends. The `next_billing_time` is set to `now + (period * (trial_periods + 1))` so the first real charge happens after the trial.
+  If the plan has trial periods, the subscription starts immediately but billing
+  begins after the trial ends. The `next_billing_time` is set to `now + (period
+  * (trial_periods + 1))` so the first real charge happens after the trial.
 </Note>

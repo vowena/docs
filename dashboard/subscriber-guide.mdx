@@ -14,6 +14,7 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
     <Tip>
       Make sure your wallet is connected to the correct network. The dashboard detects the network from your wallet.
     </Tip>
+
   </Step>
 
   <Step title="View Your Subscriptions">
@@ -30,6 +31,7 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
     <Check>
       The Universal Subscription Manager works independently of any merchant's infrastructure. Even if a merchant's website goes offline, your subscriptions are still visible and manageable here because the data comes from the blockchain.
     </Check>
+
   </Step>
 
   <Step title="Review Billing History">
@@ -45,6 +47,7 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
     <Check>
       You can never be charged more than the price ceiling you approved at subscription time. This is enforced by the smart contract - not by the dashboard, not by the merchant, and not by any off-chain system.
     </Check>
+
   </Step>
 
   <Step title="Handle Migrations">
@@ -66,6 +69,7 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
     <Check>
       Migrations are always opt-in. A merchant can request a migration, but only you can authorize the new allowance. If you reject, your current subscription continues unchanged at the original price.
     </Check>
+
   </Step>
 
   <Step title="Cancel a Subscription">
@@ -80,6 +84,7 @@ The Vowena Dashboard gives subscribers a single place to manage every on-chain s
     <Check>
       You do not need the merchant's permission to cancel. The smart contract allows the subscriber to cancel at any time, unconditionally. This is a protocol-level guarantee.
     </Check>
+
   </Step>
 </Steps>
 
@@ -108,11 +113,14 @@ One of the core benefits of on-chain subscriptions is that you are never locked 
       --caller YOUR_PUBLIC_KEY \
       --sub_id YOUR_SUBSCRIPTION_ID
     ```
+
   </Accordion>
 </AccordionGroup>
 
 <Check>
-  No single point of failure can trap you in a subscription. The contract is permissionless - any Stellar tool that can invoke Soroban contracts can cancel your subscription. The Vowena Dashboard is a convenience, not a requirement.
+  No single point of failure can trap you in a subscription. The contract is
+  permissionless - any Stellar tool that can invoke Soroban contracts can cancel
+  your subscription. The Vowena Dashboard is a convenience, not a requirement.
 </Check>
 
 ---
@@ -121,15 +129,19 @@ One of the core benefits of on-chain subscriptions is that you are never locked 
 
 <Columns cols={2}>
   <Card title="Price Ceiling" icon="shield-halved">
-    You approve a maximum charge amount at subscription time. The merchant can never exceed it without your explicit re-authorization via a migration.
+    You approve a maximum charge amount at subscription time. The merchant can
+    never exceed it without your explicit re-authorization via a migration.
   </Card>
   <Card title="Cancel Anytime" icon="xmark">
-    One-click cancellation, immediate and on-chain. No merchant approval needed. No cancellation fees. No waiting period.
+    One-click cancellation, immediate and on-chain. No merchant approval needed.
+    No cancellation fees. No waiting period.
   </Card>
   <Card title="Full Transparency" icon="eye">
-    Every charge, failure, and status change is an on-chain event. Your billing history is publicly auditable on the Stellar ledger.
+    Every charge, failure, and status change is an on-chain event. Your billing
+    history is publicly auditable on the Stellar ledger.
   </Card>
   <Card title="No Lock-in" icon="lock-open">
-    Cancel from the Vowena Dashboard, any block explorer, or the Soroban CLI. You are never dependent on a merchant's infrastructure.
+    Cancel from the Vowena Dashboard, any block explorer, or the Soroban CLI.
+    You are never dependent on a merchant's infrastructure.
   </Card>
 </Columns>

@@ -12,15 +12,19 @@ Attempts to charge a subscription that is due for billing. This is the only writ
 Returns `true` if the charge succeeded, `false` if it did not.
 
 <Warning>
-  `charge()` is **permissionless by design**. There is no `require_auth()` call. This enables keeper bots, third-party services, or anyone to trigger billing without the merchant's private key. The contract enforces all safety checks (timing, balance, allowance, and subscription status), so permissionless calling is safe.
+  `charge()` is **permissionless by design**. There is no `require_auth()` call.
+  This enables keeper bots, third-party services, or anyone to trigger billing
+  without the merchant's private key. The contract enforces all safety checks
+  (timing, balance, allowance, and subscription status), so permissionless
+  calling is safe.
 </Warning>
 
 ---
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name     | Type  | Description                    |
+| -------- | ----- | ------------------------------ |
 | `sub_id` | `u64` | The subscription ID to charge. |
 
 ---
@@ -42,7 +46,11 @@ Returns `true` if the charge succeeded, `false` if it did not.
 Before attempting the `transfer_from`, the contract checks the subscriber's balance and allowance. This is a deliberate design decision:
 
 <Warning>
-  The contract **pre-checks** the subscriber's token balance and allowance before calling `transfer_from()`. If either is insufficient, the charge fails gracefully (emitting `charge_fail`) instead of reverting the transaction. This means the caller still pays the transaction fee, but the subscription enters the grace period flow instead of causing an on-chain error.
+  The contract **pre-checks** the subscriber's token balance and allowance
+  before calling `transfer_from()`. If either is insufficient, the charge fails
+  gracefully (emitting `charge_fail`) instead of reverting the transaction. This
+  means the caller still pays the transaction fee, but the subscription enters
+  the grace period flow instead of causing an on-chain error.
 </Warning>
 
 The contract checks, in order:
@@ -59,13 +67,13 @@ The contract checks, in order:
 
 ## Events emitted
 
-| Event | Topics | Data | Condition |
-|-------|--------|------|-----------|
-| `charge_ok` | `subscriber`, `sub_id`, `amount` | Period number | Charge succeeded |
-| `charge_fail` | `subscriber`, `sub_id` | Failure reason | Balance or allowance insufficient |
-| `sub_paused` | `subscriber`, `sub_id` | `failed_at` timestamp | Grace period expired on a previously failed charge |
-| `sub_expired` | `subscriber`, `sub_id` | `periods_billed` | Max periods reached |
-| `sub_cancel` | `subscriber`, `sub_id` | `cancelled_at` timestamp | Subscription cancelled due to expiry |
+| Event         | Topics                           | Data                     | Condition                                          |
+| ------------- | -------------------------------- | ------------------------ | -------------------------------------------------- |
+| `charge_ok`   | `subscriber`, `sub_id`, `amount` | Period number            | Charge succeeded                                   |
+| `charge_fail` | `subscriber`, `sub_id`           | Failure reason           | Balance or allowance insufficient                  |
+| `sub_paused`  | `subscriber`, `sub_id`           | `failed_at` timestamp    | Grace period expired on a previously failed charge |
+| `sub_expired` | `subscriber`, `sub_id`           | `periods_billed`         | Max periods reached                                |
+| `sub_cancel`  | `subscriber`, `sub_id`           | `cancelled_at` timestamp | Subscription cancelled due to expiry               |
 
 ---
 
@@ -73,9 +81,9 @@ The contract checks, in order:
 
 `charge()` is designed to fail gracefully rather than revert. It returns `false` for most failure conditions rather than throwing an error. However, the following will cause a revert:
 
-| Code | Name | Description |
-|------|------|-------------|
-| 8 | `SubNotFound` | No subscription exists with the given `sub_id`. |
+| Code | Name          | Description                                     |
+| ---- | ------------- | ----------------------------------------------- |
+| 8    | `SubNotFound` | No subscription exists with the given `sub_id`. |
 
 ---
 
@@ -102,6 +110,7 @@ The contract checks, in order:
     const result = await client.submitTransaction(signedXdr);
     console.log("Charged:", result.charged); // true or false
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -126,6 +135,7 @@ The contract checks, in order:
     - **Third-party networks** - any service can integrate charge calling.
 
     The caller pays the Stellar transaction fee (~0.00001 XLM), but needs no special authorization.
+
   </Accordion>
   <Accordion title="What happens when a charge fails?">
     If the subscriber has insufficient balance or allowance:
@@ -134,5 +144,6 @@ The contract checks, in order:
     2. `failed_at` is set to the current timestamp.
     3. On the **next** `charge()` call, if `now > failed_at + grace_period`, the subscription is paused.
     4. A paused subscription can be reactivated by the subscriber via [`reactivate()`](/api-reference/reactivate).
+
   </Accordion>
 </AccordionGroup>

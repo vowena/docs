@@ -8,7 +8,9 @@ description: "Run an automated keeper bot that charges due subscriptions on sche
 A keeper is an automated script that calls `charge()` on the Vowena contract for subscriptions that are due. Because `charge()` is **permissionless**, anyone can trigger it - the contract validates all conditions on-chain. The keeper simply pays the tiny transaction fee (~$0.00001 in XLM), while the subscription payment flows directly from the subscriber to the merchant.
 
 <Info>
-  You don't need to run your own keeper. The [Vowena Dashboard](/dashboard/keeper-setup) provides a managed keeper service. This page is for developers who want to self-host or customize their keeper.
+  You don't need to run your own keeper. The [Vowena
+  Dashboard](/dashboard/keeper-setup) provides a managed keeper service. This
+  page is for developers who want to self-host or customize their keeper.
 </Info>
 
 ---
@@ -39,6 +41,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
     ```
 
     A few XLM is sufficient for thousands of charge transactions.
+
   </Step>
 
   <Step title="Configure Environment Variables">
@@ -55,6 +58,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
     <Warning>
       Your `KEEPER_SECRET` is a private key that can sign transactions. Never commit it to source control, share it in logs, or expose it in client-side code. Use a secrets manager or environment variable injection in production.
     </Warning>
+
   </Step>
 
   <Step title="Run the Keeper">
@@ -81,6 +85,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
     [keeper] Checking subscription #102... not yet due, skipping
     [keeper] Checking subscription #103... charge failed: insufficient balance
     ```
+
   </Step>
 
   <Step title="Verify It's Working">
@@ -90,6 +95,7 @@ The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repos
     const sub = await client.getSubscription(101, callerAddress);
     console.log(sub.periodsCharged); // Should increment after each successful charge
     ```
+
   </Step>
 </Steps>
 
@@ -116,13 +122,17 @@ The caller (keeper) only pays the transaction fee. The USDC payment goes directl
     The basic keeper iterates subscription IDs sequentially, which works for small-scale testing. For production, use the dashboard's event indexer (or build your own) to maintain a database of active subscriptions and their next charge dates. This way you only attempt charges for subscriptions that are actually due, saving RPC calls and transaction fees.
   </Accordion>
 
-  <Accordion title="Handle rate limits">
-    Public Soroban RPC endpoints have rate limits. For production keepers, use a dedicated RPC provider or self-host a Stellar node to avoid throttling during high-traffic periods.
-  </Accordion>
+<Accordion title="Handle rate limits">
+  Public Soroban RPC endpoints have rate limits. For production keepers, use a
+  dedicated RPC provider or self-host a Stellar node to avoid throttling during
+  high-traffic periods.
+</Accordion>
 
-  <Accordion title="Monitor and alert">
-    Set up monitoring for your keeper process. Track metrics like successful charges, failed charges, and RPC errors. Alert on prolonged failures so you can intervene before subscriptions start pausing due to missed charges.
-  </Accordion>
+<Accordion title="Monitor and alert">
+  Set up monitoring for your keeper process. Track metrics like successful
+  charges, failed charges, and RPC errors. Alert on prolonged failures so you
+  can intervene before subscriptions start pausing due to missed charges.
+</Accordion>
 
   <Accordion title="Run multiple instances carefully">
     If you run multiple keeper instances, they may attempt to charge the same subscription simultaneously. The contract handles this safely - only the first charge succeeds, and subsequent attempts fail harmlessly. However, you will pay unnecessary transaction fees. Use a coordination layer or partition subscription IDs across keepers.
@@ -130,5 +140,8 @@ The caller (keeper) only pays the transaction fee. The USDC payment goes directl
 </AccordionGroup>
 
 <Tip>
-  For most merchants, the managed keeper in the [Vowena Dashboard](/dashboard/keeper-setup) is the simplest option. Self-hosting a keeper is recommended only if you need custom logic, want full control over infrastructure, or are operating at scale.
+  For most merchants, the managed keeper in the [Vowena
+  Dashboard](/dashboard/keeper-setup) is the simplest option. Self-hosting a
+  keeper is recommended only if you need custom logic, want full control over
+  infrastructure, or are operating at scale.
 </Tip>

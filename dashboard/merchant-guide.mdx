@@ -14,6 +14,7 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     <Tip>
       If you don't have Freighter yet, install it from [freighter.app](https://www.freighter.app/). It's a browser extension available for Chrome, Firefox, and Brave. Make sure you're connected to the correct network.
     </Tip>
+
   </Step>
 
   <Step title="Create Your First Plan">
@@ -40,6 +41,7 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     <Tip>
       Plans are immutable on-chain once created. You can update the **amount** (within the ceiling) but not the period, trial length, or token. If you need to change those, create a new plan and use the migration flow.
     </Tip>
+
   </Step>
 
   <Step title="Share Your Plan">
@@ -86,6 +88,7 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     ```
 
     Subscribers visiting this link will see the plan details and can subscribe with one click.
+
   </Step>
 
   <Step title="Monitor Subscribers">
@@ -106,6 +109,7 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     <Note>
       Refunds require you to have sufficient USDC balance. The contract transfers tokens from your wallet to the subscriber - it does not hold funds in escrow.
     </Note>
+
   </Step>
 
   <Step title="Billing Analytics">
@@ -122,6 +126,7 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     <Tip>
       A high failed-charge rate usually means subscribers are running low on USDC. Consider adding a reminder notification in your app before billing day, or extending your grace period to give subscribers more time to top up.
     </Tip>
+
   </Step>
 
   <Step title="Enable Auto-Billing">
@@ -137,6 +142,7 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
     <Info>
       For more control or a self-hosted setup, see the [Keeper Setup guide](/dashboard/keeper-setup) which covers both the built-in keeper and a standalone bot you can run yourself.
     </Info>
+
   </Step>
 </Steps>
 
@@ -151,12 +157,15 @@ You can update a plan's amount at any time, as long as the new amount does not e
 Since the subscriber's wallet already approved spending up to the price ceiling, no re-authorization is needed. The new amount takes effect on the next billing cycle.
 
 <Warning>
-  If you need to raise the price above the current ceiling, you must create a new plan and use the migration flow. This requires every subscriber to explicitly accept the new terms.
+  If you need to raise the price above the current ceiling, you must create a
+  new plan and use the migration flow. This requires every subscriber to
+  explicitly accept the new terms.
 </Warning>
 
 ### Creating Additional Plans
 
 There is no limit to the number of plans you can create. Common patterns include:
+
 - **Tiered pricing** - Basic, Pro, and Enterprise plans with different amounts
 - **Annual vs monthly** - Same features, different billing periods (often with a discount for annual)
 - **Regional pricing** - Different price points for different markets
@@ -172,5 +181,6 @@ When you create a new plan and want to move existing subscribers:
 5. Accepted subscribers are moved to the new plan with a fresh allowance. Rejected subscribers stay on the old plan unchanged.
 
 <Tip>
-  Communicate plan changes to your subscribers before initiating a migration. Surprise price increases lead to higher rejection rates and churn.
+  Communicate plan changes to your subscribers before initiating a migration.
+  Surprise price increases lead to higher rejection rates and churn.
 </Tip>

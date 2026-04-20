@@ -13,8 +13,8 @@ Returns a vector of all plan IDs created by the given merchant address. This is 
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name       | Type      | Description                     |
+| ---------- | --------- | ------------------------------- |
 | `merchant` | `Address` | The merchant's Stellar address. |
 
 ---
@@ -59,6 +59,7 @@ None. Returns an empty vector if the merchant has no plans.
       console.log(`Plan ${planId}: ${plan.amount} stroops, active: ${plan.active}`);
     }
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash

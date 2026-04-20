@@ -10,17 +10,21 @@ fn extend_ttl(env: Env, plan_id: u64, sub_id: u64)
 Extends the TTL (time-to-live) of plan and subscription persistent storage entries. This prevents these entries from being archived by the Soroban ledger when their TTL expires.
 
 <Note>
-  Soroban persistent storage entries have a finite TTL. When the TTL expires, the entry is **archived** - it still exists but cannot be accessed until restored. Calling `extend_ttl` refreshes the TTL window, keeping the data accessible. This is critical for long-running subscriptions that span months or years.
+  Soroban persistent storage entries have a finite TTL. When the TTL expires,
+  the entry is **archived** - it still exists but cannot be accessed until
+  restored. Calling `extend_ttl` refreshes the TTL window, keeping the data
+  accessible. This is critical for long-running subscriptions that span months
+  or years.
 </Note>
 
 ---
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| `plan_id` | `u64` | The plan ID whose TTL to extend. |
-| `sub_id` | `u64` | The subscription ID whose TTL to extend. |
+| Name      | Type  | Description                              |
+| --------- | ----- | ---------------------------------------- |
+| `plan_id` | `u64` | The plan ID whose TTL to extend.         |
+| `sub_id`  | `u64` | The subscription ID whose TTL to extend. |
 
 ---
 
@@ -70,6 +74,7 @@ None. If the plan or subscription does not exist, the function is a no-op.
     const signedXdr = await signTransaction(tx);
     await client.submitTransaction(signedXdr);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -90,11 +95,13 @@ None. If the plan or subscription does not exist, the function is a no-op.
     On Soroban, every piece of persistent data has a TTL measured in ledger sequence numbers. When the current ledger passes the entry's TTL, the entry is archived. Archived entries cannot be read or written until they are restored (which costs additional fees).
 
     For Vowena, this means a subscription that hasn't been touched in several months could become inaccessible. The `extend_ttl` function prevents this by refreshing the TTL window.
+
   </Accordion>
   <Accordion title="Who should call extend_ttl?">
     Typically, keeper bots or the merchant's backend should periodically call `extend_ttl` for active plans and subscriptions. The Vowena Dashboard keeper service handles this automatically.
 
     Since the function is permissionless, anyone can extend TTL for any entry - there is no access control needed because extending TTL only keeps data alive longer.
+
   </Accordion>
   <Accordion title="What are the TTL thresholds?">
     Vowena uses these default TTL policies:
@@ -103,5 +110,6 @@ None. If the plan or subscription does not exist, the function is a no-op.
     - **Persistent storage** (plans, subscriptions, indexes): ~30 day threshold, ~120 day extend
 
     The `extend_ttl` function refreshes persistent entries to the ~120 day extend window.
+
   </Accordion>
 </AccordionGroup>

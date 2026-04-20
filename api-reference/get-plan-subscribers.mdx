@@ -13,8 +13,8 @@ Returns a vector of all subscription IDs associated with the given plan. This is
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name      | Type  | Description           |
+| --------- | ----- | --------------------- |
 | `plan_id` | `u64` | The plan ID to query. |
 
 ---
@@ -60,6 +60,7 @@ None. Returns an empty vector if the plan has no subscriptions.
       console.log(`Sub ${subId}: ${sub.subscriber}, status: ${sub.status}`);
     }
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -74,5 +75,7 @@ None. Returns an empty vector if the plan has no subscriptions.
 </Tabs>
 
 <Tip>
-  This function is useful for building merchant dashboards that show subscriber counts and for keeper bots that need to iterate over all subscriptions on a plan to find due charges.
+  This function is useful for building merchant dashboards that show subscriber
+  counts and for keeper bots that need to iterate over all subscriptions on a
+  plan to find due charges.
 </Tip>

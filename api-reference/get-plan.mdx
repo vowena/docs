@@ -13,8 +13,8 @@ Returns the full `Plan` struct for the given plan ID. This is a read-only functi
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name      | Type  | Description                     |
+| --------- | ----- | ------------------------------- |
 | `plan_id` | `u64` | The ID of the plan to retrieve. |
 
 ---
@@ -29,27 +29,27 @@ None. This is a read-only query.
 
 `Plan` struct with the following fields:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `u64` | Unique plan identifier |
-| `merchant` | `Address` | Merchant who created the plan |
-| `token` | `Address` | Token contract address (e.g., USDC) |
-| `amount` | `i128` | Amount charged per period (in stroops) |
-| `period` | `u64` | Billing period in seconds |
-| `trial_periods` | `u32` | Number of free trial periods |
-| `max_periods` | `u32` | Max billing periods (0 = unlimited) |
-| `grace_period` | `u64` | Grace window in seconds after failed charge |
-| `price_ceiling` | `i128` | Maximum amount the plan can ever charge |
-| `created_at` | `u64` | Ledger timestamp at creation |
-| `active` | `bool` | Whether the plan accepts new subscribers |
+| Field           | Type      | Description                                 |
+| --------------- | --------- | ------------------------------------------- |
+| `id`            | `u64`     | Unique plan identifier                      |
+| `merchant`      | `Address` | Merchant who created the plan               |
+| `token`         | `Address` | Token contract address (e.g., USDC)         |
+| `amount`        | `i128`    | Amount charged per period (in stroops)      |
+| `period`        | `u64`     | Billing period in seconds                   |
+| `trial_periods` | `u32`     | Number of free trial periods                |
+| `max_periods`   | `u32`     | Max billing periods (0 = unlimited)         |
+| `grace_period`  | `u64`     | Grace window in seconds after failed charge |
+| `price_ceiling` | `i128`    | Maximum amount the plan can ever charge     |
+| `created_at`    | `u64`     | Ledger timestamp at creation                |
+| `active`        | `bool`    | Whether the plan accepts new subscribers    |
 
 ---
 
 ## Error cases
 
-| Code | Name | Description |
-|------|------|-------------|
-| 6 | `PlanNotFound` | No plan exists with the given `plan_id`. |
+| Code | Name           | Description                              |
+| ---- | -------------- | ---------------------------------------- |
+| 6    | `PlanNotFound` | No plan exists with the given `plan_id`. |
 
 ---
 
@@ -74,6 +74,7 @@ None. This is a read-only query.
     console.log("Trial periods:", plan.trialPeriods);
     console.log("Active:", plan.active);
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash

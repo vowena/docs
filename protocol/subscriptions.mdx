@@ -13,21 +13,26 @@ A subscription is the on-chain record linking a **subscriber** to a **plan**. It
 
 Every subscription moves through a defined set of states. Transitions are enforced by the contract - there is no way to skip a state or force an invalid transition.
 
-| From | To | Trigger |
-|---|---|---|
-| - | **Active** | `subscribe()` called |
-| **Active** | **Paused** | Charge fails and grace period expires |
-| **Active** | **Expired** | `max_periods` reached during charge |
-| **Active** | **Cancelled** | Subscriber calls `cancel()` |
-| **Paused** | **Active** | Subscriber calls `reactivate()` (funds now available) |
+| From       | To            | Trigger                                                                     |
+| ---------- | ------------- | --------------------------------------------------------------------------- |
+| -          | **Active**    | `subscribe()` called                                                        |
+| **Active** | **Paused**    | Charge fails and grace period expires                                       |
+| **Active** | **Expired**   | `max_periods` reached during charge                                         |
+| **Active** | **Cancelled** | Subscriber calls `cancel()`                                                 |
+| **Paused** | **Active**    | Subscriber calls `reactivate()` (funds now available)                       |
 | **Paused** | **Cancelled** | One more billing period passes while paused, or subscriber calls `cancel()` |
 
 <Info>
-  **Paused** is a recoverable state. If a subscriber tops up their wallet and calls `reactivate()`, the subscription returns to Active and billing resumes. But if another full billing period passes while paused, the next `charge()` call will transition it to Cancelled permanently.
+  **Paused** is a recoverable state. If a subscriber tops up their wallet and
+  calls `reactivate()`, the subscription returns to Active and billing resumes.
+  But if another full billing period passes while paused, the next `charge()`
+  call will transition it to Cancelled permanently.
 </Info>
 
 <Note>
-  There is no transition from **Cancelled** or **Expired** back to any other state. These are terminal. The subscriber must create a new subscription if they want to resume.
+  There is no transition from **Cancelled** or **Expired** back to any other
+  state. These are terminal. The subscriber must create a new subscription if
+  they want to resume.
 </Note>
 
 ---
@@ -58,6 +63,7 @@ When a subscriber calls `subscribe()`, several things happen in a single atomic 
     - `120` if the plan is unlimited (`max_periods == 0`)
 
     The allowance expiry is set to the **maximum Soroban allows**: approximately 6,312,000 ledgers (~347 days at 5-second block times).
+
   </Step>
   <Step title="Token approval">
     The contract calls `token.approve(subscriber, contract_address, allowance, expiry_ledger)`. This grants the Vowena contract permission to pull up to `allowance` tokens from the subscriber over the approval period.
@@ -71,7 +77,10 @@ When a subscriber calls `subscribe()`, several things happen in a single atomic 
 </Steps>
 
 <Warning>
-  The allowance is based on `price_ceiling`, not the current `amount`. This is intentional - it ensures that if the merchant raises the price (within the ceiling), existing subscribers do not need to re-authorize. The subscriber sees the ceiling amount in their wallet's approval prompt.
+  The allowance is based on `price_ceiling`, not the current `amount`. This is
+  intentional - it ensures that if the merchant raises the price (within the
+  ceiling), existing subscribers do not need to re-authorize. The subscriber
+  sees the ceiling amount in their wallet's approval prompt.
 </Warning>
 
 ---
@@ -88,6 +97,7 @@ When a subscriber calls `subscribe()`, several things happen in a single atomic 
     ```
 
     The subscriber's wallet will show: "Approve 180 USDC for Vowena contract".
+
   </Tab>
   <Tab title="Unlimited plan">
     **Plan:** 5 USDC/month, ceiling 8 USDC, max 0 (unlimited)
@@ -98,6 +108,7 @@ When a subscriber calls `subscribe()`, several things happen in a single atomic 
     ```
 
     After the allowance expires (~347 days), the subscriber would need to re-approve. The contract handles this gracefully - a charge will fail, the subscriber can re-approve and reactivate.
+
   </Tab>
   <Tab title="Plan with trial">
     **Plan:** 20 USDC/month, ceiling 25 USDC, max 12, trial 2 periods
@@ -107,6 +118,7 @@ When a subscriber calls `subscribe()`, several things happen in a single atomic 
     ```
 
     The allowance covers all 12 periods including trials. During the 2 trial periods, `charge()` advances the counter but does not transfer tokens. The allowance is not consumed during trials.
+
   </Tab>
 </Tabs>
 
@@ -125,13 +137,20 @@ const tx = await client.cancel({
 
 <AccordionGroup>
   <Accordion title="Who can cancel?">
-    Only the subscriber can cancel their own subscription. The contract calls `subscriber.require_auth()`. Merchants cannot cancel on behalf of subscribers.
+    Only the subscriber can cancel their own subscription. The contract calls
+    `subscriber.require_auth()`. Merchants cannot cancel on behalf of
+    subscribers.
   </Accordion>
   <Accordion title="What happens to the allowance?">
-    The remaining token allowance stays until it expires naturally on the ledger. The contract will never use it after cancellation because the subscription status is `Cancelled` and `charge()` checks status before attempting any transfer.
+    The remaining token allowance stays until it expires naturally on the
+    ledger. The contract will never use it after cancellation because the
+    subscription status is `Cancelled` and `charge()` checks status before
+    attempting any transfer.
   </Accordion>
   <Accordion title="Is it refundable?">
-    Cancellation does not trigger an automatic refund. The current period is already paid. Merchants can issue voluntary [refunds](/protocol/refunds) separately.
+    Cancellation does not trigger an automatic refund. The current period is
+    already paid. Merchants can issue voluntary [refunds](/protocol/refunds)
+    separately.
   </Accordion>
 </AccordionGroup>
 
@@ -143,18 +162,23 @@ If a subscription is **Paused** (charge failed, grace expired), the subscriber c
 
 <Steps>
   <Step title="Top up wallet">
-    The subscriber ensures they have sufficient token balance and that the contract's allowance has not expired.
+    The subscriber ensures they have sufficient token balance and that the
+    contract's allowance has not expired.
   </Step>
   <Step title="Call reactivate">
-    The subscriber calls `reactivate(sub_id)`. The contract verifies the subscription is in `Paused` status and transitions it back to `Active`.
+    The subscriber calls `reactivate(sub_id)`. The contract verifies the
+    subscription is in `Paused` status and transitions it back to `Active`.
   </Step>
   <Step title="Billing resumes">
-    The `next_billing_time` is reset so that the next `charge()` call can process immediately.
+    The `next_billing_time` is reset so that the next `charge()` call can
+    process immediately.
   </Step>
 </Steps>
 
 <Tip>
-  If the original token allowance has expired while the subscription was paused, the subscriber will need to create a new subscription instead. Reactivation only works if the allowance is still valid.
+  If the original token allowance has expired while the subscription was paused,
+  the subscriber will need to create a new subscription instead. Reactivation
+  only works if the allowance is still valid.
 </Tip>
 
 ---
@@ -165,7 +189,11 @@ If a subscription is **Paused** (charge failed, grace expired), the subscriber c
   <Card title="Billing" icon="credit-card" href="/protocol/billing">
     The most important page - understand exactly what happens during a charge.
   </Card>
-  <Card title="Migrations" icon="arrow-right-arrow-left" href="/protocol/migrations">
+  <Card
+    title="Migrations"
+    icon="arrow-right-arrow-left"
+    href="/protocol/migrations"
+  >
     How merchants move subscribers to new plans with explicit consent.
   </Card>
 </CardGroup>

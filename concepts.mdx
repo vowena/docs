@@ -8,7 +8,11 @@ Vowena is built on a small set of composable primitives. Understanding these con
 <CardGroup cols={3}>
   <Card title="Plans" icon="file-invoice" href="#plans" />
   <Card title="Subscriptions" icon="repeat" href="#subscriptions" />
-  <Card title="Token Allowance" icon="key" href="#token-allowance-pull-billing" />
+  <Card
+    title="Token Allowance"
+    icon="key"
+    href="#token-allowance-pull-billing"
+  />
   <Card title="Billing Cycle" icon="calendar-check" href="#billing-cycle" />
   <Card title="Price Ceiling" icon="shield-halved" href="#price-ceiling" />
   <Card title="Grace Periods" icon="clock" href="#grace-periods" />
@@ -42,6 +46,7 @@ A **plan** is an immutable billing template created by a merchant on-chain. It d
     - Subscribers must explicitly accept any migration, preserving full consent.
 
     The one exception: merchants can call `update_plan_amount()` to adjust the billing amount, but **only up to the price_ceiling**. This allows minor price adjustments (e.g., rounding changes) without requiring a full migration.
+
   </Accordion>
 
   <Accordion title="Creating a Plan" icon="plus">
@@ -59,6 +64,7 @@ A **plan** is an immutable billing template created by a merchant on-chain. It d
     ```
 
     The returned `planId` is a sequential integer assigned by the contract. Use it to reference this plan in all subsequent operations.
+
   </Accordion>
 </AccordionGroup>
 
@@ -102,6 +108,7 @@ A **subscription** is an on-chain record that links a subscriber to a plan. It t
     - **Paused** - A charge failed, the grace period expired, and the subscription is on hold. It can be reactivated.
     - **Cancelled** - Permanently ended. Either the subscriber/merchant cancelled, or a paused subscription was not reactivated in time.
     - **Expired** - The `max_periods` limit was reached. The subscription completed naturally.
+
   </Accordion>
 
   <Accordion title="Subscription Data" icon="database">
@@ -116,12 +123,14 @@ A **subscription** is an on-chain record that links a subscriber to a plan. It t
     | `last_charged_at` | Timestamp of the most recent successful charge |
     | `periods_charged` | Number of billing periods successfully charged |
     | `failed_at` | Timestamp of the most recent failed charge attempt (if any) |
+
   </Accordion>
 
   <Accordion title="Who Can Cancel?" icon="ban">
     Both the **subscriber** and the **merchant** can cancel a subscription at any time by calling `cancel()`. The subscriber does not need the merchant's permission, and the merchant does not need the subscriber's permission.
 
     Cancellation is an on-chain transaction - no frontend, API, or dashboard is required. Any tool that can invoke a Soroban contract can cancel a subscription.
+
   </Accordion>
 </AccordionGroup>
 
@@ -130,7 +139,8 @@ A **subscription** is an on-chain record that links a subscriber to a plan. It t
 ## Token Allowance (Pull Billing)
 
 <Note>
-  This is the core mechanism that makes Vowena possible. Understanding token allowances is essential to understanding the protocol.
+  This is the core mechanism that makes Vowena possible. Understanding token
+  allowances is essential to understanding the protocol.
 </Note>
 
 Vowena uses the **SEP-41 token standard** on Stellar, which includes an `approve` / `transfer_from` pattern - the same concept as ERC-20 allowances on Ethereum.
@@ -153,6 +163,7 @@ Vowena uses the **SEP-41 token standard** on Stellar, which includes an `approve
     - **Token approval**: `usdc.approve(subscriber, vowena_contract, amount, expiry_ledger)`
 
     The subscriber sees exactly which token, how much spending authority, and for how long. Nothing is hidden.
+
   </Accordion>
 
   <Accordion title="One Signature, Two Authorizations" icon="signature">
@@ -162,6 +173,7 @@ Vowena uses the **SEP-41 token standard** on Stellar, which includes an `approve
     2. Authorization to invoke `approve()` on the USDC token contract
 
     The subscriber signs once, and both authorizations are included in the same transaction. This is what makes the UX seamless - no multi-step approval flow.
+
   </Accordion>
 
   <Accordion title="Security Properties" icon="shield">
@@ -190,6 +202,7 @@ The billing cycle is the heartbeat of every subscription. Here's what happens ea
     6. **Max periods check** - Has `max_periods` been reached? (If so, mark as Expired.)
 
     If all checks pass, the contract calls `transfer_from()` to move `amount` USDC from the subscriber to the merchant.
+
   </Accordion>
 
   <Accordion title="Permissionless Charging" icon="unlock">
@@ -202,6 +215,7 @@ The billing cycle is the heartbeat of every subscription. Here's what happens ea
     - **Subscriber-initiated**: Subscribers can even trigger their own charges
 
     The contract enforces all rules regardless of who calls `charge()`. There is no trust assumption on the caller.
+
   </Accordion>
 
   <Accordion title="Timing" icon="hourglass">
@@ -212,6 +226,7 @@ The billing cycle is the heartbeat of every subscription. Here's what happens ea
     ```
 
     For the first charge after subscribing (and after any trial periods), `last_charged_at` is set to the subscription creation time plus trial periods.
+
   </Accordion>
 </AccordionGroup>
 
@@ -228,6 +243,7 @@ The **price ceiling** is a subscriber protection mechanism built directly into t
     - A merchant can call `update_plan_amount()` to change the billing amount, but **only up to the price_ceiling**.
     - If the merchant needs to charge more than the ceiling, they must create a new plan and use the migration flow.
     - The subscriber must explicitly accept any migration.
+
   </Accordion>
 
   <Accordion title="Example" icon="magnifying-glass">
@@ -239,6 +255,7 @@ The **price ceiling** is a subscriber protection mechanism built directly into t
     1. Create a new plan with the new pricing
     2. Request a migration for each subscriber
     3. Each subscriber individually accepts (or rejects) the migration
+
   </Accordion>
 
   <Accordion title="Why It Matters" icon="heart">
@@ -247,6 +264,7 @@ The **price ceiling** is a subscriber protection mechanism built directly into t
     - The price ceiling is set **at plan creation** and is immutable.
     - The subscriber's token allowance is based on the price ceiling, not the current amount.
     - Any change above the ceiling requires explicit subscriber consent via the migration flow.
+
   </Accordion>
 </AccordionGroup>
 
@@ -279,6 +297,7 @@ Grace periods provide a safety net for failed charges, preventing immediate subs
     | `0` | No grace period (fail immediately pauses) |
 
     Choose a grace period that balances subscriber convenience with cash flow needs. 3 days is a common default.
+
   </Accordion>
 
   <Accordion title="Best Practices" icon="star">
@@ -293,7 +312,9 @@ Grace periods provide a safety net for failed charges, preventing immediate subs
 ## Keepers
 
 <Info>
-  A **keeper** is any service or bot that calls `charge()` on subscriptions when they become due. The term comes from the DeFi concept of "keeper bots" that maintain protocol health.
+  A **keeper** is any service or bot that calls `charge()` on subscriptions when
+  they become due. The term comes from the DeFi concept of "keeper bots" that
+  maintain protocol health.
 </Info>
 
 <AccordionGroup>
@@ -301,21 +322,25 @@ Grace periods provide a safety net for failed charges, preventing immediate subs
     Smart contracts on Soroban (and most blockchains) cannot execute automatically. Someone must submit a transaction to trigger the `charge()` function each billing period.
 
     Keepers solve this problem. They monitor subscriptions and call `charge()` at the right time.
+
   </Accordion>
 
-  <Accordion title="Keeper Options" icon="list-check">
-    <CardGroup cols={1}>
-      <Card title="Merchant Self-Hosted" icon="server">
-        Run the SDK's keeper module on your own infrastructure. Full control, no dependencies.
-      </Card>
-      <Card title="Dashboard Keeper" icon="gauge">
-        The Vowena Dashboard includes a hosted keeper service. Toggle it on per plan - no code required.
-      </Card>
-      <Card title="Third-Party Keepers" icon="handshake">
-        Independent keeper services that monitor and charge subscriptions across the network. Permissionless and competitive.
-      </Card>
-    </CardGroup>
-  </Accordion>
+<Accordion title="Keeper Options" icon="list-check">
+  <CardGroup cols={1}>
+    <Card title="Merchant Self-Hosted" icon="server">
+      Run the SDK's keeper module on your own infrastructure. Full control, no
+      dependencies.
+    </Card>
+    <Card title="Dashboard Keeper" icon="gauge">
+      The Vowena Dashboard includes a hosted keeper service. Toggle it on per
+      plan - no code required.
+    </Card>
+    <Card title="Third-Party Keepers" icon="handshake">
+      Independent keeper services that monitor and charge subscriptions across
+      the network. Permissionless and competitive.
+    </Card>
+  </CardGroup>
+</Accordion>
 
   <Accordion title="Running Your Own Keeper" icon="terminal">
     The SDK includes a keeper module:
@@ -338,6 +363,7 @@ Grace periods provide a safety net for failed charges, preventing immediate subs
     ```
 
     See the [Keeper SDK docs](/sdk/keeper) for the full API.
+
   </Accordion>
 </AccordionGroup>
 

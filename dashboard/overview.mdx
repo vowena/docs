@@ -6,7 +6,10 @@ description: "The Vowena Dashboard is a Next.js app for managing on-chain subscr
 The Vowena Dashboard at [dashboard.vowena.xyz](https://dashboard.vowena.xyz) is the primary interface for interacting with the Vowena protocol. It serves both merchants and subscribers from a single application, with your connected wallet determining your experience.
 
 <Info>
-  The smart contract is always the source of truth. The dashboard's database is a convenience layer - it indexes on-chain data into Postgres for fast querying, but every action you take in the dashboard builds and submits a real Soroban transaction.
+  The smart contract is always the source of truth. The dashboard's database is
+  a convenience layer - it indexes on-chain data into Postgres for fast
+  querying, but every action you take in the dashboard builds and submits a real
+  Soroban transaction.
 </Info>
 
 ---
@@ -21,7 +24,9 @@ There are no usernames, passwords, or email addresses. Your Stellar wallet addre
 4. You're in
 
 <Note>
-  [Freighter](https://www.freighter.app/) is the primary supported wallet. Other Stellar wallets that implement the standard wallet interface are also supported, but Freighter provides the best experience.
+  [Freighter](https://www.freighter.app/) is the primary supported wallet. Other
+  Stellar wallets that implement the standard wallet interface are also
+  supported, but Freighter provides the best experience.
 </Note>
 
 ---
@@ -32,10 +37,18 @@ The dashboard adapts based on what you do. Any wallet can act as both a merchant
 
 <Columns cols={2}>
   <Card title="Merchant" icon="store" href="/dashboard/merchant-guide">
-    Create subscription plans, monitor subscribers, view billing analytics, trigger charges, issue refunds, and configure auto-billing with the built-in keeper service.
+    Create subscription plans, monitor subscribers, view billing analytics,
+    trigger charges, issue refunds, and configure auto-billing with the built-in
+    keeper service.
   </Card>
-  <Card title="Subscriber" icon="user-shield" href="/dashboard/subscriber-guide">
-    View all your active subscriptions across every merchant in one place. Review billing history, handle plan migrations, and cancel subscriptions with a single click.
+  <Card
+    title="Subscriber"
+    icon="user-shield"
+    href="/dashboard/subscriber-guide"
+  >
+    View all your active subscriptions across every merchant in one place.
+    Review billing history, handle plan migrations, and cancel subscriptions
+    with a single click.
   </Card>
 </Columns>
 
@@ -45,13 +58,16 @@ The dashboard adapts based on what you do. Any wallet can act as both a merchant
 
 <Columns cols={3}>
   <Card title="Frontend" icon="browser">
-    Next.js 16 with App Router, Tailwind CSS dark theme, React Query for data fetching, and Recharts for analytics visualizations.
+    Next.js 16 with App Router, Tailwind CSS dark theme, React Query for data
+    fetching, and Recharts for analytics visualizations.
   </Card>
   <Card title="Backend" icon="server">
-    Next.js API routes, Drizzle ORM with Postgres, event indexer service, and a keeper cron job for automated billing.
+    Next.js API routes, Drizzle ORM with Postgres, event indexer service, and a
+    keeper cron job for automated billing.
   </Card>
   <Card title="Blockchain" icon="link">
-    Freighter wallet integration, Soroban RPC for transaction submission, and SEP-41 token interactions for USDC.
+    Freighter wallet integration, Soroban RPC for transaction submission, and
+    SEP-41 token interactions for USDC.
   </Card>
 </Columns>
 
@@ -63,18 +79,31 @@ The dashboard runs three backend services that keep the off-chain database in sy
 
 <AccordionGroup>
   <Accordion title="Event Indexer">
-    A background service that continuously polls Soroban RPC for Vowena contract events. Every `PlanCreated`, `Subscribed`, `ChargeSucceeded`, `ChargeFailed`, `SubscriptionCancelled`, and other event is parsed and written to Postgres. This is what powers instant queries - instead of making RPC calls for every page load, the dashboard reads from its local database.
+    A background service that continuously polls Soroban RPC for Vowena contract
+    events. Every `PlanCreated`, `Subscribed`, `ChargeSucceeded`,
+    `ChargeFailed`, `SubscriptionCancelled`, and other event is parsed and
+    written to Postgres. This is what powers instant queries - instead of making
+    RPC calls for every page load, the dashboard reads from its local database.
   </Accordion>
   <Accordion title="Keeper Service">
-    An automated cron job that calls `charge()` for all subscriptions that are due. Merchants can enable or disable this per-plan from the dashboard. The keeper iterates through due subscriptions, builds charge transactions, signs them with the dashboard's keeper key, and submits them to the network.
+    An automated cron job that calls `charge()` for all subscriptions that are
+    due. Merchants can enable or disable this per-plan from the dashboard. The
+    keeper iterates through due subscriptions, builds charge transactions, signs
+    them with the dashboard's keeper key, and submits them to the network.
   </Accordion>
   <Accordion title="Plan Metadata">
-    Plans on-chain are identified by numeric IDs and contain only billing parameters. The dashboard stores additional off-chain metadata - human-readable plan names, descriptions, and branding - in Postgres. This metadata is optional and never touches the smart contract.
+    Plans on-chain are identified by numeric IDs and contain only billing
+    parameters. The dashboard stores additional off-chain metadata -
+    human-readable plan names, descriptions, and branding - in Postgres. This
+    metadata is optional and never touches the smart contract.
   </Accordion>
 </AccordionGroup>
 
 <Warning>
-  If the dashboard backend goes offline, the event indexer and keeper stop running. However, all on-chain data remains intact. Subscribers can still cancel through any Stellar wallet or block explorer, and anyone can call `charge()` directly on the contract.
+  If the dashboard backend goes offline, the event indexer and keeper stop
+  running. However, all on-chain data remains intact. Subscribers can still
+  cancel through any Stellar wallet or block explorer, and anyone can call
+  `charge()` directly on the contract.
 </Warning>
 
 ---
@@ -101,15 +130,22 @@ Every write operation in the dashboard builds a Soroban transaction, prompts you
 
 <CardGroup cols={2}>
   <Card title="Merchant Guide" icon="store" href="/dashboard/merchant-guide">
-    Create your first plan, share it with subscribers, and set up automated billing.
+    Create your first plan, share it with subscribers, and set up automated
+    billing.
   </Card>
-  <Card title="Subscriber Guide" icon="user-shield" href="/dashboard/subscriber-guide">
-    Manage all your subscriptions, review billing history, and handle migrations.
+  <Card
+    title="Subscriber Guide"
+    icon="user-shield"
+    href="/dashboard/subscriber-guide"
+  >
+    Manage all your subscriptions, review billing history, and handle
+    migrations.
   </Card>
   <Card title="Keeper Setup" icon="robot" href="/dashboard/keeper-setup">
     Configure the built-in keeper or run your own standalone billing bot.
   </Card>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Prefer code? Use the TypeScript SDK to integrate Vowena directly into your app.
+    Prefer code? Use the TypeScript SDK to integrate Vowena directly into your
+    app.
   </Card>
 </CardGroup>

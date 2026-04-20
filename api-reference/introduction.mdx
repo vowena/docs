@@ -6,7 +6,10 @@ description: "Complete reference for every function in the Vowena Soroban smart 
 The Vowena contract exposes 17 functions covering the full subscription lifecycle. This reference documents every function with its parameters, authorization requirements, events, and error codes.
 
 <Info>
-  **Write functions** return assembled XDR via the SDK. You sign the transaction with your wallet and submit it to the network. **Read functions** query contract state directly and return data without requiring a transaction signature.
+  **Write functions** return assembled XDR via the SDK. You sign the transaction
+  with your wallet and submit it to the network. **Read functions** query
+  contract state directly and return data without requiring a transaction
+  signature.
 </Info>
 
 ---
@@ -15,50 +18,50 @@ The Vowena contract exposes 17 functions covering the full subscription lifecycl
 
 ### Setup
 
-| Function | Description | Auth |
-|----------|-------------|------|
+| Function                                  | Description                                                   | Auth                   |
+| ----------------------------------------- | ------------------------------------------------------------- | ---------------------- |
 | [`initialize`](/api-reference/initialize) | One-time contract setup. Sets admin and initializes counters. | None (first call only) |
 
 ### Plans
 
-| Function | Description | Auth |
-|----------|-------------|------|
-| [`create_plan`](/api-reference/create-plan) | Creates a new billing plan with pricing, period, trials, and limits. | Merchant |
-| [`update_plan_amount`](/api-reference/update-plan-amount) | Updates the billing amount within the price ceiling. | Merchant |
+| Function                                                  | Description                                                          | Auth     |
+| --------------------------------------------------------- | -------------------------------------------------------------------- | -------- |
+| [`create_plan`](/api-reference/create-plan)               | Creates a new billing plan with pricing, period, trials, and limits. | Merchant |
+| [`update_plan_amount`](/api-reference/update-plan-amount) | Updates the billing amount within the price ceiling.                 | Merchant |
 
 ### Subscriptions
 
-| Function | Description | Auth |
-|----------|-------------|------|
-| [`subscribe`](/api-reference/subscribe) | Subscribes to a plan. Sets token allowance and creates the subscription. | Subscriber |
-| [`cancel`](/api-reference/cancel) | Cancels a subscription immediately. Irreversible. | Subscriber or Merchant |
-| [`reactivate`](/api-reference/reactivate) | Reactivates a paused subscription. Re-approves allowance and attempts charge. | Subscriber |
+| Function                                  | Description                                                                   | Auth                   |
+| ----------------------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
+| [`subscribe`](/api-reference/subscribe)   | Subscribes to a plan. Sets token allowance and creates the subscription.      | Subscriber             |
+| [`cancel`](/api-reference/cancel)         | Cancels a subscription immediately. Irreversible.                             | Subscriber or Merchant |
+| [`reactivate`](/api-reference/reactivate) | Reactivates a paused subscription. Re-approves allowance and attempts charge. | Subscriber             |
 
 ### Billing
 
-| Function | Description | Auth |
-|----------|-------------|------|
-| [`charge`](/api-reference/charge) | Charges a due subscription. **Permissionless** - anyone can call. | None |
-| [`refund`](/api-reference/refund) | Refunds a subscriber from the merchant's wallet. | Merchant |
+| Function                          | Description                                                       | Auth     |
+| --------------------------------- | ----------------------------------------------------------------- | -------- |
+| [`charge`](/api-reference/charge) | Charges a due subscription. **Permissionless** - anyone can call. | None     |
+| [`refund`](/api-reference/refund) | Refunds a subscriber from the merchant's wallet.                  | Merchant |
 
 ### Migrations
 
-| Function | Description | Auth |
-|----------|-------------|------|
-| [`request_migration`](/api-reference/request-migration) | Requests migration of all subscribers from one plan to another. | Merchant |
-| [`accept_migration`](/api-reference/accept-migration) | Accepts a pending migration. Cancels old sub and creates new one. | Subscriber |
-| [`reject_migration`](/api-reference/reject-migration) | Rejects a pending migration. Stays on current plan. | Subscriber |
+| Function                                                | Description                                                       | Auth       |
+| ------------------------------------------------------- | ----------------------------------------------------------------- | ---------- |
+| [`request_migration`](/api-reference/request-migration) | Requests migration of all subscribers from one plan to another.   | Merchant   |
+| [`accept_migration`](/api-reference/accept-migration)   | Accepts a pending migration. Cancels old sub and creates new one. | Subscriber |
+| [`reject_migration`](/api-reference/reject-migration)   | Rejects a pending migration. Stays on current plan.               | Subscriber |
 
 ### Read-only
 
-| Function | Description | Auth |
-|----------|-------------|------|
-| [`get_plan`](/api-reference/get-plan) | Returns the Plan struct for a given plan ID. | None |
-| [`get_subscription`](/api-reference/get-subscription) | Returns the Subscription struct for a given subscription ID. | None |
-| [`get_merchant_plans`](/api-reference/get-merchant-plans) | Returns all plan IDs belonging to a merchant. | None |
-| [`get_subscriber_subscriptions`](/api-reference/get-subscriber-subscriptions) | Returns all subscription IDs for a subscriber. | None |
-| [`get_plan_subscribers`](/api-reference/get-plan-subscribers) | Returns all active subscription IDs on a plan. | None |
-| [`extend_ttl`](/api-reference/extend-ttl) | Extends TTL of plan and subscription entries to prevent archival. | None |
+| Function                                                                      | Description                                                       | Auth |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---- |
+| [`get_plan`](/api-reference/get-plan)                                         | Returns the Plan struct for a given plan ID.                      | None |
+| [`get_subscription`](/api-reference/get-subscription)                         | Returns the Subscription struct for a given subscription ID.      | None |
+| [`get_merchant_plans`](/api-reference/get-merchant-plans)                     | Returns all plan IDs belonging to a merchant.                     | None |
+| [`get_subscriber_subscriptions`](/api-reference/get-subscriber-subscriptions) | Returns all subscription IDs for a subscriber.                    | None |
+| [`get_plan_subscribers`](/api-reference/get-plan-subscribers)                 | Returns all active subscription IDs on a plan.                    | None |
+| [`extend_ttl`](/api-reference/extend-ttl)                                     | Extends TTL of plan and subscription entries to prevent archival. | None |
 
 ---
 
@@ -71,7 +74,9 @@ Vowena uses Soroban's `require_auth()` pattern. When a function requires authori
 - **Permissionless functions** - `charge()` is the only write function that requires no authorization. Anyone can call it, and the contract validates all conditions on-chain.
 
 <Tip>
-  Read-only functions (`get_plan`, `get_subscription`, etc.) never require a signature. They query contract state directly via Soroban's simulation endpoint.
+  Read-only functions (`get_plan`, `get_subscription`, etc.) never require a
+  signature. They query contract state directly via Soroban's simulation
+  endpoint.
 </Tip>
 
 ---
@@ -80,20 +85,20 @@ Vowena uses Soroban's `require_auth()` pattern. When a function requires authori
 
 Every error returned by the contract maps to a numeric code:
 
-| Code | Name | Description |
-|------|------|-------------|
-| 1 | `AlreadyInitialized` | Contract has already been initialized |
-| 3 | `InvalidAmount` | Amount is zero or negative |
-| 4 | `InvalidPeriod` | Period is zero |
-| 5 | `CeilingBelowAmount` | Price ceiling is less than the plan amount |
-| 6 | `PlanNotFound` | No plan exists with the given ID |
-| 7 | `PlanInactive` | Plan is not accepting new subscribers |
-| 8 | `SubNotFound` | No subscription exists with the given ID |
-| 9 | `Unauthorized` | Caller is not authorized for this action |
-| 10 | `AmountExceedsCeiling` | New amount exceeds the plan's price ceiling |
-| 11 | `MerchantMismatch` | Old and new plans belong to different merchants |
-| 12 | `NoMigrationPending` | No migration has been requested for this subscription |
-| 13 | `NotPaused` | Subscription is not in a paused state |
+| Code | Name                   | Description                                           |
+| ---- | ---------------------- | ----------------------------------------------------- |
+| 1    | `AlreadyInitialized`   | Contract has already been initialized                 |
+| 3    | `InvalidAmount`        | Amount is zero or negative                            |
+| 4    | `InvalidPeriod`        | Period is zero                                        |
+| 5    | `CeilingBelowAmount`   | Price ceiling is less than the plan amount            |
+| 6    | `PlanNotFound`         | No plan exists with the given ID                      |
+| 7    | `PlanInactive`         | Plan is not accepting new subscribers                 |
+| 8    | `SubNotFound`          | No subscription exists with the given ID              |
+| 9    | `Unauthorized`         | Caller is not authorized for this action              |
+| 10   | `AmountExceedsCeiling` | New amount exceeds the plan's price ceiling           |
+| 11   | `MerchantMismatch`     | Old and new plans belong to different merchants       |
+| 12   | `NoMigrationPending`   | No migration has been requested for this subscription |
+| 13   | `NotPaused`            | Subscription is not in a paused state                 |
 
 ---
 
@@ -103,22 +108,13 @@ Every function can be called through the TypeScript SDK or the Soroban CLI. The 
 
 <Tabs>
   <Tab title="SDK pattern">
-    ```typescript
-    const tx = await client.buildFunctionName({ ...params });
-    const signed = await signTransaction(tx);
-    const result = await client.submitTransaction(signed);
-    ```
+    ```typescript const tx = await client.buildFunctionName({...params}); const
+    signed = await signTransaction(tx); const result = await
+    client.submitTransaction(signed); ```
   </Tab>
   <Tab title="CLI pattern">
-    ```bash
-    soroban contract invoke \
-      --id CONTRACT_ID \
-      --network mainnet \
-      --source SIGNER_SECRET \
-      -- \
-      function_name \
-      --param1 value1 \
-      --param2 value2
-    ```
+    ```bash soroban contract invoke \ --id CONTRACT_ID \ --network mainnet \
+    --source SIGNER_SECRET \ -- \ function_name \ --param1 value1 \ --param2
+    value2 ```
   </Tab>
 </Tabs>

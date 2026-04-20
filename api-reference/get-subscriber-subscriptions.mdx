@@ -13,8 +13,8 @@ Returns a vector of all subscription IDs associated with the given subscriber ad
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name         | Type      | Description                       |
+| ------------ | --------- | --------------------------------- |
 | `subscriber` | `Address` | The subscriber's Stellar address. |
 
 ---
@@ -61,6 +61,7 @@ None. Returns an empty vector if the subscriber has no subscriptions.
       }
     }
     ```
+
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
@@ -75,5 +76,7 @@ None. Returns an empty vector if the subscriber has no subscriptions.
 </Tabs>
 
 <Tip>
-  This returns all subscriptions regardless of status. To display only active subscriptions in your UI, filter the results by checking each subscription's `status` field via [`get_subscription`](/api-reference/get-subscription).
+  This returns all subscriptions regardless of status. To display only active
+  subscriptions in your UI, filter the results by checking each subscription's
+  `status` field via [`get_subscription`](/api-reference/get-subscription).
 </Tip>
