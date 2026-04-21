@@ -52,9 +52,9 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
       import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
       const client = new VowenaClient({
-        contractId: NETWORKS.mainnet.contractId,
-        rpcUrl: NETWORKS.mainnet.rpcUrl,
-        networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+        contractId: NETWORKS.testnet.contractId,
+        rpcUrl: NETWORKS.testnet.rpcUrl,
+        networkPassphrase: NETWORKS.testnet.networkPassphrase,
       });
 
       async function handleSubscribe(subscriberAddress: string) {
@@ -70,9 +70,9 @@ This guide walks you through the full merchant experience on the Vowena Dashboar
       import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
       const client = new VowenaClient({
-        contractId: NETWORKS.mainnet.contractId,
-        rpcUrl: NETWORKS.mainnet.rpcUrl,
-        networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+        contractId: NETWORKS.testnet.contractId,
+        rpcUrl: NETWORKS.testnet.rpcUrl,
+        networkPassphrase: NETWORKS.testnet.networkPassphrase,
       });
 
       // Build the transaction server-side, send XDR to frontend for signing

@@ -3,17 +3,19 @@ title: "VowenaClient Reference"
 description: "Complete API reference for VowenaClient. Every write method, read method, and submit function with signatures, parameters, and TypeScript examples."
 ---
 
-The `VowenaClient` is the primary interface for interacting with the Vowena smart contract. Write methods return an assembled XDR string for wallet signing. Read methods query on-chain state directly.
+The `VowenaClient` is the primary interface for interacting with the Vowena smart contract. Write methods return an assembled XDR string for wallet signing. Read methods query on-chain state directly through Soroban simulation.
 
 ```typescript
 import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
 const client = new VowenaClient({
-  contractId: NETWORKS.mainnet.contractId,
-  rpcUrl: NETWORKS.mainnet.rpcUrl,
-  networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
 });
 ```
+
+Switch `testnet` → `mainnet` on `NETWORKS` when Vowena deploys to Stellar mainnet.
 
 ---
 
@@ -21,95 +23,126 @@ const client = new VowenaClient({
   <Tab title="Write Methods">
     Write methods build and simulate a Soroban transaction, returning an assembled XDR string. You sign the XDR with your wallet and then call `submitTransaction()` to broadcast it.
 
+    ## buildCreateProject
+
+    Creates a Project on chain. Every plan must belong to a project, so this is the first call a merchant makes.
+
+    ```typescript
+    const xdr = await client.buildCreateProject({
+      merchant: "GMERCHANT...ADDR",
+      name: "Acme SaaS",
+      description: "Recurring billing for Acme's hosted product.",
+    });
+    ```
+
+    | Parameter | Type | Required | Description |
+    | --- | --- | --- | --- |
+    | `merchant` | `string` | Yes | Stellar address of the merchant |
+    | `name` | `string` | Yes | Human-readable project name |
+    | `description` | `string` | No | Longer description shown in the dashboard |
+
+    **Returns:** `Promise<string>` — assembled XDR.
+
+    ---
+
     ## buildCreatePlan
 
-    Creates a new subscription plan on-chain.
+    Creates a new subscription plan inside an existing project.
 
     ```typescript
     const xdr = await client.buildCreatePlan({
       merchant: "GMERCHANT...ADDR",
-      token: NETWORKS.mainnet.usdcAddress,
+      token: NETWORKS.testnet.usdcAddress,
       amount: toStroops("9.99"),
       period: 2_592_000,
       priceCeiling: toStroops("14.99"),
       trialPeriods: 1,
       maxPeriods: 0,
       gracePeriod: 259_200,
+      name: "Pro",
+      projectId: 1,
     });
     ```
 
     | Parameter | Type | Required | Description |
     | --- | --- | --- | --- |
     | `merchant` | `string` | Yes | Stellar address of the merchant receiving payments |
-    | `token` | `string` | Yes | Token contract address (e.g., USDC) |
+    | `token` | `string` | Yes | SEP-41 token contract address (e.g. USDC) |
     | `amount` | `bigint` | Yes | Amount per billing period in stroops |
     | `period` | `number` | Yes | Billing period duration in seconds |
     | `priceCeiling` | `bigint` | Yes | Maximum amount the plan can ever charge per period |
+    | `name` | `string` | Yes | Display name for the plan |
+    | `projectId` | `number` | Yes | Parent project ID |
     | `trialPeriods` | `number` | No | Number of free billing periods (default: 0) |
     | `maxPeriods` | `number` | No | Maximum billing periods, 0 = unlimited (default: 0) |
-    | `gracePeriod` | `number` | No | Grace period in seconds for failed charges (default: 2592000) |
+    | `gracePeriod` | `number` | No | Grace period in seconds for failed charges (default: 2,592,000) |
 
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
+    **Returns:** `Promise<string>` — assembled XDR.
 
     ---
 
     ## buildSubscribe
 
-    Subscribes a user to a plan. This also sets the SEP-41 token allowance in a single transaction.
+    Subscribes a user to a plan and sets the SEP-41 token allowance in a single transaction.
 
     ```typescript
+    // Minimal — SDK picks safe defaults
     const xdr = await client.buildSubscribe(
       "GSUBSCRIBER...ADDR",
-      42
+      42,
+    );
+
+    // Explicit — caller-controlled allowance
+    const xdr = await client.buildSubscribe(
+      "GSUBSCRIBER...ADDR",
+      42,
+      {
+        expirationLedger: latest.sequence + 2_900_000,
+        allowancePeriods: 24,
+      },
     );
     ```
 
     | Parameter | Type | Required | Description |
     | --- | --- | --- | --- |
     | `subscriber` | `string` | Yes | Stellar address of the subscriber |
-    | `planId` | `number` | Yes | ID of the plan to subscribe to |
+    | `planId` | `number` | Yes | Plan to subscribe to |
+    | `opts.expirationLedger` | `number` | No | Absolute ledger the allowance expires at. Defaults to current + 2,900,000 |
+    | `opts.allowancePeriods` | `number` | No | Number of periods the allowance should cover. Default 120 |
 
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
+    <Tip>
+      The `expirationLedger` and `allowancePeriods` are passed to the contract so
+      the nested `token.approve()` auth entry is deterministic between simulation
+      and submission. See [the subscribe API reference](/api-reference/subscribe)
+      for the full explanation.
+    </Tip>
+
+    **Returns:** `Promise<string>` — assembled XDR.
 
     ---
 
     ## buildCharge
 
-    Charges a subscription for the current billing period. This is permissionless - anyone can call it.
+    Charges a subscription for the current billing period. Permissionless — anyone can call.
 
     ```typescript
-    const xdr = await client.buildCharge(
-      "GCALLER...ADDR",
-      101
-    );
+    const xdr = await client.buildCharge("GKEEPER...ADDR", 101);
     ```
 
     | Parameter | Type | Required | Description |
     | --- | --- | --- | --- |
-    | `callerAddress` | `string` | Yes | Stellar address of the caller (pays the tx fee) |
+    | `callerAddress` | `string` | Yes | Address that pays the tx fee |
     | `subId` | `number` | Yes | Subscription ID to charge |
-
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
     ## buildCancel
 
-    Cancels a subscription. Can be called by either the subscriber or the merchant.
+    Cancels a subscription. Either the subscriber or the merchant can call.
 
     ```typescript
-    const xdr = await client.buildCancel(
-      "GSUBSCRIBER...ADDR",
-      101
-    );
+    const xdr = await client.buildCancel("GSUBSCRIBER...ADDR", 101);
     ```
-
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `caller` | `string` | Yes | Stellar address of the subscriber or merchant |
-    | `subId` | `number` | Yes | Subscription ID to cancel |
-
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
@@ -121,145 +154,149 @@ const client = new VowenaClient({
     const xdr = await client.buildRefund(
       "GMERCHANT...ADDR",
       101,
-      toStroops("9.99")
+      toStroops("9.99"),
     );
     ```
-
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `merchantAddress` | `string` | Yes | Stellar address of the merchant issuing the refund |
-    | `subId` | `number` | Yes | Subscription ID to refund |
-    | `amount` | `bigint` | Yes | Refund amount in stroops |
-
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
     ## buildUpdatePlanAmount
 
-    Updates the billing amount for an existing plan. The new amount must not exceed the plan's price ceiling.
+    Updates the billing amount for an existing plan. The new amount must stay within the plan's price ceiling.
 
     ```typescript
     const xdr = await client.buildUpdatePlanAmount(
       "GMERCHANT...ADDR",
       42,
-      toStroops("12.99")
+      toStroops("12.99"),
     );
     ```
 
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `merchantAddress` | `string` | Yes | Stellar address of the plan's merchant |
-    | `planId` | `number` | Yes | Plan ID to update |
-    | `newAmount` | `bigint` | Yes | New amount per period in stroops |
-
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
-
     <Warning>
-      The new amount cannot exceed the plan's `priceCeiling`. This protects subscribers from unexpected price increases beyond what they originally authorized.
+      The new amount cannot exceed `priceCeiling`. This protects subscribers from
+      unexpected price increases beyond what they originally authorized.
     </Warning>
 
     ---
 
     ## buildRequestMigration
 
-    Requests migration of all subscribers from one plan to another. Subscribers must accept individually.
+    Flags every active subscription on `oldPlanId` as "migration pending" to `newPlanId`. Subscribers must accept individually.
 
     ```typescript
     const xdr = await client.buildRequestMigration(
       "GMERCHANT...ADDR",
-      42,  // old plan ID
-      43   // new plan ID
+      42,  // old plan
+      43,  // new plan
     );
     ```
-
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `merchant` | `string` | Yes | Stellar address of the merchant |
-    | `oldPlanId` | `number` | Yes | Plan ID to migrate from |
-    | `newPlanId` | `number` | Yes | Plan ID to migrate to |
-
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
     ## buildAcceptMigration
 
-    Accepts a pending migration for a subscription. Called by the subscriber.
+    Subscriber accepts a pending migration. The contract cancels the old subscription, creates one on the new plan, and sets a new allowance — all in one tx.
 
     ```typescript
     const xdr = await client.buildAcceptMigration(
       "GSUBSCRIBER...ADDR",
-      101
+      101,
+      {
+        expirationLedger: latest.sequence + 2_900_000,
+        allowancePeriods: 24,
+      },
     );
     ```
 
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `subscriber` | `string` | Yes | Stellar address of the subscriber |
-    | `subId` | `number` | Yes | Subscription ID to migrate |
-
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
+    The allowance options match `buildSubscribe`. If omitted, the SDK uses the same safe defaults.
 
     ---
 
     ## buildRejectMigration
 
-    Rejects a pending migration for a subscription. Called by the subscriber.
+    Subscriber rejects a pending migration. They stay on the old plan.
 
     ```typescript
-    const xdr = await client.buildRejectMigration(
-      "GSUBSCRIBER...ADDR",
-      101
-    );
+    const xdr = await client.buildRejectMigration("GSUBSCRIBER...ADDR", 101);
     ```
-
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `subscriber` | `string` | Yes | Stellar address of the subscriber |
-    | `subId` | `number` | Yes | Subscription ID whose migration to reject |
-
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
 
     ---
 
     ## buildReactivate
 
-    Reactivates a paused subscription. Called by the subscriber.
+    Subscriber reactivates a paused subscription. Re-signs a new allowance and attempts an immediate charge.
 
     ```typescript
     const xdr = await client.buildReactivate(
       "GSUBSCRIBER...ADDR",
-      101
+      101,
+      {
+        expirationLedger: latest.sequence + 2_900_000,
+        allowancePeriods: 24,
+      },
     );
     ```
 
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `subscriber` | `string` | Yes | Stellar address of the subscriber |
-    | `subId` | `number` | Yes | Subscription ID to reactivate |
+    ---
 
-    **Returns:** `Promise<string>` - Assembled XDR transaction string.
+    ## buildExtendTtl
+
+    Permissionless TTL bump for a plan + subscription entry. Useful for keepers that want to keep long-lived state alive alongside their `charge()` calls.
+
+    ```typescript
+    const xdr = await client.buildExtendTtl("GKEEPER...ADDR", 42, 101);
+    ```
 
   </Tab>
   <Tab title="Read Methods">
-    Read methods query on-chain state by simulating a contract call. They require a `callerAddress` for simulation context but do not create a transaction.
+    Read methods query on-chain state by simulating a contract call. They require a `callerAddress` (any valid Stellar address) for simulation context but don't create a transaction.
+
+    ## getProject
+
+    Fetches a project by ID.
+
+    ```typescript
+    const project = await client.getProject(1, "GREAD...ADDR");
+    console.log(project.name); // "Acme SaaS"
+    ```
+
+    Returns:
+
+    ```typescript
+    interface Project {
+      id: number;
+      merchant: string;
+      name: string;
+      description: string;
+      createdAt: number;
+    }
+    ```
+
+    ---
+
+    ## getMerchantProjects
+
+    All project IDs owned by a merchant.
+
+    ```typescript
+    const ids = await client.getMerchantProjects(
+      "GMERCHANT...ADDR",
+      "GREAD...ADDR",
+    );
+    ```
+
+    ---
 
     ## getPlan
 
     Fetches a plan by ID.
 
     ```typescript
-    const plan = await client.getPlan(42, "GCALLER...ADDR");
-    console.log(plan.amount, plan.period, plan.merchant);
+    const plan = await client.getPlan(42, "GREAD...ADDR");
+    console.log(plan.name, plan.amount, plan.projectId);
     ```
 
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `planId` | `number` | Yes | Plan ID to fetch |
-    | `callerAddress` | `string` | Yes | Any valid Stellar address (for simulation) |
-
-    **Returns:** `Promise<Plan>`
+    Returns:
 
     ```typescript
     interface Plan {
@@ -272,6 +309,10 @@ const client = new VowenaClient({
       maxPeriods: number;
       gracePeriod: number;
       priceCeiling: bigint;
+      createdAt: number;
+      active: boolean;
+      name: string;
+      projectId: number;
     }
     ```
 
@@ -282,93 +323,64 @@ const client = new VowenaClient({
     Fetches a subscription by ID.
 
     ```typescript
-    const sub = await client.getSubscription(101, "GCALLER...ADDR");
-    console.log(sub.status, sub.subscriber, sub.planId);
+    const sub = await client.getSubscription(101, "GREAD...ADDR");
+    console.log(sub.status, sub.periodsBilled, sub.nextBillingTime);
     ```
 
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `subId` | `number` | Yes | Subscription ID to fetch |
-    | `callerAddress` | `string` | Yes | Any valid Stellar address (for simulation) |
-
-    **Returns:** `Promise<Subscription>`
+    Returns:
 
     ```typescript
     interface Subscription {
       id: number;
-      subscriber: string;
       planId: number;
+      subscriber: string;
       status: SubscriptionStatus;
-      lastCharge: number;
-      periodsCharged: number;
       createdAt: number;
+      periodsBilled: number;
+      nextBillingTime: number;
+      failedAt: number;
+      migrationTarget: number;
+      cancelledAt: number;
     }
 
-    type SubscriptionStatus = "active" | "paused" | "cancelled" | "expired";
+    type SubscriptionStatus = "Active" | "Paused" | "Cancelled" | "Expired";
     ```
 
     ---
 
     ## getMerchantPlans
 
-    Returns all plan IDs owned by a merchant.
+    All plan IDs owned by a merchant.
 
     ```typescript
-    const planIds = await client.getMerchantPlans(
+    const ids = await client.getMerchantPlans(
       "GMERCHANT...ADDR",
-      "GCALLER...ADDR"
+      "GREAD...ADDR",
     );
-    // [42, 43, 44]
     ```
-
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `merchant` | `string` | Yes | Stellar address of the merchant |
-    | `callerAddress` | `string` | Yes | Any valid Stellar address (for simulation) |
-
-    **Returns:** `Promise<number[]>`
 
     ---
 
     ## getSubscriberSubscriptions
 
-    Returns all subscription IDs for a subscriber.
+    All subscription IDs tied to a subscriber.
 
     ```typescript
-    const subIds = await client.getSubscriberSubscriptions(
+    const ids = await client.getSubscriberSubscriptions(
       "GSUBSCRIBER...ADDR",
-      "GCALLER...ADDR"
+      "GREAD...ADDR",
     );
-    // [101, 102]
     ```
-
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `subscriber` | `string` | Yes | Stellar address of the subscriber |
-    | `callerAddress` | `string` | Yes | Any valid Stellar address (for simulation) |
-
-    **Returns:** `Promise<number[]>`
 
     ---
 
     ## getPlanSubscribers
 
-    Returns all subscription IDs associated with a plan.
+    All subscription IDs active on a plan.
 
     ```typescript
-    const subIds = await client.getPlanSubscribers(
-      42,
-      "GCALLER...ADDR"
-    );
-    // [101, 105, 112]
+    const ids = await client.getPlanSubscribers(42, "GREAD...ADDR");
     ```
-
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `planId` | `number` | Yes | Plan ID to query |
-    | `callerAddress` | `string` | Yes | Any valid Stellar address (for simulation) |
-
-    **Returns:** `Promise<number[]>`
 
   </Tab>
   <Tab title="Submit">
@@ -377,36 +389,28 @@ const client = new VowenaClient({
     Submits a signed XDR transaction to the Stellar network and waits for confirmation.
 
     ```typescript
-    // 1. Build the transaction
     const xdr = await client.buildSubscribe("GSUB...ADDR", 42);
-
-    // 2. Sign with your wallet
     const signedXdr = await wallet.signTransaction(xdr);
-
-    // 3. Submit and wait for result
     const result = await client.submitTransaction(signedXdr);
 
-    console.log(result.hash);       // Transaction hash
-    console.log(result.success);    // true if successful
+    console.log(result.hash);        // Transaction hash
+    console.log(result.success);     // true if successful
     console.log(result.returnValue); // Contract return value (if any)
     ```
 
-    | Parameter | Type | Required | Description |
-    | --- | --- | --- | --- |
-    | `signedXdr` | `string` | Yes | Signed XDR transaction string |
-
-    **Returns:** `Promise<TransactionResult>`
+    Returns:
 
     ```typescript
     interface TransactionResult {
-      hash: string;          // Stellar transaction hash
-      success: boolean;      // Whether the transaction succeeded
-      returnValue?: unknown; // Parsed return value from the contract
+      hash: string;
+      success: boolean;
+      returnValue?: unknown;
     }
     ```
 
     <Tip>
-      The typical flow is: **build** (VowenaClient) &rarr; **sign** (your wallet) &rarr; **submit** (VowenaClient). The SDK never touches private keys.
+      Flow: **build** (VowenaClient) → **sign** (your wallet) → **submit**
+      (VowenaClient). The SDK never touches private keys.
     </Tip>
 
   </Tab>

@@ -61,9 +61,9 @@ None (`void`).
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
     // Reject the pending migration - stay on current plan
@@ -81,7 +81,7 @@ None (`void`).
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network mainnet \
+      --network testnet \
       --source SUBSCRIBER_SECRET \
       -- \
       reject_migration \

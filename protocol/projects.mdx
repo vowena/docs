@@ -1,0 +1,71 @@
+---
+title: "Projects"
+description: "Projects group plans under a merchant. Every plan belongs to exactly one project on chain."
+---
+
+## What is a Project?
+
+A **Project** is the top-level container a merchant creates on chain. It groups related billing plans together. One merchant can own many projects, and every plan is scoped to exactly one project.
+
+A Project has two jobs:
+
+1. Give merchants a way to separate products on the same wallet (e.g. *Acme SaaS* and *Acme Analytics* as independent projects).
+2. Let subscribers see a friendly name instead of a raw contract ID in their subscription list.
+
+Projects are cheap to create. They store no per-subscriber state, so one project scales to thousands of plans and millions of subscribers.
+
+---
+
+## Project fields
+
+| Field         | Type      | Description                                          |
+| ------------- | --------- | ---------------------------------------------------- |
+| `id`          | `u64`     | Chain-assigned unique identifier.                    |
+| `merchant`    | `Address` | The Stellar address that owns the project.          |
+| `name`        | `String`  | Human-readable name shown in the dashboard + checkout. |
+| `description` | `String`  | Optional longer description, may be empty.           |
+| `created_at`  | `u64`     | Ledger timestamp at creation.                        |
+
+---
+
+## Lifecycle
+
+### Create
+
+The merchant calls [`create_project`](/api-reference/create-project) with a name and description. The contract assigns a globally unique `project_id` and persists the record under the merchant's account. The `project_created` event is emitted.
+
+### Read
+
+- [`get_project(project_id)`](/api-reference/get-project) returns a single project.
+- [`get_merchant_projects(merchant)`](/api-reference/get-merchant-projects) returns every project owned by a merchant.
+
+### Use
+
+When creating a plan, the merchant passes the `project_id` as an argument to [`create_plan`](/api-reference/create-plan). The contract validates that:
+
+1. The project exists, and
+2. The calling merchant owns it.
+
+A plan that references a project owned by a different merchant is rejected with `Unauthorized`.
+
+### Delete
+
+Projects are immutable once created — they cannot be deleted or renamed. If you need to reorganize, create a new project and use the [migration flow](/api-reference/request-migration) on the plans you want to move.
+
+---
+
+## Why chain-native projects?
+
+Before v0.1.4 of Vowena, projects lived off-chain (in the subscriber's browser or in the merchant's Stellar account data entries). That was cheaper but had three problems:
+
+- Subscribers saw raw plan IDs instead of a project name.
+- Merchants couldn't share project metadata across devices.
+- Anyone building a third-party dashboard had to re-implement the off-chain storage.
+
+Making `Project` a first-class contract entity fixed all three. Now the chain is the single source of truth: any client can read project + plan + subscription data without trusting an off-chain cache.
+
+---
+
+## Storage model
+
+Projects live in **persistent storage**. Each project is its own key, so the contract can run many projects in parallel without ledger contention. TTL extension works the same as for plans — keepers can call [`extend_ttl`](/api-reference/extend-ttl) to keep active projects alive past Soroban's default retention window.

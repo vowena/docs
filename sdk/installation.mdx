@@ -43,9 +43,9 @@ The `VowenaClient` is the main entry point for all contract interactions. It bui
 import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
 const client = new VowenaClient({
-  contractId: NETWORKS.mainnet.contractId,
-  rpcUrl: NETWORKS.mainnet.rpcUrl,
-  networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
 });
 ```
 
@@ -56,25 +56,6 @@ const client = new VowenaClient({
 The SDK ships with pre-configured network constants via the `NETWORKS` object.
 
 <Tabs>
-  <Tab title="Mainnet">
-    ```typescript
-    import { VowenaClient, NETWORKS } from "@vowena/sdk";
-
-    const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
-    });
-    ```
-
-    | Property | Value |
-    | --- | --- |
-    | `rpcUrl` | `https://soroban.stellar.org` |
-    | `networkPassphrase` | `Public Global Stellar Network ; September 2015` |
-    | `contractId` | Production mainnet contract |
-    | `usdcAddress` | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI` |
-
-  </Tab>
   <Tab title="Testnet">
     ```typescript
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
@@ -92,6 +73,26 @@ The SDK ships with pre-configured network constants via the `NETWORKS` object.
     | `networkPassphrase` | `Test SDF Network ; September 2015` |
     | `contractId` | Pre-deployed testnet contract |
     | `usdcAddress` | Testnet USDC token contract |
+
+  </Tab>
+  <Tab title="Mainnet">
+    ```typescript
+    // Mainnet deployment is coming after testnet pilots.
+    import { VowenaClient, NETWORKS } from "@vowena/sdk";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.mainnet.contractId,
+      rpcUrl: NETWORKS.mainnet.rpcUrl,
+      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+    });
+    ```
+
+    | Property | Value |
+    | --- | --- |
+    | `rpcUrl` | `https://soroban.stellar.org` |
+    | `networkPassphrase` | `Public Global Stellar Network ; September 2015` |
+    | `contractId` | Mainnet contract (coming soon) |
+    | `usdcAddress` | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI` |
 
   </Tab>
   <Tab title="Custom RPC">
@@ -135,9 +136,11 @@ import {
 
 ```typescript
 import type {
+  Project, // On-chain project data
   Plan, // On-chain plan data
   Subscription, // On-chain subscription data
-  SubscriptionStatus, // "active" | "paused" | "cancelled" | "expired"
+  SubscriptionStatus, // "Active" | "Paused" | "Cancelled" | "Expired"
+  CreateProjectParams, // Parameters for buildCreateProject()
   CreatePlanParams, // Parameters for buildCreatePlan()
   VowenaClientOptions, // Constructor options for VowenaClient
   TransactionResult, // Result from submitTransaction()
@@ -152,7 +155,7 @@ import type {
 
 | Dependency             | Version   |
 | ---------------------- | --------- |
-| Node.js                | 18+       |
+| Node.js                | 20+       |
 | `@stellar/stellar-sdk` | `^15.0.1` |
 
 <Tip>

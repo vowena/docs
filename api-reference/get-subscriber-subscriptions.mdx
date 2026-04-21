@@ -45,9 +45,9 @@ None. Returns an empty vector if the subscriber has no subscriptions.
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
     const subIds = await client.getSubscriberSubscriptions("GSUBSCRIBER...ADDR");
@@ -67,7 +67,7 @@ None. Returns an empty vector if the subscriber has no subscriptions.
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network mainnet \
+      --network testnet \
       -- \
       get_subscriber_subscriptions \
       --subscriber GSUBSCRIBER...ADDR

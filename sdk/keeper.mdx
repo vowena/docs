@@ -1,147 +1,121 @@
 ---
-title: "Keeper Bot"
-description: "Run an automated keeper bot that charges due subscriptions on schedule. Understand how keepers work, configure environment variables, and deploy to production."
+title: "Keeper Guide"
+description: "Run an automated keeper that charges due subscriptions on schedule. How keepers work, the charge loop, and production patterns (serial submissions, sequence numbers, retries)."
 ---
 
-## What is a Keeper?
+## What is a keeper?
 
-A keeper is an automated script that calls `charge()` on the Vowena contract for subscriptions that are due. Because `charge()` is **permissionless**, anyone can trigger it - the contract validates all conditions on-chain. The keeper simply pays the tiny transaction fee (~$0.00001 in XLM), while the subscription payment flows directly from the subscriber to the merchant.
+A keeper is any script that calls `charge()` on the Vowena contract for subscriptions that are due. `charge()` is **permissionless** — the contract validates every precondition on-chain, so the keeper just signs an invoke op and submits it. The keeper pays the tiny transaction fee (~$0.00001 in XLM) while USDC flows directly from subscriber to merchant.
 
 <Info>
-  You don't need to run your own keeper. The [Vowena
-  Dashboard](/dashboard/keeper-setup) provides a managed keeper service. This
-  page is for developers who want to self-host or customize their keeper.
+  You don't have to build this yourself. The [Vowena
+  dashboard](/dashboard/keeper-setup) ships a managed keeper that runs as a
+  Vercel cron every minute. This page is for teams that want to self-host.
 </Info>
 
 ---
 
-## How It Works
+## How it works
 
-1. The keeper polls for subscription IDs that may be due for charging
-2. For each subscription, it builds a `charge()` transaction using the SDK
-3. It signs the transaction with its own keypair (the keeper wallet)
-4. It submits the transaction to the network
-5. If the charge succeeds, USDC transfers from subscriber to merchant. If it fails (not yet due, insufficient balance, etc.), the contract rejects it harmlessly.
+1. Keeper enumerates every subscription that might be due (discovery).
+2. For each subscription, it builds a `charge()` tx via `client.buildCharge`.
+3. It signs with its own keypair and submits to the network.
+4. If the charge is due and the allowance is sufficient, USDC moves subscriber → merchant and `charge_ok` is emitted. If not, the contract rejects harmlessly — no funds move, nothing breaks.
 
-The keeper's wallet only needs a small XLM balance for transaction fees. It never handles or holds USDC - payments go directly between subscriber and merchant.
-
----
-
-## Setup
-
-The standalone keeper bot lives at `sdk/keeper/src/index.ts` in the Vowena repository.
-
-<Steps>
-  <Step title="Fund a Keeper Wallet">
-    Create a new Stellar keypair and fund it with a small amount of XLM for transaction fees.
-
-    ```bash
-    # Generate a keypair (or use an existing one)
-    # Save the secret key - you'll need it in the next step
-    ```
-
-    A few XLM is sufficient for thousands of charge transactions.
-
-  </Step>
-
-  <Step title="Configure Environment Variables">
-    The keeper bot reads its configuration from environment variables:
-
-    | Variable | Required | Default | Description |
-    | --- | --- | --- | --- |
-    | `CONTRACT_ID` | Yes | - | Vowena contract address (e.g., `CABC...XYZ`) |
-    | `KEEPER_SECRET` | Yes | - | Stellar secret key for the keeper wallet (`S...`) |
-    | `RPC_URL` | No | `https://soroban-mainnet.stellar.org` | Soroban RPC endpoint |
-    | `NETWORK_PASSPHRASE` | No | `Test SDF Network ; September 2015` | Network passphrase |
-    | `INTERVAL_MS` | No | `60000` | Polling interval in milliseconds |
-
-    <Warning>
-      Your `KEEPER_SECRET` is a private key that can sign transactions. Never commit it to source control, share it in logs, or expose it in client-side code. Use a secrets manager or environment variable injection in production.
-    </Warning>
-
-  </Step>
-
-  <Step title="Run the Keeper">
-    ```bash
-    CONTRACT_ID=C... KEEPER_SECRET=S... npx ts-node keeper/src/index.ts
-    ```
-
-    Or with all options:
-
-    ```bash
-    CONTRACT_ID=CABC...XYZ \
-    KEEPER_SECRET=SDEF...123 \
-    RPC_URL=https://soroban-mainnet.stellar.org \
-    NETWORK_PASSPHRASE="Test SDF Network ; September 2015" \
-    INTERVAL_MS=30000 \
-    npx ts-node keeper/src/index.ts
-    ```
-
-    The keeper will start polling and log each charge attempt:
-
-    ```
-    [keeper] Starting with interval 30000ms
-    [keeper] Checking subscription #101... charged OK (tx: abc123...)
-    [keeper] Checking subscription #102... not yet due, skipping
-    [keeper] Checking subscription #103... charge failed: insufficient balance
-    ```
-
-  </Step>
-
-  <Step title="Verify It's Working">
-    Use the SDK to check that subscriptions are being charged:
-
-    ```typescript
-    const sub = await client.getSubscription(101, callerAddress);
-    console.log(sub.periodsCharged); // Should increment after each successful charge
-    ```
-
-  </Step>
-</Steps>
+The keeper never holds USDC. It only holds a small XLM balance for tx fees.
 
 ---
 
-## How charge() Is Permissionless
+## A minimal keeper loop
 
-When a subscriber signs the `subscribe()` transaction, they authorize a SEP-41 token allowance to the Vowena contract. From that point on, the contract itself can pull funds via `transfer_from()` - it does not matter who initiates the `charge()` call. The contract enforces all rules:
+The only two non-obvious bits are (a) how to discover subs, and (b) why submissions must be **serial**.
 
-- The billing period must have elapsed
-- The subscription must be active
-- The subscriber must have sufficient balance and allowance
-- Trial periods must be complete
-- The max period limit must not be exceeded
+```typescript
+import {
+  VowenaClient,
+  NETWORKS,
+  Keypair,
+  rpc as SorobanRpc,
+  TransactionBuilder,
+  Networks,
+} from "@vowena/sdk";
 
-The caller (keeper) only pays the transaction fee. The USDC payment goes directly from subscriber to merchant - never through the keeper's wallet.
+const keeper = Keypair.fromSecret(process.env.KEEPER_SECRET!);
+const client = new VowenaClient({
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+});
+const server = new SorobanRpc.Server(NETWORKS.testnet.rpcUrl);
+
+async function runOnce(merchant: string) {
+  // 1. Discovery — parallel, read-only
+  const planIds = await client.getMerchantPlans(merchant, keeper.publicKey());
+  const subLists = await Promise.all(
+    planIds.map((id) =>
+      client.getPlanSubscribers(id, keeper.publicKey()).catch(() => []),
+    ),
+  );
+  const subIds = Array.from(new Set(subLists.flat()));
+
+  // 2. Submissions — SERIAL with a fresh account each time
+  for (const subId of subIds) {
+    await chargeOne(subId);
+  }
+}
+
+async function chargeOne(subId: number) {
+  // Fetch a fresh account to pick up the current sequence number. Skipping
+  // this and reusing one account snapshot across a batch causes every tx
+  // after the first to be rejected as tx_bad_seq.
+  const account = await server.getAccount(keeper.publicKey());
+  const xdr = await client.buildCharge(keeper.publicKey(), subId);
+  const tx = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
+  tx.sign(keeper);
+  await server.sendTransaction(tx);
+}
+```
+
+<Warning>
+  **Don't parallelize submissions from one signer.** Stellar requires sequence
+  numbers to be the exact next value per source account. Firing `charge()`
+  transactions in parallel with the same keeper means every tx after the first
+  lands with `tx_bad_seq`. Serial + fresh `server.getAccount()` per tx is the
+  safe pattern.
+</Warning>
 
 ---
 
-## Production Considerations
+## Scheduling
 
-<AccordionGroup>
-  <Accordion title="Use an event indexer instead of iterating IDs">
-    The basic keeper iterates subscription IDs sequentially, which works for small-scale testing. For production, use the dashboard's event indexer (or build your own) to maintain a database of active subscriptions and their next charge dates. This way you only attempt charges for subscriptions that are actually due, saving RPC calls and transaction fees.
-  </Accordion>
+A cron or setInterval call every 60 seconds is plenty for most plans. `charge()` is idempotent within a period — calling it before the next period is due simply no-ops, so you can't over-bill by polling too often.
 
-<Accordion title="Handle rate limits">
-  Public Soroban RPC endpoints have rate limits. For production keepers, use a
-  dedicated RPC provider or self-host a Stellar node to avoid throttling during
-  high-traffic periods.
-</Accordion>
+```typescript
+setInterval(() => runOnce("GMERCHANT...ADDR").catch(console.error), 60_000);
+```
 
-<Accordion title="Monitor and alert">
-  Set up monitoring for your keeper process. Track metrics like successful
-  charges, failed charges, and RPC errors. Alert on prolonged failures so you
-  can intervene before subscriptions start pausing due to missed charges.
-</Accordion>
+---
 
-  <Accordion title="Run multiple instances carefully">
-    If you run multiple keeper instances, they may attempt to charge the same subscription simultaneously. The contract handles this safely - only the first charge succeeds, and subsequent attempts fail harmlessly. However, you will pay unnecessary transaction fees. Use a coordination layer or partition subscription IDs across keepers.
-  </Accordion>
-</AccordionGroup>
+## Using the dashboard's managed keeper
 
-<Tip>
-  For most merchants, the managed keeper in the [Vowena
-  Dashboard](/dashboard/keeper-setup) is the simplest option. Self-hosting a
-  keeper is recommended only if you need custom logic, want full control over
-  infrastructure, or are operating at scale.
-</Tip>
+If you don't want to operate your own infra, enable the dashboard's managed keeper instead:
+
+- Vercel cron hits `/api/cron` every minute.
+- The cron signs with `VOWENA_ISSUER_SECRET` (set once in your Vercel env).
+- Submissions are serial with a fresh account fetch per tx — same pattern as above.
+
+See [Keeper setup](/dashboard/keeper-setup) for step-by-step configuration.
+
+---
+
+## Failure modes
+
+| Failure                         | What the contract does                                           | What the keeper should do            |
+| ------------------------------- | ---------------------------------------------------------------- | ------------------------------------ |
+| Subscription not yet due        | Returns `false`, emits nothing                                   | Keep trying next period              |
+| Insufficient balance            | Emits `charge_fail`, sets `failed_at`, starts the grace window   | Retry until grace expires            |
+| Grace expired, still failing    | Transitions subscription to `Paused`                             | Stop trying until subscriber reactivates |
+| Max periods reached             | Transitions subscription to `Expired`                            | Remove from the charge list          |
+| Subscriber cancelled            | No effect (contract already handled it)                          | Remove from the charge list          |
+
+All of these are handled automatically by calling `charge()` — the keeper doesn't need to inspect subscription state first.

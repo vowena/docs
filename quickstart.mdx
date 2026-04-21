@@ -1,54 +1,42 @@
 ---
 title: "Quickstart"
-description: "Go from zero to a working on-chain subscription in 5 minutes. Install the Vowena SDK, create a billing plan, subscribe a wallet, charge, and cancel."
+description: "Go from zero to a working on-chain subscription in 5 minutes. Install the Vowena SDK, create a project and plan, subscribe a wallet, charge, and cancel."
 ---
 
-Get a complete subscription lifecycle running on Stellar in under 5 minutes.
+Get a complete subscription lifecycle running on Stellar testnet in under 5 minutes.
 
 <Info>
-  This guide uses the Vowena TypeScript SDK. You'll need Node.js 18+ and a
-  Stellar account with USDC.
+  You'll need Node.js 20+, a funded Stellar testnet account, and a USDC
+  trustline. The [dashboard checkout page](https://dashboard.vowena.xyz) can
+  fund a fresh wallet via friendbot if you don't have one.
 </Info>
 
 <Steps>
   <Step title="Install the SDK">
-    Add the Vowena SDK to your project.
-
     <CodeGroup>
       ```bash npm
       npm install @vowena/sdk
       ```
 
-      ```bash yarn
-      yarn add @vowena/sdk
-      ```
-
       ```bash pnpm
       pnpm add @vowena/sdk
+      ```
+
+      ```bash yarn
+      yarn add @vowena/sdk
       ```
     </CodeGroup>
 
     <Tip>
-      The SDK is a lightweight wrapper around the Vowena Soroban contract. It builds transactions locally - you sign and submit them with your own wallet or keypair.
+      The SDK is a lightweight wrapper around the Vowena Soroban contract. It
+      builds transactions locally — you sign and submit them with your own
+      wallet or keypair.
     </Tip>
 
   </Step>
 
-  <Step title="Create a Client">
-    Initialize the `VowenaClient` with your network configuration.
-
+  <Step title="Create a client">
     <Tabs>
-      <Tab title="Mainnet">
-        ```typescript
-        import { VowenaClient, NETWORKS } from "@vowena/sdk";
-
-        const client = new VowenaClient({
-          contractId: NETWORKS.mainnet.contractId,
-          rpcUrl: NETWORKS.mainnet.rpcUrl,
-          networkPassphrase: NETWORKS.mainnet.networkPassphrase,
-        });
-        ```
-      </Tab>
       <Tab title="Testnet">
         ```typescript
         import { VowenaClient, NETWORKS } from "@vowena/sdk";
@@ -57,6 +45,18 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
           contractId: NETWORKS.testnet.contractId,
           rpcUrl: NETWORKS.testnet.rpcUrl,
           networkPassphrase: NETWORKS.testnet.networkPassphrase,
+        });
+        ```
+      </Tab>
+      <Tab title="Mainnet">
+        ```typescript
+        // Mainnet deployment coming after testnet pilots.
+        import { VowenaClient, NETWORKS } from "@vowena/sdk";
+
+        const client = new VowenaClient({
+          contractId: NETWORKS.mainnet.contractId,
+          rpcUrl: NETWORKS.mainnet.rpcUrl,
+          networkPassphrase: NETWORKS.mainnet.networkPassphrase,
         });
         ```
       </Tab>
@@ -74,124 +74,129 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
     </Tabs>
 
     <Note>
-      `NETWORKS.mainnet` provides pre-configured values for `contractId`, `rpcUrl`, `networkPassphrase`, and `usdcAddress` so you don't need to look them up.
+      `NETWORKS.testnet` ships pre-configured `contractId`, `rpcUrl`,
+      `networkPassphrase`, and `usdcAddress`.
     </Note>
 
   </Step>
 
-  <Step title="Create a Plan (Merchant)">
-    Define a subscription plan. This is an on-chain transaction that stores the plan parameters permanently.
+  <Step title="Create a Project (merchant)">
+    Every plan lives under a Project. Create one first.
 
+    ```typescript
+    const projectTx = await client.buildCreateProject({
+      merchant: "GMERCHANT...ADDR",
+      name: "Acme SaaS",
+      description: "Recurring billing for Acme's hosted product.",
+    });
+
+    const projectResult = await client.submitTransaction(await sign(projectTx));
+    // Fetch the newly created project_id from the merchant's project list
+    const projectIds = await client.getMerchantProjects(
+      "GMERCHANT...ADDR",
+      "GMERCHANT...ADDR",
+    );
+    const projectId = projectIds[projectIds.length - 1];
+    ```
+
+  </Step>
+
+  <Step title="Create a Plan (merchant)">
     ```typescript
     import { toStroops, NETWORKS } from "@vowena/sdk";
 
-    // Build the create_plan transaction
-    const tx = await client.buildCreatePlan({
-      merchant: "GMERCHANT...ADDR",        // Merchant's Stellar address
-      token: NETWORKS.mainnet.usdcAddress,  // USDC token contract
-      amount: toStroops("9.99"),            // 9.99 USDC per period → 99900000n
-      period: 2_592_000,                    // 30 days in seconds
-      priceCeiling: toStroops("14.99"),     // Max price before re-auth needed
-      trialPeriods: 1,                      // 1 free billing period
-      maxPeriods: 0,                        // 0 = unlimited
-      gracePeriod: 259_200,                 // 3 days grace on failed charges
+    const planTx = await client.buildCreatePlan({
+      merchant: "GMERCHANT...ADDR",
+      token: NETWORKS.testnet.usdcAddress,
+      amount: toStroops("9.99"),           // 9.99 USDC per period
+      period: 2_592_000,                   // 30 days
+      priceCeiling: toStroops("14.99"),    // max price within this plan
+      trialPeriods: 1,                     // 1 free period
+      maxPeriods: 0,                       // 0 = unlimited
+      gracePeriod: 259_200,                // 3 days grace on failed charges
+      name: "Pro",                         // display name
+      projectId,                           // parent project from step 3
     });
 
-    // Sign with your wallet and submit
-    const signedXdr = await signTransaction(tx); // Your wallet integration
-    const result = await client.submitTransaction(signedXdr);
-    console.log("Plan created! ID:", result.planId);
+    const planResult = await client.submitTransaction(await sign(planTx));
     ```
 
-    <Warning>
-      Plans are immutable once created. If you need to change pricing, create a new plan and use the migration flow to move existing subscribers.
-    </Warning>
-
     <Accordion title="What does toStroops do?">
-      `toStroops("9.99")` converts a human-readable amount to the 7-decimal-place integer format used by Stellar tokens. It returns a `BigInt`:
+      Converts a human-readable amount to the 7-decimal integer format used
+      by Stellar tokens:
 
       ```typescript
-      toStroops("9.99")   // → 99900000n
-      toStroops("1.00")   // → 10000000n
-      toStroops("0.50")   // → 5000000n
+      toStroops("9.99"); // → 99900000n
+      toStroops("1.00"); // → 10000000n
       ```
-
-      USDC on Stellar uses 7 decimal places (stroops), matching the native XLM precision.
     </Accordion>
 
   </Step>
 
-  <Step title="Subscribe (Subscriber)">
-    A subscriber authorizes the plan. This single transaction calls `subscribe()` on the Vowena contract **and** sets the SEP-41 token allowance - one signature covers both.
+  <Step title="Subscribe (subscriber)">
+    One signature creates the subscription AND sets the SAC allowance. If the
+    plan has no trial, the first period is charged atomically during this
+    call.
 
     ```typescript
-    // Build the subscribe transaction
-    const tx = await client.buildSubscribe(
-      "GSUBSCRIBER...ADDR",  // Subscriber's Stellar address
-      planId                  // Plan ID from step 3
+    const subTx = await client.buildSubscribe(
+      "GSUBSCRIBER...ADDR",
+      planId,
+      // Optional: tune the allowance explicitly
+      { allowancePeriods: 24 },
     );
 
-    // Subscriber signs and submits
-    const signedXdr = await signTransaction(tx);
-    const result = await client.submitTransaction(signedXdr);
-    console.log("Subscribed! Subscription ID:", result.subscriptionId);
+    const subResult = await client.submitTransaction(await sign(subTx));
     ```
 
     <Tip>
-      The subscriber's wallet will display exactly what is being approved: the token (USDC), the spending ceiling (price_ceiling from the plan), and the contract authorized to pull funds. Full transparency - no hidden permissions.
+      The subscriber's wallet displays exactly what's being approved: the
+      token (USDC), the spending ceiling (`price_ceiling × allowance_periods`),
+      and the Vowena contract as spender. Full transparency.
     </Tip>
 
   </Step>
 
-  <Step title="Charge (Keeper / Anyone)">
-    Once a billing period has elapsed, **anyone** can trigger the charge. The contract validates all conditions on-chain.
+  <Step title="Charge (keeper or anyone)">
+    Once a billing period has elapsed, anyone can fire the charge. The
+    contract does all the validation on-chain.
 
     ```typescript
-    // Build the charge transaction
-    const tx = await client.buildCharge(
-      "GCALLER...ADDR",  // Address of whoever is calling (can be anyone)
-      subscriptionId      // Subscription ID from step 4
-    );
-
-    // Sign and submit
-    const signedXdr = await signTransaction(tx);
-    const result = await client.submitTransaction(signedXdr);
-    console.log("Charged! Period:", result.periodNumber);
+    const chargeTx = await client.buildCharge("GKEEPER...ADDR", subId);
+    await client.submitTransaction(await sign(chargeTx));
     ```
 
     The contract checks:
-    - <Check /> Is the subscription active?
-    - <Check /> Has enough time passed since the last charge?
-    - <Check /> Is the trial period over?
-    - <Check /> Does the subscriber have sufficient balance and allowance?
-    - <Check /> Has the max period limit been reached?
 
-    If all checks pass, USDC is transferred from the subscriber directly to the merchant via `transfer_from()`.
+    - Is the subscription active?
+    - Has `period` seconds passed since the last charge?
+    - Is the trial over?
+    - Does the subscriber have sufficient balance and allowance?
+    - Has `max_periods` been reached?
+
+    If all checks pass, USDC moves from subscriber to merchant via the SAC's
+    `transfer_from`.
 
     <Info>
-      You don't need to run your own keeper. The [Vowena Dashboard](/dashboard/keeper-setup) includes a built-in keeper service, or you can use third-party keeper networks.
+      You don't have to run your own keeper. The [Vowena
+      dashboard](/dashboard/keeper-setup) ships a managed keeper cron that
+      fires every minute.
     </Info>
 
   </Step>
 
   <Step title="Cancel">
-    Either the subscriber **or** the merchant can cancel a subscription at any time.
+    Either party can cancel, any time.
 
     ```typescript
-    // Build the cancel transaction
-    const tx = await client.buildCancel(
-      "GSUBSCRIBER...ADDR",  // Subscriber or merchant address
-      subscriptionId          // Subscription ID
-    );
-
-    // Sign and submit
-    const signedXdr = await signTransaction(tx);
-    const result = await client.submitTransaction(signedXdr);
-    console.log("Cancelled! Subscription:", subscriptionId);
+    const cancelTx = await client.buildCancel("GSUBSCRIBER...ADDR", subId);
+    await client.submitTransaction(await sign(cancelTx));
     ```
 
     <Note>
-      Cancellation is **immediate and on-chain**. No approval from the merchant is needed. The subscriber can also cancel directly through any Stellar wallet or block explorer that supports Soroban contract invocations - the Vowena frontend is not required.
+      Cancellation is immediate and on-chain. Subscribers can also cancel
+      directly via any Soroban-aware wallet or block explorer — the Vowena
+      frontend is not required.
     </Note>
 
   </Step>
@@ -199,69 +204,79 @@ Get a complete subscription lifecycle running on Stellar in under 5 minutes.
 
 ---
 
-## Full Example
-
-Here's the complete flow in a single script:
+## Full example
 
 ```typescript
 import { VowenaClient, NETWORKS, toStroops } from "@vowena/sdk";
 
 const client = new VowenaClient({
-  contractId: NETWORKS.mainnet.contractId,
-  rpcUrl: NETWORKS.mainnet.rpcUrl,
-  networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
 });
 
-// 1. Merchant creates a plan
-const createTx = await client.buildCreatePlan({
+// 1. Create a project
+const projectTx = await client.buildCreateProject({
   merchant: "GMERCHANT...ADDR",
-  token: NETWORKS.mainnet.usdcAddress,
+  name: "Acme SaaS",
+  description: "",
+});
+await client.submitTransaction(await sign(projectTx));
+const [projectId] = (
+  await client.getMerchantProjects("GMERCHANT...ADDR", "GMERCHANT...ADDR")
+).slice(-1);
+
+// 2. Create a plan
+const planTx = await client.buildCreatePlan({
+  merchant: "GMERCHANT...ADDR",
+  token: NETWORKS.testnet.usdcAddress,
   amount: toStroops("9.99"),
   period: 2_592_000,
   priceCeiling: toStroops("14.99"),
-  trialPeriods: 1,
+  trialPeriods: 0,
   maxPeriods: 12,
   gracePeriod: 259_200,
+  name: "Pro",
+  projectId,
 });
-const planResult = await client.submitTransaction(await sign(createTx));
+await client.submitTransaction(await sign(planTx));
+const [planId] = (
+  await client.getMerchantPlans("GMERCHANT...ADDR", "GMERCHANT...ADDR")
+).slice(-1);
 
-// 2. Subscriber subscribes
-const subTx = await client.buildSubscribe("GSUB...ADDR", planResult.planId);
-const subResult = await client.submitTransaction(await sign(subTx));
+// 3. Subscriber subscribes (first period charges atomically since trial=0)
+const subTx = await client.buildSubscribe("GSUB...ADDR", planId);
+await client.submitTransaction(await sign(subTx));
+const [subId] = (
+  await client.getSubscriberSubscriptions("GSUB...ADDR", "GSUB...ADDR")
+).slice(-1);
 
-// 3. After billing period elapses, anyone charges
-const chargeTx = await client.buildCharge(
-  "GKEEPER...ADDR",
-  subResult.subscriptionId,
-);
+// 4. After the next period elapses, anyone can charge
+const chargeTx = await client.buildCharge("GKEEPER...ADDR", subId);
 await client.submitTransaction(await sign(chargeTx));
 
-// 4. Subscriber cancels when they want
-const cancelTx = await client.buildCancel(
-  "GSUB...ADDR",
-  subResult.subscriptionId,
-);
+// 5. Cancel
+const cancelTx = await client.buildCancel("GSUB...ADDR", subId);
 await client.submitTransaction(await sign(cancelTx));
 ```
 
 ---
 
-## Next Steps
+## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Core Concepts" icon="lightbulb" href="/concepts">
-    Understand plans, subscriptions, allowances, and the billing lifecycle in
+  <Card title="Core concepts" icon="lightbulb" href="/concepts">
+    Projects, plans, subscriptions, allowances, and the billing lifecycle in
     depth.
   </Card>
-  <Card title="How It Works" icon="diagram-project" href="/how-it-works">
-    Visual walkthrough of the full protocol flow - from plan creation to
+  <Card title="How it works" icon="diagram-project" href="/how-it-works">
+    Visual walkthrough of the full protocol flow — plan creation to
     cancellation.
   </Card>
-  <Card title="SDK Reference" icon="npm" href="/sdk/client">
-    Complete SDK documentation with all methods, types, and configuration
-    options.
+  <Card title="SDK reference" icon="code" href="/sdk/client">
+    Every method, type, and configuration option.
   </Card>
-  <Card title="Run a Keeper" icon="robot" href="/sdk/keeper">
-    Set up an automated keeper bot to charge subscriptions on schedule.
+  <Card title="Run a keeper" icon="robot" href="/sdk/keeper">
+    Set up an automated keeper to charge subscriptions on schedule.
   </Card>
 </CardGroup>

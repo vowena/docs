@@ -60,9 +60,9 @@ None. This is a read-only query.
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
     const sub = await client.getSubscription(1);
@@ -83,7 +83,7 @@ None. This is a read-only query.
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network mainnet \
+      --network testnet \
       -- \
       get_subscription \
       --sub_id 1

@@ -95,9 +95,9 @@ The contract checks, in order:
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
     // Anyone can build and submit this. No specific signer required
@@ -116,7 +116,7 @@ The contract checks, in order:
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network mainnet \
+      --network testnet \
       --source ANY_SECRET_KEY \
       -- \
       charge \

@@ -1,0 +1,98 @@
+---
+title: "create_project"
+description: "Creates a Project on chain. A Project groups plans together under a merchant. Returns the chain-assigned project_id."
+---
+
+```rust
+fn create_project(
+    env: Env,
+    merchant: Address,
+    name: String,
+    description: String,
+) -> u64
+```
+
+Creates a Project on chain. A Project groups billing plans together under a single merchant: one merchant can own many projects, and each plan is scoped to exactly one. Returns the chain-assigned `project_id` (a globally unique `u64`).
+
+Every plan must reference an existing project, so merchants must create a Project before they can create any plans.
+
+---
+
+## Parameters
+
+| Name          | Type      | Description                                                           |
+| ------------- | --------- | --------------------------------------------------------------------- |
+| `merchant`    | `Address` | The merchant's Stellar address. Must sign the transaction.            |
+| `name`        | `String`  | Human-readable project name (e.g. `"Acme SaaS"`).                     |
+| `description` | `String`  | Optional longer description shown in the dashboard. Pass `""` to skip. |
+
+---
+
+## Authorization
+
+```rust
+merchant.require_auth();
+```
+
+The merchant address must sign.
+
+---
+
+## Return value
+
+`u64` — the new `project_id`.
+
+---
+
+## Events emitted
+
+| Event             | Topics                      | Data |
+| ----------------- | --------------------------- | ---- |
+| `project_created` | `"project_created"`, `merchant` | `project_id` |
+
+---
+
+## Examples
+
+<Tabs>
+  <Tab title="SDK">
+    ```typescript
+    import { VowenaClient, NETWORKS } from "@vowena/sdk";
+
+    const client = new VowenaClient({
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
+    });
+
+    const tx = await client.buildCreateProject({
+      merchant: "GMERCHANT...ADDR",
+      name: "Acme SaaS",
+      description: "Recurring billing for Acme's hosted product.",
+    });
+
+    const signedXdr = await signTransaction(tx);
+    const result = await client.submitTransaction(signedXdr);
+    // The contract returns the new project_id via the transaction result.
+    ```
+
+  </Tab>
+  <Tab title="Soroban CLI">
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source MERCHANT_SECRET \
+      -- \
+      create_project \
+      --merchant GMERCHANT...ADDR \
+      --name "Acme SaaS" \
+      --description "Recurring billing for Acme's hosted product."
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Projects are cheap to create and can't be deleted, so you typically
+  create one per product line. Each plan belongs to exactly one project.
+</Tip>

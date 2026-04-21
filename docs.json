@@ -48,6 +48,7 @@
             "group": "Architecture",
             "pages": [
               "protocol/overview",
+              "protocol/projects",
               "protocol/plans",
               "protocol/subscriptions",
               "protocol/billing"
@@ -91,6 +92,7 @@
             "group": "Core",
             "pages": [
               "api-reference/initialize",
+              "api-reference/create-project",
               "api-reference/create-plan",
               "api-reference/subscribe",
               "api-reference/charge"
@@ -118,11 +120,16 @@
             "pages": [
               "api-reference/get-plan",
               "api-reference/get-subscription",
+              "api-reference/get-project",
               "api-reference/get-merchant-plans",
+              "api-reference/get-merchant-projects",
               "api-reference/get-subscriber-subscriptions",
-              "api-reference/get-plan-subscribers",
-              "api-reference/extend-ttl"
+              "api-reference/get-plan-subscribers"
             ]
+          },
+          {
+            "group": "Utilities",
+            "pages": ["api-reference/extend-ttl"]
           }
         ]
       },
@@ -155,7 +162,7 @@
         },
         {
           "anchor": "npm",
-          "href": "https://www.npmjs.com/package/vowena",
+          "href": "https://www.npmjs.com/package/@vowena/sdk",
           "icon": "npm"
         }
       ]

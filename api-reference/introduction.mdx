@@ -3,7 +3,7 @@ title: "API Reference"
 description: "Complete reference for every function in the Vowena Soroban smart contract - parameters, authorization, return types, events, and error codes."
 ---
 
-The Vowena contract exposes 17 functions covering the full subscription lifecycle. This reference documents every function with its parameters, authorization requirements, events, and error codes.
+The Vowena contract exposes 20 functions covering the full subscription lifecycle, from project setup to billing to migration. This reference documents every function with its parameters, authorization requirements, events, and error codes.
 
 <Info>
   **Write functions** return assembled XDR via the SDK. You sign the transaction
@@ -22,12 +22,18 @@ The Vowena contract exposes 17 functions covering the full subscription lifecycl
 | ----------------------------------------- | ------------------------------------------------------------- | ---------------------- |
 | [`initialize`](/api-reference/initialize) | One-time contract setup. Sets admin and initializes counters. | None (first call only) |
 
+### Projects
+
+| Function                                          | Description                                                 | Auth     |
+| ------------------------------------------------- | ----------------------------------------------------------- | -------- |
+| [`create_project`](/api-reference/create-project) | Creates a Project on chain. Plans are scoped to projects.   | Merchant |
+
 ### Plans
 
-| Function                                                  | Description                                                          | Auth     |
-| --------------------------------------------------------- | -------------------------------------------------------------------- | -------- |
-| [`create_plan`](/api-reference/create-plan)               | Creates a new billing plan with pricing, period, trials, and limits. | Merchant |
-| [`update_plan_amount`](/api-reference/update-plan-amount) | Updates the billing amount within the price ceiling.                 | Merchant |
+| Function                                                  | Description                                                                    | Auth     |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------ | -------- |
+| [`create_plan`](/api-reference/create-plan)               | Creates a new billing plan inside a project (pricing, period, trials, limits). | Merchant |
+| [`update_plan_amount`](/api-reference/update-plan-amount) | Updates the billing amount within the price ceiling.                           | Merchant |
 
 ### Subscriptions
 
@@ -54,14 +60,21 @@ The Vowena contract exposes 17 functions covering the full subscription lifecycl
 
 ### Read-only
 
-| Function                                                                      | Description                                                       | Auth |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---- |
-| [`get_plan`](/api-reference/get-plan)                                         | Returns the Plan struct for a given plan ID.                      | None |
-| [`get_subscription`](/api-reference/get-subscription)                         | Returns the Subscription struct for a given subscription ID.      | None |
-| [`get_merchant_plans`](/api-reference/get-merchant-plans)                     | Returns all plan IDs belonging to a merchant.                     | None |
-| [`get_subscriber_subscriptions`](/api-reference/get-subscriber-subscriptions) | Returns all subscription IDs for a subscriber.                    | None |
-| [`get_plan_subscribers`](/api-reference/get-plan-subscribers)                 | Returns all active subscription IDs on a plan.                    | None |
-| [`extend_ttl`](/api-reference/extend-ttl)                                     | Extends TTL of plan and subscription entries to prevent archival. | None |
+| Function                                                                      | Description                                                  | Auth |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------ | ---- |
+| [`get_project`](/api-reference/get-project)                                   | Returns the Project struct for a given project ID.          | None |
+| [`get_merchant_projects`](/api-reference/get-merchant-projects)               | Returns all project IDs belonging to a merchant.            | None |
+| [`get_plan`](/api-reference/get-plan)                                         | Returns the Plan struct for a given plan ID.                 | None |
+| [`get_subscription`](/api-reference/get-subscription)                         | Returns the Subscription struct for a given subscription ID. | None |
+| [`get_merchant_plans`](/api-reference/get-merchant-plans)                     | Returns all plan IDs belonging to a merchant.                | None |
+| [`get_subscriber_subscriptions`](/api-reference/get-subscriber-subscriptions) | Returns all subscription IDs for a subscriber.               | None |
+| [`get_plan_subscribers`](/api-reference/get-plan-subscribers)                 | Returns all active subscription IDs on a plan.               | None |
+
+### Utilities
+
+| Function                                  | Description                                                       | Auth |
+| ----------------------------------------- | ----------------------------------------------------------------- | ---- |
+| [`extend_ttl`](/api-reference/extend-ttl) | Extends TTL of plan and subscription entries to prevent archival. | None |
 
 ---
 
@@ -113,8 +126,15 @@ Every function can be called through the TypeScript SDK or the Soroban CLI. The 
     client.submitTransaction(signed); ```
   </Tab>
   <Tab title="CLI pattern">
-    ```bash soroban contract invoke \ --id CONTRACT_ID \ --network mainnet \
-    --source SIGNER_SECRET \ -- \ function_name \ --param1 value1 \ --param2
-    value2 ```
+    ```bash
+    soroban contract invoke \
+      --id CONTRACT_ID \
+      --network testnet \
+      --source SIGNER_SECRET \
+      -- \
+      function_name \
+      --param1 value1 \
+      --param2 value2
+    ```
   </Tab>
 </Tabs>

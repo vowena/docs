@@ -94,7 +94,7 @@ amount: 3_5000000n,
 # Full refund
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network mainnet \
+  --network testnet \
   -- refund \
   --merchant $MERCHANT_ADDRESS \
   --sub_id 42 \
@@ -103,7 +103,7 @@ stellar contract invoke \
 # Partial refund (3.50 USDC)
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network mainnet \
+  --network testnet \
   -- refund \
   --merchant $MERCHANT_ADDRESS \
   --sub_id 42 \

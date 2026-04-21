@@ -47,7 +47,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
         ```bash
         stellar contract deploy \
           --wasm target/wasm32v1-none/release/vowena.wasm \
-          --network mainnet \
+          --network testnet \
           --source $YOUR_SECRET_KEY
         ```
 
@@ -82,7 +82,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
         ```bash
         stellar contract invoke \
           --id $CONTRACT_ID \
-          --network mainnet \
+          --network testnet \
           --source $YOUR_SECRET_KEY \
           -- initialize \
           --admin $ADMIN_ADDRESS
@@ -114,7 +114,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
         ```bash
         stellar contract invoke \
           --id $CONTRACT_ID \
-          --network mainnet \
+          --network testnet \
           -- get_plan \
           --plan_id 1
         ```
@@ -142,7 +142,7 @@ description: "Step-by-step guide to building, deploying, and initializing the Vo
         ```bash
         stellar contract invoke \
           --id $CONTRACT_ID \
-          --network mainnet \
+          --network testnet \
           --source $YOUR_SECRET_KEY \
           -- create_plan \
           --merchant $MERCHANT_ADDRESS \

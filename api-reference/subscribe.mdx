@@ -1,24 +1,36 @@
 ---
 title: "subscribe"
-description: "Subscribes to a billing plan by setting a token allowance and creating an on-chain subscription. One signature covers both the contract call and approval."
+description: "Subscribes to a billing plan by setting a token allowance and creating an on-chain subscription. One signature covers everything."
 ---
 
 ```rust
-fn subscribe(env: Env, subscriber: Address, plan_id: u64) -> u64
+fn subscribe(
+    env: Env,
+    subscriber: Address,
+    plan_id: u64,
+    expiration_ledger: u32,
+    allowance_periods: u32,
+) -> u64
 ```
 
-Subscribes a user to an existing plan. This function creates the subscription record and sets the SEP-41 token allowance in a single transaction. The subscriber signs once and both operations are authorized.
+Subscribes a user to an existing plan. In a single transaction the contract sets the SEP-41 token allowance and creates the subscription record. The subscriber signs once and both operations are authorized.
 
-Returns the auto-incremented `sub_id`.
+If the plan has no trial (`trial_periods = 0`), the contract charges the first period atomically during `subscribe` — Stripe-style semantics. If the plan has a trial, no funds move until the trial ends.
+
+Returns the chain-assigned `sub_id`.
 
 ---
 
 ## Parameters
 
-| Name         | Type      | Description                                                  |
-| ------------ | --------- | ------------------------------------------------------------ |
-| `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
-| `plan_id`    | `u64`     | The ID of the plan to subscribe to.                          |
+| Name                | Type      | Description                                                                                                           |
+| ------------------- | --------- | --------------------------------------------------------------------------------------------------------------------- |
+| `subscriber`        | `Address` | The subscriber's Stellar address. Must sign the transaction.                                                          |
+| `plan_id`           | `u64`     | The ID of the plan to subscribe to.                                                                                   |
+| `expiration_ledger` | `u32`     | Absolute ledger at which the SAC allowance expires. Typically `current_ledger + MAX_APPROVAL_LEDGERS`.                |
+| `allowance_periods` | `u32`     | Number of billing periods the allowance should cover. Clamped to `plan.max_periods`, or `120` for unlimited plans.    |
+
+Both `expiration_ledger` and `allowance_periods` are passed in rather than computed inside the contract. This is intentional: the nested `token.approve()` call's args must match exactly between simulation and submission, otherwise Soroban's auth tree rejects the invocation.
 
 ---
 
@@ -31,41 +43,40 @@ subscriber.require_auth();
 The subscriber's single signature covers both the `subscribe()` contract call **and** the nested `token.approve()` call. Soroban's auth tree bundles both operations into one authorization.
 
 <Tip>
-  The subscriber signs once. Their wallet will display exactly what is being
-  authorized: the Vowena contract call and the token allowance (amount =
-  `price_ceiling * periods`, spender = Vowena contract). No hidden permissions.
-  Full transparency.
+  The subscriber signs once. Their wallet shows exactly what is being authorized:
+  the Vowena contract call and the token allowance (amount =
+  `price_ceiling * allowance_periods`, spender = Vowena contract).
 </Tip>
 
 ---
 
 ## Allowance calculation
 
-The contract calculates the token allowance as:
-
 ```
-allowance = price_ceiling * periods_for_approval
+allowance = price_ceiling * effective_periods
 ```
 
-- If `max_periods > 0`: `periods_for_approval = max_periods`
-- If `max_periods = 0` (unlimited): `periods_for_approval = 120`
-- Allowance expiry is capped at **6,000,000 ledgers** (~347 days)
+Where `effective_periods` is:
 
-The allowance is set against the plan's `price_ceiling`, not the current `amount`. This means the merchant can adjust pricing within the ceiling without requiring re-authorization.
+- `min(allowance_periods, plan.max_periods)` if `plan.max_periods > 0`
+- `min(allowance_periods, 120)` if the plan is unlimited
+
+The allowance is set against the plan's `price_ceiling`, not the current `amount`. This way the merchant can adjust pricing within the ceiling without requiring re-authorization.
 
 ---
 
 ## Return value
 
-`u64` - the newly created subscription ID.
+`u64` — the newly created subscription ID.
 
 ---
 
 ## Events emitted
 
-| Event         | Topics                            | Data                  |
-| ------------- | --------------------------------- | --------------------- |
-| `sub_created` | `subscriber`, `sub_id`, `plan_id` | `Subscription` struct |
+| Event         | Topics                              | Data                  |
+| ------------- | ----------------------------------- | --------------------- |
+| `sub_created` | `"sub_created"`, `subscriber`       | `(sub_id, plan_id)`   |
+| `charge_ok`   | `"charge_ok"`, `subscriber`         | `(sub_id, amount)` — only emitted when there is no trial and the first-period charge succeeds |
 
 ---
 
@@ -86,14 +97,27 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
+    // Minimal: the SDK picks safe defaults for expirationLedger
+    // and allowancePeriods.
     const tx = await client.buildSubscribe(
-      "GSUBSCRIBER...ADDR",  // Subscriber's address
-      1                       // Plan ID
+      "GSUBSCRIBER...ADDR", // Subscriber's address
+      1,                    // Plan ID
+    );
+
+    // Or with explicit values:
+    const latest = await client["server"].getLatestLedger();
+    const tx2 = await client.buildSubscribe(
+      "GSUBSCRIBER...ADDR",
+      1,
+      {
+        expirationLedger: latest.sequence + 2_900_000,
+        allowancePeriods: 24,
+      },
     );
 
     const signedXdr = await signTransaction(tx);
@@ -104,20 +128,24 @@ The allowance is set against the plan's `price_ceiling`, not the current `amount
   </Tab>
   <Tab title="Soroban CLI">
     ```bash
+    # expiration_ledger = current + 2_900_000 (~168-day buffer)
+    # allowance_periods = 24 (covers 2 years of monthly billing)
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network mainnet \
+      --network testnet \
       --source SUBSCRIBER_SECRET \
       -- \
       subscribe \
       --subscriber GSUBSCRIBER...ADDR \
-      --plan_id 1
+      --plan_id 1 \
+      --expiration_ledger 3100000 \
+      --allowance_periods 24
     ```
   </Tab>
 </Tabs>
 
 <Note>
   If the plan has trial periods, the subscription starts immediately but billing
-  begins after the trial ends. The `next_billing_time` is set to `now + (period
-  * (trial_periods + 1))` so the first real charge happens after the trial.
+  begins after the trial ends. The `next_billing_time` is set to
+  `now + plan.period` and the trial periods are advanced without charging.
 </Note>

@@ -1,0 +1,55 @@
+---
+title: "get_merchant_projects"
+description: "Returns the list of project IDs owned by a merchant."
+---
+
+```rust
+fn get_merchant_projects(env: Env, merchant: Address) -> Vec<u64>
+```
+
+Returns every project ID owned by the given merchant. Read-only, runs via Soroban simulation and does not consume fees.
+
+---
+
+## Parameters
+
+| Name       | Type      | Description                                |
+| ---------- | --------- | ------------------------------------------ |
+| `merchant` | `Address` | The merchant whose projects you want to list. |
+
+---
+
+## Return value
+
+`Vec<u64>` — the project IDs. Order is insertion order on chain.
+
+An empty vec means the merchant has not created any projects yet.
+
+---
+
+## Examples
+
+```typescript
+import { VowenaClient, NETWORKS } from "@vowena/sdk";
+
+const client = new VowenaClient({
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+});
+
+const ids = await client.getMerchantProjects(
+  "GMERCHANT...ADDR",
+  "GREAD_CALLER...ADDR",
+);
+
+for (const id of ids) {
+  const project = await client.getProject(id, "GREAD_CALLER...ADDR");
+  console.log(project.id, project.name);
+}
+```
+
+<Tip>
+  Pair this with `get_merchant_plans` and the plan's `project_id` field to
+  reconstruct the full "project → plans" tree a merchant has on chain.
+</Tip>

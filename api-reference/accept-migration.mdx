@@ -4,7 +4,13 @@ description: "Accepts a pending plan migration for a subscriber. Cancels the old
 ---
 
 ```rust
-fn accept_migration(env: Env, subscriber: Address, sub_id: u64) -> u64
+fn accept_migration(
+    env: Env,
+    subscriber: Address,
+    sub_id: u64,
+    expiration_ledger: u32,
+    allowance_periods: u32,
+) -> u64
 ```
 
 Accepts a pending migration for a subscription. This cancels the old subscription, creates a new subscription on the target plan, and sets a fresh token allowance for the new plan's terms. Returns the new subscription ID.
@@ -13,10 +19,12 @@ Accepts a pending migration for a subscription. This cancels the old subscriptio
 
 ## Parameters
 
-| Name         | Type      | Description                                                  |
-| ------------ | --------- | ------------------------------------------------------------ |
-| `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
-| `sub_id`     | `u64`     | The old subscription ID with a pending migration.            |
+| Name                | Type      | Description                                                                    |
+| ------------------- | --------- | ------------------------------------------------------------------------------ |
+| `subscriber`        | `Address` | The subscriber's Stellar address. Must sign the transaction.                   |
+| `sub_id`            | `u64`     | The old subscription ID with a pending migration.                              |
+| `expiration_ledger` | `u32`     | Absolute ledger at which the new SAC allowance expires.                        |
+| `allowance_periods` | `u32`     | Number of periods the new allowance should cover.                              |
 
 ---
 
@@ -61,15 +69,16 @@ Only the subscriber on the subscription can accept the migration. The subscriber
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
     // Accept the pending migration
     const tx = await client.buildAcceptMigration(
       "GSUBSCRIBER...ADDR",   // Subscriber's address
-      oldSubscriptionId        // Old subscription ID
+      oldSubscriptionId,       // Old subscription ID
+      { allowancePeriods: 24 } // Optional allowance tuning
     );
 
     const signedXdr = await signTransaction(tx);
@@ -82,12 +91,14 @@ Only the subscriber on the subscription can accept the migration. The subscriber
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network mainnet \
+      --network testnet \
       --source SUBSCRIBER_SECRET \
       -- \
       accept_migration \
       --subscriber GSUBSCRIBER...ADDR \
-      --sub_id 1
+      --sub_id 1 \
+      --expiration_ledger 3100000 \
+      --allowance_periods 24
     ```
   </Tab>
 </Tabs>

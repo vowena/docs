@@ -142,8 +142,8 @@ The Vowena contract emits the following event types:
 import { VowenaEventPoller, NETWORKS } from "@vowena/sdk";
 
 const poller = new VowenaEventPoller({
-  contractId: NETWORKS.mainnet.contractId,
-  rpcUrl: NETWORKS.mainnet.rpcUrl,
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
   onEvent: (event) => {
     if (event.type === "charge_ok") {
       console.log(`Charge succeeded at ledger ${event.ledger}`, event.data);

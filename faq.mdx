@@ -37,7 +37,7 @@ description: "Frequently asked questions about the Vowena protocol covering bill
 </Accordion>
 
   <Accordion title="What wallets are supported?">
-    The Vowena dashboard supports **Freighter** as the primary wallet. The SDK works with any Stellar wallet that supports Soroban transaction signing, including Freighter, xBull, Albedo, and WalletConnect-compatible wallets.
+    The Vowena dashboard uses **Stellar Wallets Kit** for multi-wallet support — Freighter, Lobstr, xBull, Albedo, and Hana all work out of the box. The SDK itself is wallet-agnostic: it returns assembled XDR for you to sign with any Stellar wallet that supports Soroban.
   </Accordion>
 </AccordionGroup>
 

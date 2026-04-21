@@ -1,0 +1,70 @@
+---
+title: "get_project"
+description: "Returns the full Project record for a given project_id."
+---
+
+```rust
+fn get_project(env: Env, project_id: u64) -> Project
+```
+
+Returns the full `Project` struct for the given ID. Read-only, runs via Soroban simulation and does not consume fees.
+
+---
+
+## Parameters
+
+| Name         | Type  | Description           |
+| ------------ | ----- | --------------------- |
+| `project_id` | `u64` | The Project to fetch. |
+
+---
+
+## Return value
+
+```rust
+struct Project {
+    id: u64,
+    merchant: Address,
+    name: String,
+    description: String,
+    created_at: u64,
+}
+```
+
+| Field         | Description                                         |
+| ------------- | --------------------------------------------------- |
+| `id`          | Chain-assigned project ID.                          |
+| `merchant`    | The merchant address that owns this project.       |
+| `name`        | Human-readable project name.                        |
+| `description` | Optional longer description, may be an empty string. |
+| `created_at`  | Unix timestamp of the ledger at creation time.      |
+
+---
+
+## Error cases
+
+| Code | Name           | Description                                          |
+| ---- | -------------- | ---------------------------------------------------- |
+| 6    | `PlanNotFound` | No project exists with the given `project_id` on chain. |
+
+---
+
+## Examples
+
+```typescript
+import { VowenaClient, NETWORKS } from "@vowena/sdk";
+
+const client = new VowenaClient({
+  contractId: NETWORKS.testnet.contractId,
+  rpcUrl: NETWORKS.testnet.rpcUrl,
+  networkPassphrase: NETWORKS.testnet.networkPassphrase,
+});
+
+const project = await client.getProject(1, "GREAD_CALLER...ADDR");
+console.log(project.name); // "Acme SaaS"
+```
+
+<Tip>
+  Reads use a caller address for the Soroban simulation. Any funded testnet
+  address works — the SDK ships a `READ_CALLER` default for dashboards.
+</Tip>

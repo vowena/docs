@@ -4,7 +4,13 @@ description: "Reactivates a paused subscription by re-approving the token allowa
 ---
 
 ```rust
-fn reactivate(env: Env, subscriber: Address, sub_id: u64) -> Result<bool>
+fn reactivate(
+    env: Env,
+    subscriber: Address,
+    sub_id: u64,
+    expiration_ledger: u32,
+    allowance_periods: u32,
+) -> Result<bool>
 ```
 
 Reactivates a subscription that was paused due to failed charges. The function re-approves the token allowance and immediately attempts to charge the overdue period. If the charge succeeds, the subscription returns to `Active` status.
@@ -13,10 +19,12 @@ Reactivates a subscription that was paused due to failed charges. The function r
 
 ## Parameters
 
-| Name         | Type      | Description                                                  |
-| ------------ | --------- | ------------------------------------------------------------ |
-| `subscriber` | `Address` | The subscriber's Stellar address. Must sign the transaction. |
-| `sub_id`     | `u64`     | The subscription ID to reactivate.                           |
+| Name                | Type      | Description                                                                  |
+| ------------------- | --------- | ---------------------------------------------------------------------------- |
+| `subscriber`        | `Address` | The subscriber's Stellar address. Must sign the transaction.                 |
+| `sub_id`            | `u64`     | The subscription ID to reactivate.                                           |
+| `expiration_ledger` | `u32`     | Absolute ledger at which the refreshed SAC allowance expires.                |
+| `allowance_periods` | `u32`     | Number of periods the new allowance should cover. Clamped to the remaining `max_periods`. |
 
 ---
 
@@ -64,15 +72,16 @@ Additional events may be emitted from the implicit charge attempt (`charge_ok` o
     import { VowenaClient, NETWORKS } from "@vowena/sdk";
 
     const client = new VowenaClient({
-      contractId: NETWORKS.mainnet.contractId,
-      rpcUrl: NETWORKS.mainnet.rpcUrl,
-      networkPassphrase: NETWORKS.mainnet.networkPassphrase,
+      contractId: NETWORKS.testnet.contractId,
+      rpcUrl: NETWORKS.testnet.rpcUrl,
+      networkPassphrase: NETWORKS.testnet.networkPassphrase,
     });
 
     // Subscriber reactivates a paused subscription
     const tx = await client.buildReactivate(
       "GSUBSCRIBER...ADDR",   // Subscriber's address
-      subscriptionId           // Subscription ID
+      subscriptionId,          // Subscription ID
+      { allowancePeriods: 24 } // Optional: SDK picks a safe default otherwise
     );
 
     const signedXdr = await signTransaction(tx);
@@ -85,12 +94,14 @@ Additional events may be emitted from the implicit charge attempt (`charge_ok` o
     ```bash
     soroban contract invoke \
       --id CONTRACT_ID \
-      --network mainnet \
+      --network testnet \
       --source SUBSCRIBER_SECRET \
       -- \
       reactivate \
       --subscriber GSUBSCRIBER...ADDR \
-      --sub_id 1
+      --sub_id 1 \
+      --expiration_ledger 3100000 \
+      --allowance_periods 24
     ```
   </Tab>
 </Tabs>
